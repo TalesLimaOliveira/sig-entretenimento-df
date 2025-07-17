@@ -1,0 +1,79 @@
+{
+  "name": "pontos-entretenimento-df",
+  "version": "1.0.0",
+  "description": "Sistema interativo para visualizar e gerenciar pontos de entretenimento do Distrito Federal",
+  "main": "index.html",
+  "keywords": [
+    "leaflet",
+    "mapa",
+    "entretenimento",
+    "distrito-federal",
+    "brasilia",
+    "pontos-turisticos",
+    "javascript",
+    "sistema-gerenciamento",
+    "mapa-interativo"
+  ],
+  "author": {
+    "name": "Seu Nome",
+    "email": "seu.email@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/pontos-entretenimento-df.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seu-usuario/pontos-entretenimento-df/issues"
+  },
+  "homepage": "https://seu-usuario.github.io/pontos-entretenimento-df",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "http-server -p 8000 -c-1",
+    "dev": "concurrently \"npm run serve\" \"npm run api\"",
+    "api": "json-server --watch db.json --port 3000"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "http-server": "^14.1.1",
+    "json-server": "^0.17.3"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "leaflet": "^1.9.4"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie <= 11"
+  ],
+  "files": [
+    "index.html",
+    "admin.html",
+    "src/",
+    "assets/",
+    "docs/",
+    "README.md"
+  ],
+  "directories": {
+    "doc": "docs",
+    "lib": "src"
+  },
+  "config": {
+    "port": "8000",
+    "host": "localhost"
+  },
+  "contributors": [
+    {
+      "name": "Seu Nome",
+      "email": "seu.email@example.com",
+      "role": "developer"
+    }
+  ],
+  "private": false
+}
