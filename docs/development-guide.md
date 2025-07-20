@@ -311,3 +311,174 @@ window.debugApp = {
     }
 };
 ```
+
+## Funcionalidades Recentes (2025)
+
+### Sistema de Temas Aprimorado
+
+#### Implementação do Menu Adaptativo
+O sistema agora suporta temas dinâmicos para todos os componentes:
+
+```css
+/* Tema escuro para user menu */
+.theme-dark .user-menu {
+    background: var(--gray-800);
+    border-color: var(--gray-600);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Tema claro para user menu */
+.theme-light .user-menu {
+    background: var(--white);
+    border-color: var(--gray-200);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+```
+
+#### Botões de Navegação Responsivos
+```css
+/* Botões adaptativos por tema */
+.theme-dark .nav-btn.active {
+    background: var(--primary);
+    box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+}
+
+.theme-light .nav-btn.active {
+    background: var(--primary);
+    box-shadow: 0 6px 25px rgba(37, 99, 235, 0.3);
+}
+```
+
+### Sistema de Filtros Corrigido
+
+#### Lógica de Filtros de Categoria
+```javascript
+filtrarPorCategoria(categoria, username = null) {
+    // Remover TODOS os grupos ativos do mapa primeiro
+    this.gruposPorCategoria.forEach((grupo, cat) => {
+        if (this.map.hasLayer(grupo)) {
+            this.map.removeLayer(grupo);
+        }
+    });
+
+    if (categoria === 'todos') {
+        // Mostrar todos os pontos exceto favoritos
+        this.gruposPorCategoria.forEach((grupo, cat) => {
+            if (cat !== 'favoritos') {
+                this.map.addLayer(grupo);
+            }
+        });
+    }
+}
+```
+
+### Interface de Usuário Personalizada
+
+#### Botão de Usuário com Avatar
+```javascript
+atualizarBotaoLogin(user) {
+    const isAdmin = user.role === 'admin';
+    const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
+    
+    loginBtn.outerHTML = `
+        <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="user-info-btn">
+            <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
+            ${adminIcon}
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </button>
+    `;
+}
+```
+
+#### Estilos para Administradores
+```css
+.user-info.is-admin {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.8), rgba(245, 158, 11, 0.9));
+    border-color: rgba(251, 191, 36, 0.6);
+}
+
+.admin-icon {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+```
+
+### Sistema de Favoritos Persistente
+
+#### Implementação Completa
+O sistema de favoritos já estava implementado e funcional:
+
+```javascript
+toggleFavorito(pontoId, username) {
+    const dadosUsuario = this.obterDadosUsuario(username);
+    const index = dadosUsuario.favoritos.indexOf(pontoId);
+    
+    if (index === -1) {
+        dadosUsuario.favoritos.push(pontoId);
+    } else {
+        dadosUsuario.favoritos.splice(index, 1);
+    }
+    
+    this.salvarTodosDados();
+    return index === -1; // retorna true se foi adicionado
+}
+```
+
+### Modal de Sugestões Avançado
+
+#### Formulário Pré-preenchido
+```javascript
+fillFormData(data) {
+    this.setFieldValue('point-name', data.nome);
+    this.setFieldValue('point-category', data.categoria);
+    this.setFieldValue('point-description', data.descricao);
+    // ... outros campos
+    
+    if (data.coordenadas && Array.isArray(data.coordenadas)) {
+        this.selectedPosition = data.coordenadas;
+        this.showSelectedCoordinates(data.coordenadas);
+    }
+}
+```
+
+#### Processamento de Sugestões
+```javascript
+processarSugestao(pontoOriginal, dadosAtualizados) {
+    const sugestoes = {};
+    const camposParaComparar = [
+        'nome', 'categoria', 'descricao', 'endereco', 
+        'telefone', 'website', 'horario', 'preco', 'imagem'
+    ];
+
+    for (const campo of camposParaComparar) {
+        const valorOriginal = pontoOriginal[campo] || '';
+        const valorNovo = dadosAtualizados[campo] || '';
+        
+        if (valorNovo !== valorOriginal && valorNovo.trim() !== '') {
+            sugestoes[campo] = valorNovo.trim();
+        }
+    }
+    
+    window.databaseManager.sugerirMudanca(pontoOriginal.id, sugestoes, user.username);
+}
+```
+
+## Boas Práticas Implementadas
+
+### Responsividade Visual
+- Temas adaptativos para todos os componentes
+- Gradientes suaves e consistentes
+- Indicadores visuais claros para administradores
+
+### UX/UI Melhorada
+- Botão "ENTRAR" em vez de "LOGIN"
+- Avatar com inicial do usuário
+- Ícone de escudo para administradores
+- Formulários modal para sugestões
+
+### Funcionalidade Robusta
+- Filtros de categoria funcionais
+- Sistema de favoritos persistente
+- Modal reutilizável para múltiplos propósitos
+- Validação e tratamento de erros aprimorados

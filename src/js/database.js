@@ -32,7 +32,7 @@ class DatabaseManager {
      */
     async carregarTodosDados() {
         try {
-            // Carregar dados do localStorage (fallback)
+            // Carregar dados do localStorage primeiro
             const pontosConfirmados = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
             const pontosPendentes = localStorage.getItem(this.baseStorageKey + '_pontosPendentes');
             const pontosOcultos = localStorage.getItem(this.baseStorageKey + '_pontosOcultos');
@@ -43,6 +43,18 @@ class DatabaseManager {
             this.pontosOcultos = pontosOcultos ? JSON.parse(pontosOcultos) : [];
             this.usuarios = usuarios ? JSON.parse(usuarios) : {};
 
+            // Se não há pontos confirmados, tentar carregar do db.json
+            if (this.pontosConfirmados.length === 0) {
+                console.log('📍 Nenhum ponto confirmado encontrado, tentando carregar do db.json...');
+                await this.carregarDoPrincipalDb();
+            }
+
+            // Se ainda não há pontos, carregar dados padrão
+            if (this.pontosConfirmados.length === 0) {
+                console.log('📍 Carregando dados padrão...');
+                this.inicializarPontosDefault();
+            }
+
             // Calcular próximo ID
             const todosOsPontos = [...this.pontosConfirmados, ...this.pontosPendentes, ...this.pontosOcultos];
             this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
@@ -50,6 +62,50 @@ class DatabaseManager {
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             this.inicializarDadosDefault();
+        }
+    }
+
+    /**
+     * Carrega dados do arquivo db.json principal
+     */
+    async carregarDoPrincipalDb() {
+        try {
+            const response = await fetch('./db.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.pontos && Array.isArray(data.pontos)) {
+                // Converter pontos do db.json para formato esperado
+                const pontosConvertidos = data.pontos
+                    .filter(ponto => ponto.ativo !== false)
+                    .map(ponto => ({
+                        id: ponto.id,
+                        nome: ponto.nome,
+                        descricao: ponto.descricao,
+                        categoria: ponto.categoria,
+                        coordenadas: ponto.coordenadas,
+                        endereco: ponto.endereco,
+                        telefone: ponto.telefone,
+                        website: ponto.website,
+                        horario: ponto.horario,
+                        preco: ponto.preco,
+                        nota: ponto.avaliacao || ponto.nota || 0,
+                        verificado: true,
+                        status: 'confirmado',
+                        dataAdicao: ponto.dataCriacao || new Date().toISOString()
+                    }));
+
+                this.pontosConfirmados = pontosConvertidos;
+                this.salvarTodosDados();
+                
+                console.log(`✅ ${pontosConvertidos.length} pontos carregados do db.json`);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar db.json:', error);
+            // Não lançar erro, deixar que seja usado o fallback
         }
     }
 
@@ -124,6 +180,16 @@ class DatabaseManager {
         return this.usuarios[username];
     }
 
+    /**
+     * Inicializar dados padrão quando não há dados salvos
+     */
+    inicializarDadosDefault() {
+        console.log('🔧 Inicializando dados padrão...');
+        this.inicializarPontosDefault();
+        this.carregarCategorias(); // Garantir que categorias estejam carregadas
+        console.log('✅ Dados padrão inicializados');
+    }
+
     inicializarPontosDefault() {
         const pontosDefault = [
             {
@@ -131,8 +197,7 @@ class DatabaseManager {
                 nome: 'Pontão do Lago Sul',
                 descricao: 'Complexo gastronômico e de lazer',
                 categoria: 'gastronomia',
-                latitude: -15.8267,
-                longitude: -47.8881,
+                coordenadas: [-15.8267, -47.8881],
                 endereco: 'SHIS QI 11, Brasília - DF',
                 telefone: '(61) 3248-1000',
                 website: 'https://pontaodolagosul.com.br',
@@ -148,8 +213,7 @@ class DatabaseManager {
                 nome: 'Estádio Nacional de Brasília',
                 descricao: 'Estádio multiuso para eventos esportivos',
                 categoria: 'esportes',
-                latitude: -15.7836,
-                longitude: -47.9003,
+                coordenadas: [-15.7836, -47.9003],
                 endereco: 'SRPN, Brasília - DF',
                 telefone: '(61) 3340-9000',
                 website: 'https://mane.gov.br',
@@ -165,8 +229,7 @@ class DatabaseManager {
                 nome: 'Teatro Nacional Claudio Santoro',
                 descricao: 'Principal casa de espetáculos de Brasília',
                 categoria: 'cultura',
-                latitude: -15.7952,
-                longitude: -47.8852,
+                coordenadas: [-15.7952, -47.8852],
                 endereco: 'Via N2, Brasília - DF',
                 telefone: '(61) 3325-6100',
                 website: 'https://teatronacional.df.gov.br',
@@ -182,8 +245,7 @@ class DatabaseManager {
                 nome: 'Praça dos Três Poderes',
                 descricao: 'Marco histórico e político do Brasil',
                 categoria: 'geral',
-                latitude: -15.7999,
-                longitude: -47.8597,
+                coordenadas: [-15.7999, -47.8597],
                 endereco: 'Praça dos Três Poderes, Brasília - DF',
                 telefone: 'N/A',
                 website: 'https://www.gov.br',
@@ -199,8 +261,7 @@ class DatabaseManager {
                 nome: 'Villa Mix Brasília',
                 descricao: 'Casa noturna com música sertaneja',
                 categoria: 'noturno',
-                latitude: -15.8321,
-                longitude: -47.9187,
+                coordenadas: [-15.8321, -47.9187],
                 endereco: 'SGAS 915, Brasília - DF',
                 telefone: '(61) 3443-8000',
                 website: 'https://villamix.com.br',
@@ -605,36 +666,6 @@ class DatabaseManager {
     async carregarDados() {
         // Método para compatibilidade com app.js
         return Promise.resolve();
-    }
-
-    /**
-     * Limpar cache do sistema
-     */
-    limparCache() {
-        console.log('🧹 Limpando cache do sistema...');
-        
-        // Limpar dados temporários mas manter dados importantes
-        const keysToKeep = [
-            this.baseStorageKey + '_pontosConfirmados',
-            this.baseStorageKey + '_pontosPendentes', 
-            this.baseStorageKey + '_pontosOcultos',
-            this.baseStorageKey + '_usuarios',
-            this.baseStorageKey + '_categorias',
-            'pontosDF_session'
-        ];
-        
-        const allKeys = Object.keys(localStorage);
-        let removedCount = 0;
-        
-        allKeys.forEach(key => {
-            if (!keysToKeep.includes(key)) {
-                localStorage.removeItem(key);
-                removedCount++;
-            }
-        });
-        
-        console.log(`✅ Cache limpo: ${removedCount} itens removidos`);
-        return { success: true, removedItems: removedCount };
     }
 
     /**

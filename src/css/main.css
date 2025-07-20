@@ -64,11 +64,12 @@ body {
 
 .header-content {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
     flex-wrap: wrap;
     position: relative;
+    min-height: 60px;
 }
 
 /* Header Navigation */
@@ -76,6 +77,7 @@ body {
     flex: 1;
     display: flex;
     justify-content: center;
+    width: 100%;
 }
 
 .nav-buttons-container {
@@ -84,21 +86,57 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    width: 100%;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
-    position: absolute;
-    right: 0;
+    flex-shrink: 0;
+}
+
+/* Responsividade para header */
+@media (max-width: 1024px) {
+    .header-content {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .header-navigation {
+        order: 2;
+        width: 100%;
+    }
+    
+    .header-actions {
+        order: 1;
+        position: relative;
+        right: auto;
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-buttons-container {
+        gap: 0.5rem;
+    }
+    
+    .nav-btn {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* Botão de favoritos - oculto por padrão */
+.favoritos-btn.hidden {
+    display: none;
 }
 
 /* Header Login Button */
 .header-login-btn {
     padding: 0.6rem 1.2rem;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--theme-gradient-button);
+    border: 2px solid var(--theme-primary);
     border-radius: 8px;
     color: var(--white);
     font-weight: 500;
@@ -109,18 +147,46 @@ body {
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .header-login-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .header-login-btn:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline: 2px solid var(--theme-primary);
     outline-offset: 2px;
+}
+
+/* Tema escuro para botão de login */
+.theme-dark .header-login-btn {
+    background: var(--theme-gradient-button);
+    border-color: var(--theme-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.theme-dark .header-login-btn:hover {
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Tema claro para botão de login */
+.theme-light .header-login-btn {
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.theme-light .header-login-btn:hover {
+    background: var(--theme-gradient-button);
+    border-color: var(--theme-primary-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== THEME SWITCH ===== */
@@ -193,7 +259,6 @@ body {
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
-/* ===== NAVEGAÇÃO CENTRALIZADA ===== */
 /* ===== NAVIGATION BUTTONS ===== */
 .nav-btn {
     padding: 0.5rem 1rem;
@@ -211,6 +276,7 @@ body {
     backdrop-filter: blur(10px);
     white-space: nowrap;
     min-width: fit-content;
+    position: relative;
 }
 
 .nav-btn:hover {
@@ -221,27 +287,50 @@ body {
 }
 
 .nav-btn.active {
-    background: var(--white);
-    color: var(--primary);
-    border-color: var(--white);
+    background: var(--theme-gradient-button);
+    color: #ffffff;
+    border-color: var(--theme-primary);
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.nav-btn:hover {
-    background: rgba(37, 99, 235, 0.95);
-    color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
-    border-color: #2563eb;
-}
-
-.nav-btn.active {
-    background: rgba(37, 99, 235, 0.95);
-    color: #ffffff;
-    box-shadow: 0 6px 25px rgba(37, 99, 235, 0.5);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
     transform: translateY(-1px);
-    border-color: #2563eb;
+}
+
+/* Tema escuro para botões de navegação */
+.theme-dark .nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--gray-100);
+}
+
+.theme-dark .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.theme-dark .nav-btn.active {
+    background: var(--theme-gradient-primary);
+    color: #ffffff;
+    border-color: var(--theme-primary);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Tema claro para botões de navegação */
+.theme-light .nav-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--gray-700);
+}
+
+.theme-light .nav-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.theme-light .nav-btn.active {
+    background: var(--theme-gradient-primary);
+    color: #ffffff;
+    border-color: var(--theme-primary);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
 }
 
 /* Layout principal - Full Screen */
@@ -267,7 +356,6 @@ body {
 .map-container {
     width: 100vw;
     height: calc(100vh - var(--header-height));
-    background: var(--bg-secondary);
     border-radius: 0;
     overflow: hidden;
     box-shadow: none;
@@ -275,12 +363,14 @@ body {
     top: 0;
     left: 0;
     z-index: 1;
+    transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 #map {
     width: 100%;
     height: 100%;
     border-radius: 0;
+    background: var(--bg-secondary);
 }
 
 /* Estilo para marcadores personalizados */
@@ -325,14 +415,15 @@ body {
 /* ===== PAINEL LATERAL DE INFORMAÇÕES ===== */
 .info-panel {
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 400px;
-    height: 100vh;
+    max-width: 400px;
+    height: calc(100vh - var(--header-height));
     background: var(--bg-primary);
     border-right: 1px solid var(--border);
     box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 1001;
+    z-index: 999;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow: hidden;
@@ -342,6 +433,13 @@ body {
 
 .info-panel.visible {
     transform: translateX(0);
+}
+
+/* Ajustar mapa quando painel está visível */
+.body-with-info-panel .map-container {
+    margin-left: 400px;
+    width: calc(100% - 400px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 /* Header do Painel */
@@ -980,7 +1078,6 @@ body {
     .container {
         padding: 0 10px;
     }
-}
 
 /* Smartphones */
 @media (max-width: 480px) {
@@ -1012,7 +1109,25 @@ body {
     .theme-toggle-checkbox:checked + .theme-toggle-label .theme-toggle-switch {
         transform: translateX(30px);
     }
+}
+
+/* Tablets e telas médias */
+@media (max-width: 768px) {
+    .info-panel {
+        width: 100vw;
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+    }
     
+    .info-panel.visible ~ .map-container {
+        margin-left: 0;
+        width: 100%;
+        display: none; /* Ocultar mapa em telas pequenas quando info-panel estiver aberto */
+    }
+}
+
+/* Smartphones */
+@media (max-width: 480px) {
     /* Painel lateral em tela cheia para smartphones */
     .info-panel {
         width: 100vw;

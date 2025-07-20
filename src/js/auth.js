@@ -138,6 +138,8 @@ class AuthManager {
     logout() {
         const user = this.currentUser;
         
+        console.log('🔓 Efetuando logout...');
+        
         // Limpar dados da sessão
         localStorage.removeItem('pontosDF_session');
         this.currentUser = null;
@@ -145,9 +147,16 @@ class AuthManager {
         // Disparar evento de logout
         this.dispatchAuthEvent('logout', user);
 
-        // Redirecionar para página de login se necessário
+        console.log('✅ Logout realizado com sucesso');
+
+        // Redirecionar para página principal se estiver no admin
         if (this.isAdminPage()) {
             window.location.href = 'index.html';
+        } else {
+            // Se já estiver na página principal, apenas recarregar
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         }
     }
 

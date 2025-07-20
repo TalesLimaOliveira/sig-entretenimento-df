@@ -246,6 +246,9 @@ class PontosEntretenimentoApp {
             this.isAdmin = false;
             this.configurarInterfaceUsuario();
         }
+        
+        // Mostrar/ocultar botão de favoritos baseado no tipo de usuário
+        this.atualizarVisibilidadeFavoritos(user.role);
     }
 
     /**
@@ -255,6 +258,7 @@ class PontosEntretenimentoApp {
         console.log('👤 Usuário visitante');
         this.isAdmin = false;
         this.configurarBotaoLogin();
+        this.atualizarVisibilidadeFavoritos('visitor');
     }
 
     /**
@@ -263,7 +267,7 @@ class PontosEntretenimentoApp {
     configurarBotaoLogin() {
         const loginBtn = document.getElementById('header-login-btn');
         if (loginBtn) {
-            loginBtn.innerHTML = '<i class="fas fa-user-shield"></i> LOGIN';
+            loginBtn.innerHTML = '<i class="fas fa-user"></i> ENTRAR';
             loginBtn.onclick = () => {
                 window.loginModal.open();
             };
@@ -276,11 +280,14 @@ class PontosEntretenimentoApp {
     atualizarBotaoLogin(user) {
         const loginBtn = document.getElementById('header-login-btn');
         if (loginBtn) {
+            const isAdmin = user.role === 'admin';
+            const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
+            
             // Substituir por botão de usuário com dropdown
             loginBtn.outerHTML = `
-                <button class="user-info" id="user-info-btn">
+                <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="user-info-btn">
                     <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
-                    <span class="user-name">${user.name}</span>
+                    ${adminIcon}
                     <i class="fas fa-chevron-down dropdown-arrow"></i>
                 </button>
             `;
@@ -323,13 +330,35 @@ class PontosEntretenimentoApp {
      * Adicionar categoria de favoritos
      */
     adicionarCategoriaFavoritos() {
-        const navContainer = document.querySelector('.nav-buttons-container');
-        if (navContainer && !document.querySelector('[data-categoria="favoritos"]')) {
-            const favoritesBtn = document.createElement('button');
-            favoritesBtn.className = 'nav-btn category-btn';
-            favoritesBtn.setAttribute('data-categoria', 'favoritos');
-            favoritesBtn.innerHTML = '<i class="fas fa-heart"></i> Favoritos';
-            navContainer.appendChild(favoritesBtn);
+        const favoritosBtn = document.querySelector('[data-categoria="favoritos"]');
+        if (favoritosBtn) {
+            favoritosBtn.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Atualizar visibilidade do botão de favoritos baseado no papel do usuário
+     */
+    atualizarVisibilidadeFavoritos(userRole) {
+        const favoritosBtn = document.querySelector('[data-categoria="favoritos"]');
+        if (favoritosBtn) {
+            if (userRole === 'user') {
+                // Mostrar para usuários comuns
+                favoritosBtn.classList.remove('hidden');
+            } else {
+                // Ocultar para administradores e visitantes
+                favoritosBtn.classList.add('hidden');
+                
+                // Se favoritos estava ativo, mudar para "todos"
+                if (favoritosBtn.classList.contains('active')) {
+                    favoritosBtn.classList.remove('active');
+                    const todosBtn = document.querySelector('[data-categoria="todos"]');
+                    if (todosBtn) {
+                        todosBtn.classList.add('active');
+                        this.filtrarPorCategoria('todos');
+                    }
+                }
+            }
         }
     }
 
@@ -640,6 +669,11 @@ class PontosEntretenimentoApp {
                     console.error('❌ Erro ao adicionar marcador:', ponto.nome, error);
                 }
             });
+            
+            // Ativar filtro "todos" por padrão após carregar pontos
+            setTimeout(() => {
+                this.filtrarPorCategoria('todos');
+            }, 100);
             
             console.log(`✅ ${pontos.length} pontos renderizados no mapa`);
         } catch (error) {

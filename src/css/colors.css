@@ -1,30 +1,64 @@
 /**
- * Sistema de Cores - Clean Architecture
- * Configuração centralizada de temas claro e escuro
+ * Sistema de Cores - Clean Architecture + Sistema de Temas
  * 
- * Para alterar cores:
- * 1. Modifique as variáveis no :root para cores base
- * 2. Ajuste .theme-light para personalizar tema claro
- * 3. Ajuste .theme-dark para personalizar tema escuro
+ * Este arquivo combina:
+ * 1. Configuração de temas claro/escuro (layout e contraste)
+ * 2. Sistema de paletas de cores temáticas (identidade visual)
+ * 
+ * Para alterar TEMA DE CORES (identidade visual):
+ * - Modifique theme-colors.js e altere currentColorTheme
+ * 
+ * Para alterar MODO CLARO/ESCURO:
+ * - Use as classes .theme-light e .theme-dark
  */
 
 :root {
     /* ===== DIMENSÕES LAYOUT ===== */
     --header-height: 130px;
     
-    /* ===== CORES BASE ===== */
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --secondary: #10b981;
+    /* ===== SISTEMA DE TEMAS DE CORES ===== */
+    /* Estas variáveis são definidas dinamicamente pelo ColorThemeManager */
+    /* Cores temáticas (mudam conforme o tema selecionado) */
+    --theme-primary: #4da6ff;           /* Definido pelo tema atual */
+    --theme-primary-hover: #3d8bdb;     /* Definido pelo tema atual */
+    --theme-primary-dark: #2563eb;      /* Definido pelo tema atual */
+    --theme-secondary: #e3f2fd;         /* Definido pelo tema atual */
+    --theme-accent: #0066cc;            /* Definido pelo tema atual */
+    --theme-light: #f0f8ff;             /* Definido pelo tema atual */
+    --theme-medium: #90caf9;            /* Definido pelo tema atual */
+    --theme-gradient-primary: linear-gradient(135deg, #4da6ff 0%, #2563eb 100%);
+    --theme-gradient-secondary: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    --theme-gradient-button: linear-gradient(135deg, rgba(77, 166, 255, 0.8), rgba(37, 99, 235, 0.9));
+    
+    /* Cores fixas funcionais (não mudam entre temas) */
+    --color-favorite: #ff4081;          /* Rosa para favoritos */
+    --color-route: #2196f3;            /* Azul para rotas */
+    --color-success: #10b981;          /* Verde para sucesso */
+    --color-warning: #f59e0b;          /* Laranja para avisos */
+    --color-error: #ef4444;            /* Vermelho para erros */
+    --color-info: #3b82f6;             /* Azul para informações */
+    --color-admin: #fbbf24;            /* Dourado para admin */
+    
+    /* Gradientes fixos funcionais */
+    --gradient-favorite: linear-gradient(135deg, #ff4081 0%, #e91e63 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --gradient-error: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    --gradient-admin: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    
+    /* ===== CORES COMPATIBILIDADE (mapeamento das antigas variáveis) ===== */
+    --primary: var(--theme-primary);
+    --primary-dark: var(--theme-primary-dark);
+    --secondary: var(--color-success);
     --secondary-dark: #059669;
-    --accent: #f59e0b;
-    --accent-dark: #d97706;
+    --accent: var(--theme-accent);
+    --accent-dark: var(--theme-primary-dark);
     
     /* ===== CORES DE ESTADO ===== */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --info: #3b82f6;
+    --success: var(--color-success);
+    --warning: var(--color-warning);
+    --error: var(--color-error);
+    --info: var(--color-info);
     
     /* ===== CORES NEUTRAS ===== */
     --white: #ffffff;

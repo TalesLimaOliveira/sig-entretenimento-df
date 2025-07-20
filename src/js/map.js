@@ -293,8 +293,8 @@ class MapManager {
         });
         this.gruposPorCategoria.clear();
 
-        // Grupo especial para "todos" (sempre visível)
-        this.gruposPorCategoria.set('todos', L.layerGroup().addTo(this.map));
+        // Grupo especial para "todos" (não adicionado automaticamente)
+        this.gruposPorCategoria.set('todos', L.layerGroup());
 
         // Aguardar DatabaseManager estar disponível
         if (window.databaseManager) {
@@ -798,14 +798,14 @@ class MapManager {
 
             // Garantir que grupos existem
             if (!this.gruposPorCategoria.has('todos')) {
-                this.gruposPorCategoria.set('todos', L.layerGroup().addTo(this.map));
+                this.gruposPorCategoria.set('todos', L.layerGroup());
             }
             if (!this.gruposPorCategoria.has(ponto.categoria)) {
                 this.gruposPorCategoria.set(ponto.categoria, L.layerGroup());
             }
 
-            // Adicionar aos grupos
-            this.gruposPorCategoria.get('todos').addLayer(marcador);
+            // Adicionar APENAS ao grupo da categoria específica
+            // Os grupos serão adicionados/removidos do mapa conforme o filtro ativo
             if (this.gruposPorCategoria.has(ponto.categoria)) {
                 this.gruposPorCategoria.get(ponto.categoria).addLayer(marcador);
             }
@@ -971,35 +971,68 @@ class MapManager {
      * @param {string} categoria - Categoria a filtrar
      */
     filtrarPorCategoria(categoria, username = null) {
+        console.log(`🔍 Iniciando filtro por categoria: ${categoria}`);
+        console.log(`📋 Grupos disponíveis:`, Array.from(this.gruposPorCategoria.keys()));
+        
         // Garantir que os grupos existam
         if (!this.gruposPorCategoria.size) {
-            this.inicializarGruposCategorias();
+            console.log('📍 Inicializando grupos de categorias...');
+            this._inicializarGruposCategorias();
         }
 
-        // Remover categoria atual
-        if (this.gruposPorCategoria.has(this.categoriaAtiva)) {
-            this.map.removeLayer(this.gruposPorCategoria.get(this.categoriaAtiva));
-        }
+        // Remover TODOS os grupos ativos do mapa primeiro
+        let gruposRemovidos = 0;
+        this.gruposPorCategoria.forEach((grupo, cat) => {
+            if (this.map.hasLayer(grupo)) {
+                this.map.removeLayer(grupo);
+                gruposRemovidos++;
+                console.log(`➖ Removido grupo: ${cat}`);
+            }
+        });
+        console.log(`🗑️ Total de grupos removidos: ${gruposRemovidos}`);
 
         // Lógica especial para favoritos
         if (categoria === 'favoritos' && username) {
             this.filtrarFavoritos(username);
+            this.categoriaAtiva = categoria;
+            console.log(`✅ Filtro de favoritos aplicado para: ${username}`);
             return;
         }
 
-        // Adicionar nova categoria
-        if (this.gruposPorCategoria.has(categoria)) {
-            this.map.addLayer(this.gruposPorCategoria.get(categoria));
+        // Adicionar grupo da categoria selecionada
+        if (categoria === 'todos') {
+            // Mostrar todos os pontos - adicionar todos os grupos de categorias reais
+            let gruposAdicionados = 0;
+            this.gruposPorCategoria.forEach((grupo, cat) => {
+                if (cat !== 'favoritos' && cat !== 'todos') {
+                    this.map.addLayer(grupo);
+                    gruposAdicionados++;
+                    console.log(`➕ Adicionado grupo: ${cat} (${grupo.getLayers().length} pontos)`);
+                }
+            });
+            this.categoriaAtiva = 'todos';
+            console.log(`✅ Mostrando todos os pontos (${gruposAdicionados} grupos)`);
+        } else if (this.gruposPorCategoria.has(categoria)) {
+            // Mostrar apenas pontos da categoria específica
+            const grupo = this.gruposPorCategoria.get(categoria);
+            this.map.addLayer(grupo);
             this.categoriaAtiva = categoria;
+            console.log(`✅ Mostrando pontos da categoria: ${categoria} (${grupo.getLayers().length} pontos)`);
         } else {
-            // Se categoria não existe, mostrar todas
-            if (this.gruposPorCategoria.has('todos')) {
-                this.map.addLayer(this.gruposPorCategoria.get('todos'));
-                this.categoriaAtiva = 'todos';
-            }
+            // Categoria não existe, fallback para "todos"
+            console.warn(`⚠️ Categoria '${categoria}' não encontrada, mostrando todos`);
+            let gruposAdicionados = 0;
+            this.gruposPorCategoria.forEach((grupo, cat) => {
+                if (cat !== 'favoritos' && cat !== 'todos') {
+                    this.map.addLayer(grupo);
+                    gruposAdicionados++;
+                    console.log(`➕ Adicionado grupo (fallback): ${cat} (${grupo.getLayers().length} pontos)`);
+                }
+            });
+            this.categoriaAtiva = 'todos';
         }
 
-        console.log(`🗺️ Filtrando por categoria: ${categoria}`);
+        console.log(`🗺️ Filtro aplicado: ${this.categoriaAtiva}`);
     }
 
     /**
@@ -1052,10 +1085,11 @@ class MapManager {
             this.pontosCarregados.clear();
 
             // Recriar grupos
-            this.inicializarGruposCategorias(pontos);
+            this._inicializarGruposCategorias(pontos);
 
-            // Aplicar filtro atual
-            this.filtrarPorCategoria(this.categoriaAtiva, username);
+            // Aplicar filtro atual ou "todos" se não há categoria ativa
+            const categoriaParaFiltrar = this.categoriaAtiva || 'todos';
+            this.filtrarPorCategoria(categoriaParaFiltrar, username);
 
             console.log(`🔄 Pontos recarregados para ${userRole}: ${pontos.length} pontos`);
         } catch (error) {

@@ -35,8 +35,15 @@
                 <!-- Navigation Buttons -->
                 <nav class="header-navigation">
                     <div class="nav-buttons-container">
+                        <!-- Favoritos - só aparece se usuário comum estiver logado -->
+                        <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
+                            <i class="fas fa-heart"></i> Favoritos
+                        </button>
                         <button class="nav-btn active category-btn" data-categoria="todos">
                             <i class="fas fa-globe"></i> Todos
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="geral">
+                            <i class="fas fa-map-marker-alt"></i> Geral
                         </button>
                         <button class="nav-btn category-btn" data-categoria="cultura">
                             <i class="fas fa-theater-masks"></i> Cultura
@@ -44,19 +51,17 @@
                         <button class="nav-btn category-btn" data-categoria="gastronomia">
                             <i class="fas fa-utensils"></i> Gastronomia
                         </button>
-                        <button class="nav-btn category-btn" data-categoria="noturno">
-                            <i class="fas fa-glass-cheers"></i> Vida Noturna
-                        </button>
                         <button class="nav-btn category-btn" data-categoria="esportes">
                             <i class="fas fa-futbol"></i> Esportes
                         </button>
-                        <button class="nav-btn category-btn" data-categoria="geral">
-                            <i class="fas fa-map-marker-alt"></i> Geral
+                        <button class="nav-btn category-btn" data-categoria="noturno">
+                            <i class="fas fa-glass-cheers"></i> Vida Noturna
                         </button>
                     </div>
                 </nav>
                 
                 <div class="header-actions">
+                    
                     <!-- Theme Switch -->
                     <div class="theme-switch">
                         <input type="checkbox" id="theme-toggle" class="theme-toggle-checkbox">
@@ -71,7 +76,7 @@
                     
                     <!-- Login/User Button -->
                     <button class="btn btn-primary header-login-btn" id="header-login-btn">
-                        <i class="fas fa-user-shield"></i> LOGIN
+                        <i class="fas fa-user"></i> ENTRAR
                     </button>
                 </div>
             </div>
@@ -149,6 +154,7 @@
     <script src="src/js/info-panel.js"></script>
     <script src="src/js/map.js"></script>
     <script src="src/js/theme.js"></script>
+    <script src="src/js/theme-colors.js"></script>
     <script src="src/components/modal.js"></script>
     <script src="src/components/login-modal.js"></script>
     <script src="src/components/user-menu.js"></script>
@@ -289,12 +295,6 @@
                             <summary style="cursor: pointer; font-weight: bold;">📋 Informações técnicas</summary>
                             <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 12px; margin-top: 1rem;">${error.stack || 'Stack trace não disponível'}</pre>
                         </details>
-                        
-                        <div style="text-align: center; margin-top: 2rem;">
-                            <button onclick="window.location.href='limpar-cache.html'" style="padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
-                                🗑️ Limpar Cache
-                            </button>
-                        </div>
                     </div>
                 `;
             }

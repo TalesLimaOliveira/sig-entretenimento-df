@@ -137,6 +137,9 @@ class InfoPanelManager {
         // Garantir que a aba Overview está selecionada
         this.switchTab('overview');
         
+        // Adicionar classe ao body para ajustar layout
+        document.body.classList.add('body-with-info-panel');
+        
         // Mostrar painel
         this.panel.classList.remove('hidden');
         setTimeout(() => {
@@ -157,6 +160,9 @@ class InfoPanelManager {
         setTimeout(() => {
             this.panel.classList.add('hidden');
         }, 300);
+        
+        // Remover classe do body
+        document.body.classList.remove('body-with-info-panel');
         
         this.isVisible = false;
         this.currentPoint = null;
@@ -337,46 +343,100 @@ class InfoPanelManager {
             return;
         }
 
-        // Usar o novo modal de sugestão
-        if (window.suggestionModal) {
-            window.suggestionModal.open(ponto);
-        } else {
-            this.openSuggestionModal(ponto);
+        // Abrir modal de formulário com dados pré-preenchidos
+        this.openSuggestionFormModal(ponto);
+    }
+
+    /**
+     * Abrir modal de formulário com dados pré-preenchidos para sugestão
+     */
+    openSuggestionFormModal(ponto) {
+        try {
+            // Verificar se o modal de adicionar ponto existe
+            if (!window.addPointModal) {
+                console.error('❌ Modal de adicionar ponto não encontrado');
+                this.showNotification('Erro: Modal não disponível', 'error');
+                return;
+            }
+
+            // Abrir o modal com os dados do ponto atual
+            window.addPointModal.open({
+                isEditMode: true,
+                isSuggestion: true,
+                pointData: {
+                    id: ponto.id,
+                    nome: ponto.nome || '',
+                    categoria: ponto.categoria || 'geral',
+                    descricao: ponto.descricao || '',
+                    endereco: ponto.endereco || '',
+                    telefone: ponto.telefone || '',
+                    website: ponto.website || '',
+                    horario: ponto.horario || '',
+                    preco: ponto.preco || '',
+                    imagem: ponto.imagem || '',
+                    coordenadas: ponto.coordenadas || [ponto.lat, ponto.lng]
+                },
+                originalPoint: ponto,
+                onSave: (dadosAtualizados) => {
+                    this.processarSugestao(ponto, dadosAtualizados);
+                }
+            });
+
+            console.log('📝 Modal de sugestão aberto para:', ponto.nome);
+        } catch (error) {
+            console.error('❌ Erro ao abrir modal de sugestão:', error);
+            this.showNotification('Erro ao abrir formulário de sugestão', 'error');
         }
     }
 
     /**
-     * Abrir modal de sugestão de mudança
+     * Processar sugestão enviada pelo formulário
      */
-    openSuggestionModal(ponto) {
-        // Implementação simples - em produção seria um modal mais sofisticado
-        const campos = [
-            'nome', 'descricao', 'endereco', 'telefone', 
-            'website', 'horario', 'preco'
-        ];
-        
-        const sugestoes = {};
-        let hasSuggestion = false;
-        
-        for (const campo of campos) {
-            const valorAtual = ponto[campo] || '';
-            const novoValor = prompt(`Sugerir novo ${campo}:\n\nValor atual: ${valorAtual}\n\nNovo valor (deixe vazio para não alterar):`);
+    processarSugestao(pontoOriginal, dadosAtualizados) {
+        try {
+            const user = window.authManager.getCurrentUser();
+            if (!user) {
+                this.showNotification('Erro: Usuário não autenticado', 'error');
+                return;
+            }
+
+            // Identificar quais campos foram alterados
+            const sugestoes = {};
+            const camposParaComparar = [
+                'nome', 'categoria', 'descricao', 'endereco', 
+                'telefone', 'website', 'horario', 'preco', 'imagem'
+            ];
+
+            for (const campo of camposParaComparar) {
+                const valorOriginal = pontoOriginal[campo] || '';
+                const valorNovo = dadosAtualizados[campo] || '';
+                
+                if (valorNovo !== valorOriginal && valorNovo.trim() !== '') {
+                    sugestoes[campo] = valorNovo.trim();
+                }
+            }
+
+            // Verificar coordenadas
+            if (dadosAtualizados.coordenadas && 
+                (dadosAtualizados.coordenadas[0] !== pontoOriginal.lat || 
+                 dadosAtualizados.coordenadas[1] !== pontoOriginal.lng)) {
+                sugestoes.coordenadas = dadosAtualizados.coordenadas;
+            }
+
+            // Verificar se há alguma sugestão
+            if (Object.keys(sugestoes).length === 0) {
+                this.showNotification('Nenhuma alteração detectada', 'info');
+                return;
+            }
+
+            // Enviar sugestão
+            window.databaseManager.sugerirMudanca(pontoOriginal.id, sugestoes, user.username);
+            this.showNotification('Sugestão enviada para análise!', 'success');
             
-            if (novoValor && novoValor.trim() !== '' && novoValor !== valorAtual) {
-                sugestoes[campo] = novoValor.trim();
-                hasSuggestion = true;
-            }
-        }
-        
-        if (hasSuggestion) {
-            try {
-                const user = window.authManager.getCurrentUser();
-                window.databaseManager.sugerirMudanca(ponto.id, sugestoes, user.username);
-                this.showNotification('Sugestão enviada para análise!', 'success');
-            } catch (error) {
-                console.error('Erro ao enviar sugestão:', error);
-                this.showNotification('Erro ao enviar sugestão', 'error');
-            }
+            console.log('✅ Sugestão processada:', sugestoes);
+        } catch (error) {
+            console.error('❌ Erro ao processar sugestão:', error);
+            this.showNotification('Erro ao enviar sugestão', 'error');
         }
     }
 
@@ -384,6 +444,26 @@ class InfoPanelManager {
      * Mostrar notificação
      */
     showNotification(message, type = 'info') {
+        // Sistema de throttling para reduzir notificações repetidas
+        if (!this.notificationThrottle) {
+            this.notificationThrottle = new Map();
+        }
+        
+        const throttleKey = `${type}-${message}`;
+        const now = Date.now();
+        const lastShown = this.notificationThrottle.get(throttleKey);
+        
+        // Para erros, só mostrar se passou pelo menos 5 segundos
+        // Para outros tipos, 2 segundos
+        const throttleTime = type === 'error' ? 5000 : 2000;
+        
+        if (lastShown && (now - lastShown) < throttleTime) {
+            console.log(`🔇 Notificação throttled: ${message}`);
+            return;
+        }
+        
+        this.notificationThrottle.set(throttleKey, now);
+        
         // Usar o sistema de notificações global se disponível
         if (window.notificationSystem) {
             window.notificationSystem.show(message, type);
@@ -398,6 +478,19 @@ class InfoPanelManager {
      * Implementação simples de notificação como fallback
      */
     showSimpleNotification(message, type) {
+        // Limitar número de notificações simultâneas
+        const existingNotifications = document.querySelectorAll('.notification.show');
+        if (existingNotifications.length >= 3) {
+            // Remover a mais antiga
+            const oldest = existingNotifications[0];
+            oldest.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (oldest.parentNode) {
+                    oldest.parentNode.removeChild(oldest);
+                }
+            }, 300);
+        }
+        
         const colors = {
             success: '#10b981',
             error: '#ef4444',
@@ -414,16 +507,21 @@ class InfoPanelManager {
             </div>
         `;
         
+        // Reduzir tamanho das notificações de erro
+        const fontSize = type === 'error' ? '0.85rem' : '0.9rem';
+        const padding = type === 'error' ? '0.75rem' : '1rem';
+        
         notification.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: ${20 + (existingNotifications.length * 70)}px;
             right: 20px;
             background: ${colors[type] || colors.info};
             color: white;
-            padding: 1rem;
+            padding: ${padding};
             border-radius: 6px;
             z-index: 10001;
-            max-width: 300px;
+            max-width: 280px;
+            font-size: ${fontSize};
             transform: translateX(100%);
             transition: transform 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -436,7 +534,10 @@ class InfoPanelManager {
             notification.style.transform = 'translateX(0)';
         });
         
-        // Remover após 4 segundos
+        // Tempo baseado no tipo: erros duram menos
+        const duration = type === 'error' ? 3000 : 4000;
+        
+        // Remover após o tempo especificado
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -444,7 +545,7 @@ class InfoPanelManager {
                     document.body.removeChild(notification);
                 }
             }, 300);
-        }, 4000);
+        }, duration);
     }
 
     /**

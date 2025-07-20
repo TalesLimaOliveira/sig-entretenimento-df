@@ -168,27 +168,6 @@ class LoginModal {
                 margin-top: 1rem;
             }
 
-            .login-demo-credentials {
-                background: var(--bg-tertiary);
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                padding: 1rem;
-                margin-top: 1rem;
-                font-size: 0.85rem;
-            }
-
-            .login-demo-credentials h4 {
-                margin: 0 0 0.5rem 0;
-                color: var(--text-primary);
-                font-size: 0.9rem;
-            }
-
-            .login-demo-credentials p {
-                margin: 0.25rem 0;
-                color: var(--text-secondary);
-                font-family: monospace;
-            }
-
             .login-spinner {
                 width: 20px;
                 height: 20px;
@@ -239,20 +218,14 @@ class LoginModal {
                     </div>
                     
                     <div class="login-form-buttons">
-                        <button type="button" class="login-btn login-btn-secondary" id="login-cancel">
-                            <i class="fas fa-times"></i> Cancelar
+                        <button type="button" class="login-btn login-btn-secondary" id="login-register">
+                            <i class="fas fa-user-plus"></i> Cadastrar
                         </button>
                         <button type="submit" class="login-btn login-btn-primary" id="login-submit">
                             <i class="fas fa-sign-in-alt"></i> Entrar
                         </button>
                     </div>
                 </form>
-                
-                <div class="login-demo-credentials">
-                    <h4><i class="fas fa-info-circle"></i> Credenciais de Demo:</h4>
-                    <p><strong>Admin:</strong> email: admin | senha: admin</p>
-                    <p><strong>Usuário:</strong> email: user | senha: user</p>
-                </div>
             </div>
         `;
         
@@ -267,9 +240,9 @@ class LoginModal {
             }
         });
 
-        // Botão cancelar
-        document.getElementById('login-cancel').addEventListener('click', () => {
-            this.close();
+        // Botão cadastrar (placeholder)
+        document.getElementById('login-register').addEventListener('click', () => {
+            this.showRegisterPlaceholder();
         });
 
         // Form submit
@@ -282,20 +255,6 @@ class LoginModal {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
-            }
-        });
-
-        // Autofill credenciais demo
-        this.overlay.addEventListener('click', (e) => {
-            if (e.target.tagName === 'P' && e.target.textContent.includes('email:')) {
-                const text = e.target.textContent;
-                if (text.includes('admin')) {
-                    document.getElementById('login-email').value = 'admin';
-                    document.getElementById('login-password').value = 'admin';
-                } else if (text.includes('user')) {
-                    document.getElementById('login-email').value = 'user';
-                    document.getElementById('login-password').value = 'user';
-                }
             }
         });
     }
@@ -470,6 +429,15 @@ class LoginModal {
         this.overlay.classList.remove('show');
         this.onLoginSuccess = null;
         this.pendingAction = null;
+    }
+
+    showRegisterPlaceholder() {
+        // Placeholder para funcionalidade de cadastro
+        if (window.infoPanelManager?.showNotification) {
+            window.infoPanelManager.showNotification('Funcionalidade de cadastro em desenvolvimento', 'info');
+        } else {
+            alert('Funcionalidade de cadastro em desenvolvimento');
+        }
     }
 }
 

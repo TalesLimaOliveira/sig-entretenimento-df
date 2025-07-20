@@ -95,11 +95,6 @@ class UserMenu {
                 action: () => this.addPoint()
             },
             {
-                icon: 'fas fa-broom',
-                label: 'Limpar Cache',
-                action: () => this.clearCache()
-            },
-            {
                 icon: 'fas fa-sign-out-alt',
                 label: 'Sair',
                 action: () => this.logout(),
@@ -110,11 +105,6 @@ class UserMenu {
                 icon: 'fas fa-plus-circle',
                 label: 'Adicionar Ponto',
                 action: () => this.addPoint()
-            },
-            {
-                icon: 'fas fa-broom',
-                label: 'Limpar Cache',
-                action: () => this.clearCache()
             },
             {
                 icon: 'fas fa-sign-out-alt',
@@ -163,9 +153,12 @@ class UserMenu {
     }
 
     openDashboard() {
-        if (window.location.pathname !== '/admin.html') {
-            window.location.href = '/admin.html';
+        // Usar caminho relativo correto
+        if (window.location.pathname.endsWith('admin.html')) {
+            // Já está no dashboard
+            return;
         }
+        window.location.href = 'admin.html';
     }
 
     addPoint() {
@@ -177,34 +170,15 @@ class UserMenu {
         }
     }
 
-    async clearCache() {
-        try {
-            if (window.databaseManager?.limparCache) {
-                const result = window.databaseManager.limparCache();
-                this.showNotification('Cache limpo com sucesso!', 'success');
-                
-                // Recarregar a página após um pequeno delay
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                // Fallback: limpar localStorage
-                localStorage.clear();
-                this.showNotification('Cache local limpo!', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            }
-        } catch (error) {
-            console.error('Erro ao limpar cache:', error);
-            this.showNotification('Erro ao limpar cache', 'error');
-        }
-    }
-
     logout() {
         if (window.authManager?.logout) {
             window.authManager.logout();
             this.showNotification('Logout realizado com sucesso', 'success');
+            
+            // Recarregar a página automaticamente após um breve delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 800);
         }
     }
 

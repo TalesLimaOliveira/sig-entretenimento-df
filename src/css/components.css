@@ -14,26 +14,45 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    z-index: var(--z-modal-backdrop);
+    z-index: 9998;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-lg);
     opacity: 0;
     animation: fadeInBackdrop 0.3s ease forwards;
+    pointer-events: auto;
 }
 
 .modal {
-    background: var(--white);
+    background: #ffffff;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-lg);
     max-width: 500px;
     width: 100%;
     max-height: 90vh;
-    overflow-y: auto;
     transform: scale(0.9);
     animation: modalSlideIn 0.3s ease forwards;
+    z-index: 9999;
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal.large {
+    max-width: 800px;
+}
+
+/* Garantir que formulários sejam interativos */
+.modal form,
+.modal input,
+.modal select,
+.modal textarea,
+.modal button {
+    pointer-events: auto;
+    filter: none;
 }
 
 .modal-header {
@@ -42,6 +61,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .modal-title {
@@ -68,6 +88,30 @@
 
 .modal-body {
     padding: var(--spacing-lg);
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+/* Estilização da barra de rolagem para Webkit */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
 }
 
 .modal-footer {
@@ -76,6 +120,7 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-md);
+    flex-shrink: 0;
 }
 
 /* Animações dos modais */
@@ -1010,13 +1055,15 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: var(--theme-gradient-button);
     color: white;
+    border: 1px solid var(--theme-primary);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    background: var(--theme-gradient-primary);
     transform: translateY(-1px);
+    border-color: var(--theme-primary-hover);
 }
 
 .btn-secondary {
@@ -1073,14 +1120,28 @@
 .user-menu {
     position: fixed;
     z-index: 2000;
-    background: var(--panel-bg);
-    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     opacity: 0;
     transform: translateY(-8px);
     transition: all 0.2s ease;
     min-width: 200px;
+}
+
+/* Tema escuro para user menu */
+.theme-dark .user-menu {
+    background: var(--gray-800);
+    border-color: var(--gray-600);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Tema claro para user menu */
+.theme-light .user-menu {
+    background: var(--white);
+    border-color: var(--gray-200);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .user-menu.open {
@@ -1101,7 +1162,7 @@
     background: none;
     border: none;
     border-radius: 6px;
-    color: var(--text-color);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
@@ -1109,8 +1170,26 @@
 }
 
 .user-menu-item:hover {
-    background: var(--accent-color);
+    background: var(--hover-bg);
     transform: translateX(2px);
+}
+
+/* Tema escuro para menu items */
+.theme-dark .user-menu-item {
+    color: var(--gray-100);
+}
+
+.theme-dark .user-menu-item:hover {
+    background: var(--gray-700);
+}
+
+/* Tema claro para menu items */
+.theme-light .user-menu-item {
+    color: var(--gray-900);
+}
+
+.theme-light .user-menu-item:hover {
+    background: var(--gray-50);
 }
 
 .user-menu-item.logout {
@@ -1137,18 +1216,92 @@
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    background: var(--accent-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-color);
+    background: var(--theme-gradient-button);
+    border: 2px solid var(--theme-primary);
+    border-radius: 8px;
+    color: var(--white);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-size: 0.9rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .user-info:hover {
-    background: var(--button-hover);
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Avatar do usuário */
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--white);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Ícone de administrador */
+.admin-icon {
+    color: var(--color-admin);
+    font-size: 0.8rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo especial para administradores */
+.user-info.is-admin {
+    background: var(--gradient-admin);
+    border-color: var(--color-admin);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.user-info.is-admin:hover {
+    background: var(--gradient-admin);
+    border-color: var(--color-admin);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    filter: brightness(1.1);
+}
+
+.user-info.is-admin .user-avatar {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Seta dropdown */
+.dropdown-arrow {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* Tema escuro para botão de usuário */
+.theme-dark .user-info {
+    background: var(--theme-gradient-button);
+    border-color: var(--theme-primary);
+}
+
+.theme-dark .user-info:hover {
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary-hover);
+}
+
+/* Tema claro para botão de usuário */
+.theme-light .user-info {
+    background: var(--theme-gradient-primary);
+    border-color: var(--theme-primary);
+}
+
+.theme-light .user-info:hover {
+    background: var(--theme-gradient-button);
+    border-color: var(--theme-primary-hover);
 }
 
 .user-info .user-avatar {
@@ -1295,10 +1448,12 @@
 }
 
 /* Large modal variant */
-.modal-content.large {
+.modal-content.large,
+.modal.large {
     max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
+    margin: 0 auto;
+    align-self: center;
+    justify-self: center;
 }
 
 /* Form improvements for add point modal */
@@ -1334,15 +1489,38 @@
 
 /* Responsive adjustments for large modal */
 @media (max-width: 768px) {
+    .modal.large,
     .modal-content.large {
         width: 95vw;
         max-width: none;
-        margin: 1rem;
+        margin: 0 auto;
         max-height: 95vh;
     }
 
-    .modal-content.large .form-row {
+    .modal-backdrop {
+        padding: var(--spacing-md);
+    }
+
+    .modal-content.large .form-row,
+    .modal.large .form-row {
         grid-template-columns: 1fr;
+    }
+
+    .modal-header {
+        padding: var(--spacing-md);
+    }
+
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+
+    .modal-footer {
+        padding: var(--spacing-md);
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
     }
 
     .image-preview img {

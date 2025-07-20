@@ -6,6 +6,9 @@ class ErrorHandler {
     constructor() {
         this.errorModal = null;
         this.errors = [];
+        this.errorThrottle = new Map();
+        this.lastErrorTime = 0;
+        this.errorCooldown = 3000; // 3 segundos entre erros
         this.init();
     }
 
@@ -52,9 +55,6 @@ class ErrorHandler {
                         <button type="button" class="btn btn-secondary" id="error-dismiss">
                             <i class="fas fa-times"></i> Fechar
                         </button>
-                        <button type="button" class="btn btn-warning" id="error-clear-cache">
-                            <i class="fas fa-broom"></i> Limpar Cache
-                        </button>
                         <button type="button" class="btn btn-primary" id="error-reload">
                             <i class="fas fa-redo"></i> Recarregar
                         </button>
@@ -79,10 +79,6 @@ class ErrorHandler {
         });
 
         // Action buttons
-        document.getElementById('error-clear-cache').addEventListener('click', () => {
-            this.clearCache();
-        });
-
         document.getElementById('error-reload').addEventListener('click', () => {
             this.reloadPage();
         });
@@ -118,6 +114,31 @@ class ErrorHandler {
 
     handleError(errorInfo) {
         console.error('❌ Erro capturado:', errorInfo);
+        
+        // Sistema de throttling para evitar spam de erros
+        const now = Date.now();
+        const errorKey = JSON.stringify({
+            message: errorInfo.message,
+            filename: errorInfo.filename,
+            lineno: errorInfo.lineno
+        });
+        
+        // Verificar se erro similar foi mostrado recentemente
+        const lastShown = this.errorThrottle.get(errorKey);
+        if (lastShown && (now - lastShown) < this.errorCooldown) {
+            console.log('🔇 Error throttled:', errorInfo.message);
+            return;
+        }
+        
+        // Cooldown global entre erros
+        if (now - this.lastErrorTime < 1000) {
+            console.log('🔇 Global error cooldown active');
+            return;
+        }
+        
+        this.errorThrottle.set(errorKey, now);
+        this.lastErrorTime = now;
+        
         this.errors.push({
             ...errorInfo,
             timestamp: new Date().toISOString()
@@ -214,39 +235,6 @@ class ErrorHandler {
         };
 
         return configs[type] || configs.general;
-    }
-
-    async clearCache() {
-        try {
-            const clearBtn = document.getElementById('error-clear-cache');
-            const originalText = clearBtn.innerHTML;
-            clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Limpando...';
-            clearBtn.disabled = true;
-
-            // Usar o método do database manager se disponível
-            if (window.databaseManager?.limparCache) {
-                const result = window.databaseManager.limparCache();
-                this.showSuccess(`Cache limpo! ${result.removedItems} itens removidos.`);
-            } else {
-                // Fallback para limpeza básica
-                const itemsRemoved = Object.keys(localStorage).length;
-                localStorage.clear();
-                this.showSuccess(`Cache limpo! ${itemsRemoved} itens removidos.`);
-            }
-
-            // Aguardar um pouco e recarregar
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-
-        } catch (error) {
-            console.error('Erro ao limpar cache:', error);
-            this.showError('general', { message: 'Erro ao limpar cache', error });
-        } finally {
-            const clearBtn = document.getElementById('error-clear-cache');
-            clearBtn.disabled = false;
-            clearBtn.innerHTML = '<i class="fas fa-broom"></i> Limpar Cache';
-        }
     }
 
     reloadPage() {
