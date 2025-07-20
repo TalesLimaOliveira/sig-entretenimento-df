@@ -128,7 +128,7 @@ class DatabaseManager {
             });
             
             this.salvarTodosDados();
-            console.log('Migracao concluida');
+            console.log('✅ Migração concluída');
         }
     }
 
@@ -138,55 +138,12 @@ class DatabaseManager {
             this.categorias = JSON.parse(saved);
         } else {
             this.categorias = [
-                { 
-                    id: 'geral', 
-                    nome: 'Geral', 
-                    icon: 'fas fa-theater-masks', 
-                    cor: '#8b5cf6',
-                    descricao: 'Teatros, cinemas, centros culturais, casas de show, eventos públicos'
-                },
-                { 
-                    id: 'esportes-lazer', 
-                    nome: 'Esportes e Lazer', 
-                    icon: 'fas fa-running', 
-                    cor: '#10b981',
-                    descricao: 'Estádios, quadras públicas, academias ao ar livre, pistas de skate, parques ecológicos'
-                },
-                { 
-                    id: 'gastronomia', 
-                    nome: 'Gastronomia', 
-                    icon: 'fas fa-utensils', 
-                    cor: '#2563eb',
-                    descricao: 'Bares, restaurantes, feiras gastronômicas, cafeterias, food trucks'
-                },
-                { 
-                    id: 'geek-nerd', 
-                    nome: 'Geek e Nerd', 
-                    icon: 'fas fa-gamepad', 
-                    cor: '#7c3aed',
-                    descricao: 'Lojas de board games, card games, action figures, eventos de cultura pop, espaços de e-sports'
-                },
-                { 
-                    id: 'alternativo', 
-                    nome: 'Alternativo', 
-                    icon: 'fas fa-palette', 
-                    cor: '#ef4444',
-                    descricao: 'Espaços culturais, saraus, exposições independentes, feiras de arte'
-                },
-                { 
-                    id: 'casas-noturnas', 
-                    nome: 'Casas Noturnas', 
-                    icon: 'fas fa-glass-cheers', 
-                    cor: '#f59e0b',
-                    descricao: 'Boates, pubs, lounges, baladas temáticas e outros espaços voltados à vida noturna'
-                },
-                { 
-                    id: 'favoritos', 
-                    nome: 'Favoritos', 
-                    icon: 'fas fa-heart', 
-                    cor: '#ec4899',
-                    descricao: 'Pontos marcados como favoritos pelo usuário'
-                }
+                { id: 'geral', nome: 'Geral', icon: 'fas fa-map-marker-alt', cor: '#ef4444' },
+                { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#2563eb' },
+                { id: 'esportes', nome: 'Esportes', icon: 'fas fa-futbol', cor: '#10b981' },
+                { id: 'cultura', nome: 'Cultura', icon: 'fas fa-theater-masks', cor: '#8b5cf6' },
+                { id: 'noturno', nome: 'Vida Noturna', icon: 'fas fa-glass-cheers', cor: '#f59e0b' },
+                { id: 'favoritos', nome: 'Favoritos', icon: 'fas fa-heart', cor: '#ec4899' }
             ];
             this.salvarCategorias();
         }
@@ -230,20 +187,53 @@ class DatabaseManager {
         console.log('🔧 Inicializando dados padrão...');
         this.inicializarPontosDefault();
         this.carregarCategorias(); // Garantir que categorias estejam carregadas
-        console.log('Dados padrao inicializados');
+        console.log('✅ Dados padrão inicializados');
     }
 
     inicializarPontosDefault() {
         const pontosDefault = [
             {
                 id: 1,
+                nome: 'Pontão do Lago Sul',
+                descricao: 'Complexo gastronômico e de lazer',
+                categoria: 'gastronomia',
+                coordenadas: [-15.8267, -47.8881],
+                endereco: 'SHIS QI 11, Brasília - DF',
+                telefone: '(61) 3248-1000',
+                website: 'https://pontaodolagosul.com.br',
+                horario: '10:00 - 22:00',
+                preco: 'R$ 50-100',
+                nota: 4.5,
+                verificado: true,
+                status: 'confirmado',
+                dataAdicao: new Date().toISOString()
+            },
+            {
+                id: 2,
+                nome: 'Estádio Nacional de Brasília',
+                descricao: 'Estádio multiuso para eventos esportivos',
+                categoria: 'esportes',
+                coordenadas: [-15.7836, -47.9003],
+                endereco: 'SRPN, Brasília - DF',
+                telefone: '(61) 3340-9000',
+                website: 'https://mane.gov.br',
+                horario: 'Conforme eventos',
+                preco: 'Variável',
+                nota: 4.3,
+                verificado: true,
+                status: 'confirmado',
+                dataAdicao: new Date().toISOString()
+            },
+            {
+                id: 3,
                 nome: 'Teatro Nacional Claudio Santoro',
-                descricao: 'Principal teatro de Brasília, com programação diversificada',
-                categoria: 'geral',
-                coordenadas: [-15.796, -47.878],
-                endereco: 'Via N2 - Asa Norte, Brasília',
-                telefone: '(61) 3325-6268',
-                horario: 'Conforme programação',
+                descricao: 'Principal casa de espetáculos de Brasília',
+                categoria: 'cultura',
+                coordenadas: [-15.7952, -47.8852],
+                endereco: 'Via N2, Brasília - DF',
+                telefone: '(61) 3325-6100',
+                website: 'https://teatronacional.df.gov.br',
+                horario: '19:00 - 22:00',
                 preco: 'R$ 20-80',
                 nota: 4.6,
                 verificado: true,
@@ -251,162 +241,33 @@ class DatabaseManager {
                 dataAdicao: new Date().toISOString()
             },
             {
-                id: 2,
-                nome: 'Cine Brasília',
-                descricao: 'Cinema de arte e cultura, com filmes alternativos',
-                categoria: 'geral',
-                coordenadas: [-15.795, -47.882],
-                endereco: 'EQS 106/107 - Asa Sul, Brasília',
-                telefone: '(61) 3244-1660',
-                horario: '14h às 22h',
-                preco: 'R$ 10-15',
-                nota: 4.4,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 3,
-                nome: 'Estádio Nacional de Brasília',
-                descricao: 'Arena multiuso para grandes eventos esportivos',
-                categoria: 'esportes-lazer',
-                coordenadas: [-15.783, -47.899],
-                endereco: 'SRPN - Asa Norte, Brasília',
-                telefone: '(61) 3424-4000',
-                horario: 'Conforme eventos',
-                preco: 'Variável',
-                nota: 4.5,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
                 id: 4,
-                nome: 'Parque da Cidade Sarah Kubitschek',
-                descricao: 'Maior parque urbano do mundo, ideal para esportes e lazer',
-                categoria: 'esportes-lazer',
-                coordenadas: [-15.788, -47.907],
-                endereco: 'Asa Sul, Brasília',
+                nome: 'Praça dos Três Poderes',
+                descricao: 'Marco histórico e político do Brasil',
+                categoria: 'geral',
+                coordenadas: [-15.7999, -47.8597],
+                endereco: 'Praça dos Três Poderes, Brasília - DF',
+                telefone: 'N/A',
+                website: 'https://www.gov.br',
                 horario: '24 horas',
                 preco: 'Gratuito',
-                nota: 4.7,
+                nota: 4.8,
                 verificado: true,
                 status: 'confirmado',
                 dataAdicao: new Date().toISOString()
             },
             {
                 id: 5,
-                nome: 'Restaurante Olivae',
-                descricao: 'Restaurante italiano sofisticado com ambiente acolhedor',
-                categoria: 'gastronomia',
-                coordenadas: [-15.795, -48.105],
-                endereco: 'CLN 201 - Asa Norte, Brasília',
-                telefone: '(61) 3340-8120',
-                horario: '12h às 15h, 19h às 23h',
-                preco: 'R$ 80-120',
-                nota: 4.5,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 6,
-                nome: 'Feira da Torre de TV',
-                descricao: 'Feira gastronômica tradicional aos fins de semana',
-                categoria: 'gastronomia',
-                coordenadas: [-15.790, -47.896],
-                endereco: 'Torre de TV, Asa Norte, Brasília',
-                horario: 'Sábados e domingos, 9h às 18h',
-                preco: 'R$ 15-40',
-                nota: 4.2,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 7,
-                nome: 'Dragonstore',
-                descricao: 'Loja especializada em jogos, cards e cultura geek',
-                categoria: 'geek-nerd',
-                coordenadas: [-15.794, -47.889],
-                endereco: 'CLN 208 - Asa Norte, Brasília',
-                telefone: '(61) 3328-1234',
-                horario: '10h às 22h',
-                preco: 'R$ 20-200',
-                nota: 4.6,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 8,
-                nome: 'Arena E-Sports BSB',
-                descricao: 'Centro de e-sports com torneios e competições',
-                categoria: 'geek-nerd',
-                coordenadas: [-15.835, -48.044],
-                endereco: 'Taguatinga Centro, Brasília',
-                telefone: '(61) 3562-9876',
-                horario: '14h às 23h',
-                preco: 'R$ 10-30/hora',
-                nota: 4.3,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 9,
-                nome: 'Centro Cultural da República',
-                descricao: 'Espaço cultural independente com exposições alternativas',
-                categoria: 'alternativo',
-                coordenadas: [-15.797, -47.879],
-                endereco: 'Eixo Monumental, Brasília',
-                horario: '9h às 18h',
-                preco: 'Gratuito',
-                nota: 4.4,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 10,
-                nome: 'Sarau do Beco',
-                descricao: 'Sarau independente com poesia e música',
-                categoria: 'alternativo',
-                coordenadas: [-15.840, -48.045],
-                endereco: 'Taguatinga Norte, Brasília',
-                horario: 'Quintas, 19h às 23h',
-                preco: 'R$ 5-15',
-                nota: 4.1,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 11,
                 nome: 'Villa Mix Brasília',
-                descricao: 'Casa noturna com música sertaneja e eletrônica',
-                categoria: 'casas-noturnas',
-                coordenadas: [-15.796, -47.885],
-                endereco: 'SCLS 109 - Asa Sul, Brasília',
-                telefone: '(61) 3244-1010',
-                horario: '22h às 4h',
-                preco: 'R$ 40-80',
+                descricao: 'Casa noturna com música sertaneja',
+                categoria: 'noturno',
+                coordenadas: [-15.8321, -47.9187],
+                endereco: 'SGAS 915, Brasília - DF',
+                telefone: '(61) 3443-8000',
+                website: 'https://villamix.com.br',
+                horario: '22:00 - 06:00',
+                preco: 'R$ 40-120',
                 nota: 4.2,
-                verificado: true,
-                status: 'confirmado',
-                dataAdicao: new Date().toISOString()
-            },
-            {
-                id: 12,
-                nome: 'Lounge 442',
-                descricao: 'Lounge sofisticado com drinks autorais',
-                categoria: 'casas-noturnas',
-                coordenadas: [-15.794, -47.886],
-                endereco: 'CLN 442 - Asa Norte, Brasília',
-                telefone: '(61) 3328-4422',
-                horario: '19h às 2h',
-                preco: 'R$ 30-60',
-                nota: 4.0,
                 verificado: true,
                 status: 'confirmado',
                 dataAdicao: new Date().toISOString()
@@ -414,7 +275,7 @@ class DatabaseManager {
         ];
         
         this.confirmedPoints = pontosDefault;
-        this.proximoId = 13;
+        this.proximoId = 6;
         this.salvarTodosDados();
         console.log(`${pontosDefault.length} pontos padrao carregados`);
     }
@@ -752,7 +613,7 @@ class DatabaseManager {
 
     buscarPontos(termo) {
         const termoLower = termo.toLowerCase();
-        return this.confirmedPoints.filter(ponto => 
+        return this.pontosConfirmados.filter(ponto => 
             ponto.nome.toLowerCase().includes(termoLower) ||
             ponto.descricao.toLowerCase().includes(termoLower) ||
             ponto.endereco.toLowerCase().includes(termoLower)
@@ -761,20 +622,20 @@ class DatabaseManager {
 
     filtrarPorCategoria(categoria, username = null) {
         if (categoria === 'todos') {
-            return this.confirmedPoints;
+            return this.pontosConfirmados;
         }
         
         if (categoria === 'favoritos' && username) {
             return this.getFavoritos(username);
         }
         
-        return this.confirmedPoints.filter(p => p.categoria === categoria);
+        return this.pontosConfirmados.filter(p => p.categoria === categoria);
     }
 
     getEstatisticas() {
-        const totalConfirmados = this.confirmedPoints.length;
-        const totalPendentes = this.pendingPoints.length;
-        const totalOcultos = this.hiddenPoints.length;
+        const totalConfirmados = this.pontosConfirmados.length;
+        const totalPendentes = this.pontosPendentes.length;
+        const totalOcultos = this.pontosOcultos.length;
         const pontosPorCategoria = {};
         
         // Inicializar contadores para todas as categorias
@@ -783,7 +644,7 @@ class DatabaseManager {
         });
         
         // Contar pontos confirmados por categoria
-        this.confirmedPoints.forEach(ponto => {
+        this.pontosConfirmados.forEach(ponto => {
             if (pontosPorCategoria.hasOwnProperty(ponto.categoria)) {
                 pontosPorCategoria[ponto.categoria]++;
             }
@@ -812,9 +673,9 @@ class DatabaseManager {
      */
     exportarDados() {
         return {
-            confirmedPoints: this.confirmedPoints,
-            pendingPoints: this.pendingPoints,
-            hiddenPoints: this.hiddenPoints,
+            pontosConfirmados: this.pontosConfirmados,
+            pontosPendentes: this.pontosPendentes,
+            pontosOcultos: this.pontosOcultos,
             usuarios: this.usuarios,
             categorias: this.categorias,
             dataExport: new Date().toISOString(),
@@ -830,15 +691,15 @@ class DatabaseManager {
             throw new Error('Apenas administradores podem importar dados');
         }
 
-        if (dados.versao && (dados.confirmedPoints || dados.pontosConfirmados)) {
-            this.confirmedPoints = dados.confirmedPoints || dados.pontosConfirmados || [];
-            this.pendingPoints = dados.pendingPoints || dados.pontosPendentes || [];
-            this.hiddenPoints = dados.hiddenPoints || dados.pontosOcultos || [];
+        if (dados.versao && dados.pontosConfirmados) {
+            this.pontosConfirmados = dados.pontosConfirmados || [];
+            this.pontosPendentes = dados.pontosPendentes || [];
+            this.pontosOcultos = dados.pontosOcultos || [];
             this.usuarios = dados.usuarios || {};
             this.categorias = dados.categorias || this.categorias;
             
             // Recalcular próximo ID
-            const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
+            const todosOsPontos = [...this.pontosConfirmados, ...this.pontosPendentes, ...this.pontosOcultos];
             this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
             
             this.salvarTodosDados();
@@ -870,27 +731,27 @@ class DatabaseManager {
         const id = parseInt(pontoId);
 
         // Tentar deletar de todas as listas
-        let index = this.confirmedPoints.findIndex(p => p.id === id);
+        let index = this.pontosConfirmados.findIndex(p => p.id === id);
         if (index !== -1) {
-            this.confirmedPoints.splice(index, 1);
+            this.pontosConfirmados.splice(index, 1);
             deletado = true;
         }
 
-        index = this.pendingPoints.findIndex(p => p.id === id);
+        index = this.pontosPendentes.findIndex(p => p.id === id);
         if (index !== -1) {
-            this.pendingPoints.splice(index, 1);
+            this.pontosPendentes.splice(index, 1);
             deletado = true;
         }
 
-        index = this.hiddenPoints.findIndex(p => p.id === id);
+        index = this.pontosOcultos.findIndex(p => p.id === id);
         if (index !== -1) {
-            this.hiddenPoints.splice(index, 1);
+            this.pontosOcultos.splice(index, 1);
             deletado = true;
         }
 
         if (deletado) {
             this.salvarTodosDados();
-            console.log(`Ponto ${pontoId} deletado definitivamente`);
+            console.log(`🗑️ Ponto ${pontoId} deletado definitivamente`);
         }
 
         return deletado;

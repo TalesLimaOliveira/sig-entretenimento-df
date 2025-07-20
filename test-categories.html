@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste das Categorias</title>
+</head>
+<body>
+    <h1>Teste das Categorias</h1>
+    <div id="resultado"></div>
+
+    <script src="src/js/database.js"></script>
+    <script>
+        // Inicializar o DatabaseManager
+        window.databaseManager = new DatabaseManager();
+
+        // Testar carregamento das categorias
+        const categorias = window.databaseManager.getCategorias();
+        console.log('Categorias carregadas:', categorias);
+
+        // Testar carregamento dos pontos
+        const pontos = window.databaseManager.getPontos();
+        console.log('Pontos carregados:', pontos);
+
+        // Mostrar resultado na página
+        const resultado = document.getElementById('resultado');
+        resultado.innerHTML = `
+            <h2>Categorias (${categorias.length}):</h2>
+            <ul>
+                ${categorias.map(cat => `<li><strong>${cat.nome}</strong> (${cat.id}) - ${cat.descricao}</li>`).join('')}
+            </ul>
+            
+            <h2>Pontos (${pontos.length}):</h2>
+            <ul>
+                ${pontos.map(ponto => `<li><strong>${ponto.nome}</strong> - Categoria: ${ponto.categoria}</li>`).join('')}
+            </ul>
+            
+            <h2>Distribuição por Categoria:</h2>
+            <ul>
+                ${categorias.map(cat => {
+                    const pontosCategoria = pontos.filter(p => p.categoria === cat.id);
+                    return `<li><strong>${cat.nome}</strong>: ${pontosCategoria.length} pontos</li>`;
+                }).join('')}
+            </ul>
+        `;
+    </script>
+</body>
+</html>

@@ -14,10 +14,11 @@ class PontosEntretenimentoApp { }
 
 #### Métodos e Variáveis
 ```javascript
-// camelCase para métodos e variáveis
+// camelCase para métodos e variáveis (SEMPRE EM INGLÊS)
 configurarInterface()
 adicionarMarcador()
-const categoriaAtiva = 'todos';
+const activeCategory = 'todos';  // ✓ Correto
+const categoriaAtiva = 'todos';  // ✗ Evitar português
 ```
 
 #### Constantes
@@ -25,6 +26,26 @@ const categoriaAtiva = 'todos';
 // UPPER_SNAKE_CASE para constantes
 const BASE_STORAGE_KEY = 'pontosEntretenimento';
 const DEFAULT_ZOOM_LEVEL = 11;
+```
+
+#### Propriedades de Classe
+```javascript
+// Propriedades em inglês
+class DatabaseManager {
+    constructor() {
+        this.confirmedPoints = [];  // ✓ Correto
+        this.pendingPoints = [];    // ✓ Correto
+        this.hiddenPoints = [];     // ✓ Correto
+        // Evitar: pontosConfirmados, pontosPendentes, etc.
+    }
+}
+
+class ModalManager {
+    constructor() {
+        this.activeModal = null;  // ✓ Correto
+        // Evitar: modalAtivo
+    }
+}
 ```
 
 #### Elementos DOM
@@ -54,7 +75,7 @@ const DEFAULT_ZOOM_LEVEL = 11;
 ```javascript
 async exemploMetodo(parametro) {
     try {
-        console.log('🔄 Iniciando operação...');
+        console.log('Iniciando operacao...');  // Sem emojis
         
         // Validações de entrada
         if (!parametro) {
@@ -64,15 +85,21 @@ async exemploMetodo(parametro) {
         // Lógica principal
         const resultado = await operacao(parametro);
         
-        console.log('✅ Operação concluída com sucesso');
+        console.log('Operacao concluida com sucesso');  // Sem emojis
         return resultado;
         
     } catch (error) {
-        console.error('❌ Erro na operação:', error);
+        console.error('Erro na operacao:', error);  // Sem emojis
         throw error; // ou return null para não-críticos
     }
 }
 ```
+
+### Regras de Log
+- **Sem emojis**: Logs devem ser limpos e profissionais
+- **Contextuais**: Incluir informações relevantes sobre o estado
+- **Consistentes**: Usar padrões uniformes em todo o projeto
+- **Informativos**: Logs devem ajudar no debugging
 
 ### Estrutura de Classes
 

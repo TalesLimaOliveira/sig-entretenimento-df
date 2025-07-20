@@ -1,5 +1,80 @@
 # Guia de Migração - SIG Entretenimento DF
 
+## Refatoração Realizada (Julho 2025)
+
+### Mudanças de Nomenclatura
+
+#### Propriedades de Classes (Português → Inglês)
+```javascript
+// ANTES
+class PontosEntretenimentoApp {
+    constructor() {
+        this.categoriaAtiva = 'todos';
+    }
+}
+
+class DatabaseManager {
+    constructor() {
+        this.pontosConfirmados = [];
+        this.pontosPendentes = [];
+        this.pontosOcultos = [];
+    }
+}
+
+class ModalManager {
+    constructor() {
+        this.modalAtivo = null;
+    }
+}
+
+// DEPOIS
+class PontosEntretenimentoApp {
+    constructor() {
+        this.activeCategory = 'todos';  // ✓ Inglês
+    }
+}
+
+class DatabaseManager {
+    constructor() {
+        this.confirmedPoints = [];      // ✓ Inglês
+        this.pendingPoints = [];        // ✓ Inglês
+        this.hiddenPoints = [];         // ✓ Inglês
+    }
+}
+
+class ModalManager {
+    constructor() {
+        this.activeModal = null;        // ✓ Inglês
+    }
+}
+```
+
+### Logs Simplificados
+
+#### Remoção de Emojis
+```javascript
+// ANTES
+console.log('🚀 Iniciando aplicação...');
+console.log('✅ Operação concluída');
+console.error('❌ Erro crítico:', error);
+
+// DEPOIS
+console.log('Iniciando aplicacao...');      // ✓ Limpo
+console.log('Operacao concluida');          // ✓ Limpo
+console.error('Erro critico:', error);      // ✓ Limpo
+```
+
+### Compatibilidade Mantida
+
+#### Importação/Exportação de Dados
+- Suporte a formatos antigos (`pontosConfirmados`, `pontosPendentes`, etc.)
+- Migração automática para novos formatos
+- Retrocompatibilidade em métodos críticos
+
+#### Keys do LocalStorage
+- Mantidas as chaves antigas para não quebrar dados existentes
+- Sistema híbrido de leitura (novo formato preferido, fallback para antigo)
+
 ## Migração para React Native
 
 ### Considerações Arquiteturais
@@ -29,24 +104,28 @@ src/components/      → src/components/
 ```javascript
 // Web (Manager Class)
 class DatabaseManager {
-    constructor() { }
+    constructor() { 
+        this.confirmedPoints = [];  // ✓ Já em inglês
+    }
     getPontos() { }
 }
 
 // React Native (Service + Hook)
 // services/DatabaseService.js
 export const DatabaseService = {
-    getPontos: async () => { }
+    getConfirmedPoints: async () => { }  // ✓ Nomenclatura consistente
 };
 
 // hooks/useDatabase.js
 export const useDatabase = () => {
-    const [pontos, setPontos] = useState([]);
+    const [confirmedPoints, setConfirmedPoints] = useState([]);  // ✓ Inglês
     
-    const getPontos = useCallback(async () => {
-        const data = await DatabaseService.getPontos();
-        setPontos(data);
+    const getConfirmedPoints = useCallback(async () => {
+        const data = await DatabaseService.getConfirmedPoints();
+        setConfirmedPoints(data);
     }, []);
+    
+};
     
     return { pontos, getPontos };
 };

@@ -68,6 +68,8 @@ MapManager.filtrarPorCategoria(categoria, username)
 Filter Points by Category + User Context
      ↓
 Update Map Markers Visibility
+
+Nota: activeCategory substituiu categoriaAtiva para padronização em inglês
 ```
 
 ### 4. Fluxo de Adição de Pontos (Admin)
@@ -87,7 +89,7 @@ DatabaseManager.adicionarPonto(data, role, username)
      ↓
 Generate Unique ID
      ↓
-Add to Appropriate Array (pendentes/confirmados)
+Add to Appropriate Array (pendingPoints/confirmedPoints)
      ↓
 Save to LocalStorage
      ↓
@@ -96,6 +98,8 @@ MapManager.adicionarMarcador(ponto)
 Create Leaflet Marker
      ↓
 Update Statistics
+
+Nota: pendingPoints e confirmedPoints substituíram pontosPendentes e pontosConfirmados
 ```
 
 ## Estrutura de Dados
@@ -296,3 +300,31 @@ canView(resource) → Boolean
 - Managers são singletons globais
 - Eventos para sincronização de estado
 - Immutable data patterns onde possível
+
+## Refatorações Aplicadas (Julho 2025)
+
+### Nomenclatura Padronizada
+**Propriedades de Classes (Português → Inglês):**
+- `categoriaAtiva` → `activeCategory`
+- `modalAtivo` → `activeModal`
+- `pontosConfirmados` → `confirmedPoints`
+- `pontosPendentes` → `pendingPoints`
+- `pontosOcultos` → `hiddenPoints`
+
+### Logs Simplificados
+**Remoção de Emojis dos Logs:**
+- Console logs limpos e profissionais
+- Contexto mantido sem indicadores visuais
+- Melhoria na legibilidade em ambientes de produção
+
+### Tratamento de Erros Aprimorado
+**Estrutura Consistente:**
+- Try-catch em todos os métodos críticos
+- Logs contextuais sem poluição visual
+- Graceful degradation mantida
+
+### Compatibilidade
+**Retrocompatibilidade de Dados:**
+- Importação/exportação suporta formatos antigos
+- Migração automática de estruturas de dados
+- Fallbacks para propriedades antigas mantidos onde necessário

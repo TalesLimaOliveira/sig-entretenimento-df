@@ -145,7 +145,7 @@ class ModalManager {
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.activeModal) {
+            if (e.key === 'Escape' && this.modalAtivo) {
                 this.fechar();
             }
         });
@@ -159,7 +159,7 @@ class ModalManager {
         overlay.innerHTML = this.getModalHTML(tipo, dados);
 
         document.body.appendChild(overlay);
-        this.activeModal = overlay;
+        this.modalAtivo = overlay;
 
         // Animar entrada
         setTimeout(() => overlay.classList.add('show'), 10);
@@ -171,14 +171,14 @@ class ModalManager {
     }
 
     fechar() {
-        if (!this.activeModal) return;
+        if (!this.modalAtivo) return;
 
-        this.activeModal.classList.remove('show');
+        this.modalAtivo.classList.remove('show');
         setTimeout(() => {
-            if (this.activeModal && this.activeModal.parentNode) {
-                this.activeModal.parentNode.removeChild(this.activeModal);
+            if (this.modalAtivo && this.modalAtivo.parentNode) {
+                this.modalAtivo.parentNode.removeChild(this.modalAtivo);
             }
-            this.activeModal = null;
+            this.modalAtivo = null;
         }, 300);
     }
 

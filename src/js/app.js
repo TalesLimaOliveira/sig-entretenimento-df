@@ -37,7 +37,7 @@ class PontosEntretenimentoApp {
     constructor() {
         // Estado da aplicação
         this.isAdmin = false;                    // Se usuário atual é administrador
-        this.categoriaAtiva = 'todos';           // Categoria atualmente filtrada
+        this.activeCategory = 'todos';           // Categoria atualmente filtrada
         this.isInitialized = false;              // Se aplicação foi totalmente inicializada
         
         // Configurações de responsividade
@@ -61,7 +61,7 @@ class PontosEntretenimentoApp {
      */
     async init() {
         try {
-            console.log('🚀 Iniciando aplicação SIG Entretenimento DF...');
+            console.log('Iniciando aplicacao SIG Entretenimento DF...');
             
             // Aguardar DOM estar pronto
             if (document.readyState === 'loading') {
@@ -70,7 +70,7 @@ class PontosEntretenimentoApp {
                 await this._inicializar();
             }
         } catch (error) {
-            console.error('❌ Erro crítico ao inicializar aplicação:', error);
+            console.error('Erro critico ao inicializar aplicacao:', error);
             this._mostrarErroInicializacao(error);
         }
     }
@@ -85,37 +85,37 @@ class PontosEntretenimentoApp {
      */
     async _inicializar() {
         try {
-            console.log('⏳ Aguardando managers...');
+            console.log('Aguardando managers...');
             await this.aguardarManagers();
-            console.log('✅ Managers carregados');
+            console.log('Managers carregados');
 
-            console.log('📱 Configurando responsividade...');
+            console.log('Configurando responsividade...');
             this.configurarResponsividade();
-            console.log('✅ Responsividade configurada');
+            console.log('Responsividade configurada');
             
-            console.log('🔐 Verificando autenticação...');
+            console.log('Verificando autenticacao...');
             this.verificarAutenticacao();
-            console.log('✅ Autenticação verificada');
+            console.log('Autenticacao verificada');
             
-            console.log('🎨 Configurando interface...');
+            console.log('Configurando interface...');
             this.configurarInterface();
-            console.log('✅ Interface configurada');
+            console.log('Interface configurada');
             
-            console.log('⚡ Configurando eventos...');
+            console.log('Configurando eventos...');
             this.configurarEventos();
-            console.log('✅ Eventos configurados');
+            console.log('Eventos configurados');
             
-            console.log('📊 Carregando dados...');
+            console.log('Carregando dados...');
             await this.carregarDados();
-            console.log('✅ Dados carregados');
+            console.log('Dados carregados');
             
-            console.log('🎯 Finalizando inicialização...');
+            console.log('Finalizando inicializacao...');
             this.removerLoadingScreen();
             this._marcarComoInicializado();
-            console.log('🎉 Aplicação inicializada com sucesso!');
+            console.log('Aplicacao inicializada com sucesso!');
             
         } catch (error) {
-            console.error('❌ Erro durante inicialização:', error);
+            console.error('Erro durante inicializacao:', error);
             this._mostrarErroInicializacao(error);
         }
     }
@@ -151,20 +151,20 @@ class PontosEntretenimentoApp {
         const CHECK_INTERVAL_MS = 50; // 50ms
         const start = Date.now();
         
-        console.log('⏳ Aguardando managers...');
+        console.log('Aguardando managers...');
         
         while (Date.now() - start < TIMEOUT_MS) {
             const managersReady = this.verificarManagers();
             
             if (managersReady.allReady) {
-                console.log('✅ Todos os managers estão prontos:', managersReady.ready);
+                console.log('Todos os managers estao prontos:', managersReady.ready);
                 return;
             }
             
             // Verificar se pelo menos os essenciais estão prontos
             if (managersReady.hasMinimal) {
-                console.log('✅ Managers essenciais prontos:', managersReady.ready);
-                console.log('⚠️ Managers faltando:', managersReady.missing);
+                console.log('Managers essenciais prontos:', managersReady.ready);
+                console.log('Managers faltando:', managersReady.missing);
                 return;
             }
             
@@ -173,11 +173,11 @@ class PontosEntretenimentoApp {
         
         // Se chegou aqui, houve timeout
         const managersStatus = this.verificarManagers();
-        console.error('❌ Timeout ao aguardar managers. Status:', managersStatus);
+        console.error('Timeout ao aguardar managers. Status:', managersStatus);
         
         // Tenta continuar se tiver pelo menos os essenciais
         if (managersStatus.hasMinimal) {
-            console.warn('⚠️ Continuando com managers essenciais:', managersStatus.ready);
+            console.warn('Continuando com managers essenciais:', managersStatus.ready);
             return;
         }
         
@@ -224,7 +224,7 @@ class PontosEntretenimentoApp {
                 this.configurarUsuarioVisitante();
             }
         } catch (error) {
-            console.error('❌ Erro ao verificar autenticação:', error);
+            console.error('Erro ao verificar autenticacao:', error);
             this.configurarUsuarioVisitante();
         }
     }
@@ -233,7 +233,7 @@ class PontosEntretenimentoApp {
      * Configurar interface para usuário logado
      */
     configurarUsuarioLogado(user) {
-        console.log(`👤 Usuário logado: ${user.name} (${user.role})`);
+        console.log(`Usuario logado: ${user.name} (${user.role})`);
         
         // Atualizar botão do header
         this.atualizarBotaoLogin(user);
@@ -255,7 +255,7 @@ class PontosEntretenimentoApp {
      * Configurar interface para visitante
      */
     configurarUsuarioVisitante() {
-        console.log('👤 Usuário visitante');
+        console.log('Usuario visitante');
         this.isAdmin = false;
         this.configurarBotaoLogin();
         this.atualizarVisibilidadeFavoritos('visitor');
@@ -309,7 +309,7 @@ class PontosEntretenimentoApp {
      * Configurar interface para administrador
      */
     configurarInterfaceAdmin() {
-        console.log('🔐 Configurando interface para administrador');
+        console.log('Configurando interface para administrador');
         // Admin pode ver pontos pendentes e tem acesso a todas as funcionalidades
         this.adicionarBotoesAdmin();
     }
@@ -318,7 +318,7 @@ class PontosEntretenimentoApp {
      * Configurar interface para usuário comum
      */
     configurarInterfaceUsuario() {
-        console.log('👤 Configurando interface para usuário comum');
+        console.log('Configurando interface para usuario comum');
         // Adicionar categoria de favoritos
         this.adicionarCategoriaFavoritos();
         
@@ -375,7 +375,7 @@ class PontosEntretenimentoApp {
      */
     configurarAcoesUsuario() {
         // Implementar ações específicas do usuário
-        console.log('👤 Configurando ações para usuário comum');
+        console.log('Configurando acoes para usuario comum');
     }
 
     /**
@@ -402,12 +402,12 @@ class PontosEntretenimentoApp {
 
     configurarInterface() {
         try {
-            console.log('🎨 Configurando interface...');
+            console.log('Configurando interface...');
             this.configurarMenuCategorias();
             this.configurarEstatisticas();
-            console.log('✅ Interface configurada');
+            console.log('Interface configurada');
         } catch (error) {
-            console.error('❌ Erro ao configurar interface:', error);
+            console.error('Erro ao configurar interface:', error);
             throw error;
         }
     }
@@ -561,7 +561,7 @@ class PontosEntretenimentoApp {
 
     async carregarDados() {
         try {
-            console.log('📊 Carregando dados...');
+            console.log('Carregando dados...');
             
             // Verificar se os managers estão disponíveis
             if (!window.databaseManager) {
@@ -569,7 +569,7 @@ class PontosEntretenimentoApp {
             }
             
             if (!window.mapManager) {
-                console.warn('⚠️ MapManager não disponível, pulando renderização de pontos');
+                console.warn('MapManager nao disponivel, pulando renderizacao de pontos');
                 this.atualizarEstatisticas();
                 return;
             }
@@ -579,9 +579,14 @@ class PontosEntretenimentoApp {
             this.renderizarPontos();
             this.atualizarEstatisticas();
             
-            console.log('✅ Dados carregados com sucesso');
+            // Forçar redimensionamento após carregar dados
+            setTimeout(() => {
+                this.forcarRedimensionamentoMapa();
+            }, 500);
+            
+            console.log('Dados carregados com sucesso');
         } catch (error) {
-            console.error('❌ Erro ao carregar dados:', error);
+            console.error('Erro ao carregar dados:', error);
             this.mostrarErro('Erro ao carregar dados do mapa.');
             throw error;
         }
@@ -608,7 +613,7 @@ class PontosEntretenimentoApp {
 
     filtrarPorCategoria(categoria) {
         try {
-            this.categoriaAtiva = categoria;
+            this.activeCategory = categoria;
             
             // Atualizar botões de navegação
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -631,53 +636,45 @@ class PontosEntretenimentoApp {
                 const user = window.authManager.getCurrentUser();
                 window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
             } else {
-                console.warn('⚠️ MapManager não disponível para filtrar');
+                console.warn('MapManager nao disponivel para filtrar');
             }
             
-            console.log(`🔍 Filtrando por categoria: ${categoria}`);
+            console.log(`Filtrando por categoria: ${categoria}`);
         } catch (error) {
-            console.error('❌ Erro ao filtrar por categoria:', error);
+            console.error('Erro ao filtrar por categoria:', error);
         }
     }
 
     renderizarPontos() {
         try {
             if (!window.mapManager) {
-                console.warn('⚠️ MapManager não disponível para renderizar pontos');
+                console.warn('MapManager nao disponivel para renderizar pontos');
                 return;
             }
             
             if (!window.databaseManager) {
-                console.warn('⚠️ DatabaseManager não disponível');
+                console.warn('DatabaseManager nao disponivel');
                 return;
             }
             
-            const pontos = window.databaseManager.getPontos();
-            console.log(`📍 Renderizando ${pontos.length} pontos no mapa...`);
+            console.log('🔄 Iniciando renderização de pontos via app...');
             
-            // Limpar marcadores existentes primeiro
-            if (typeof window.mapManager.limparMarcadores === 'function') {
-                window.mapManager.limparMarcadores();
-            }
+            // Usar o método recarregarPontos do MapManager em vez de renderizar manualmente
+            const user = window.authManager?.getCurrentUser();
+            const userRole = user?.role || 'visitor';
+            const username = user?.username || null;
             
-            // Adicionar cada ponto
-            pontos.forEach((ponto, index) => {
-                try {
-                    console.log(`📍 Adicionando ponto ${index + 1}: ${ponto.nome} (${ponto.categoria})`);
-                    window.mapManager.adicionarMarcador(ponto);
-                } catch (error) {
-                    console.error('❌ Erro ao adicionar marcador:', ponto.nome, error);
-                }
-            });
+            // Delegar para o MapManager que agora tem lógica aprimorada
+            window.mapManager.recarregarPontos(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
             setTimeout(() => {
                 this.filtrarPorCategoria('todos');
-            }, 100);
+            }, 500);
             
-            console.log(`✅ ${pontos.length} pontos renderizados no mapa`);
+            console.log('✅ Renderização delegada para MapManager');
         } catch (error) {
-            console.error('❌ Erro ao renderizar pontos:', error);
+            console.error('Erro ao renderizar pontos:', error);
         }
     }
 
@@ -692,9 +689,9 @@ class PontosEntretenimentoApp {
             elementos.forEach(el => {
                 el.style.display = this.isAdmin ? 'block' : 'none';
             });
-            console.log(`🎨 Interface admin atualizada (${elementos.length} elementos)`);
+            console.log(`Interface admin atualizada (${elementos.length} elementos)`);
         } catch (error) {
-            console.error('❌ Erro ao atualizar interface admin:', error);
+            console.error('Erro ao atualizar interface admin:', error);
         }
     }
 
@@ -703,11 +700,11 @@ class PontosEntretenimentoApp {
             if (window.modalManager && typeof window.modalManager.mostrar === 'function') {
                 window.modalManager.mostrar('login');
             } else {
-                console.warn('⚠️ ModalManager não disponível');
+                console.warn('ModalManager nao disponivel');
                 alert('Sistema de login não está disponível no momento.');
             }
         } catch (error) {
-            console.error('❌ Erro ao mostrar modal de login:', error);
+            console.error('Erro ao mostrar modal de login:', error);
         }
     }
 
@@ -725,13 +722,44 @@ class PontosEntretenimentoApp {
                     if (loading.parentNode) {
                         loading.remove();
                     }
+                    // Forçar redimensionamento do mapa após a remoção do loading
+                    this.forcarRedimensionamentoMapa();
                 }, 500);
-                console.log('✅ Loading screen removido');
+                console.log('Loading screen removido');
             } else {
-                console.log('ℹ️ Loading screen não encontrado');
+                console.log('Loading screen nao encontrado');
+                // Mesmo sem loading screen, tentar redimensionar o mapa
+                this.forcarRedimensionamentoMapa();
             }
         } catch (error) {
-            console.error('❌ Erro ao remover loading screen:', error);
+            console.error('Erro ao remover loading screen:', error);
+        }
+    }
+
+    /**
+     * Força o redimensionamento do mapa para corrigir problemas de renderização inicial
+     */
+    forcarRedimensionamentoMapa() {
+        if (window.mapManager && typeof window.mapManager.forcarRedimensionamento === 'function') {
+            // Aguardar um pouco para garantir que as dimensões estão estabilizadas
+            setTimeout(() => {
+                window.mapManager.forcarRedimensionamento();
+            }, 100);
+        } else if (window.mapManager && window.mapManager.map) {
+            // Fallback para método direto
+            setTimeout(() => {
+                try {
+                    console.log('Forcando redimensionamento do mapa (fallback)...');
+                    window.mapManager.map.invalidateSize(true);
+                    
+                    setTimeout(() => {
+                        window.mapManager.map.invalidateSize(true);
+                        console.log('Mapa redimensionado com sucesso');
+                    }, 200);
+                } catch (error) {
+                    console.error('Erro ao redimensionar mapa:', error);
+                }
+            }, 100);
         }
     }
 
@@ -739,7 +767,7 @@ class PontosEntretenimentoApp {
      * Configurar responsividade global da aplicação
      */
     configurarResponsividade() {
-        console.log('📱 Configurando responsividade...');
+        console.log('Configurando responsividade...');
         
         // Configurar viewport meta tag se não existir
         this.configurarViewport();
@@ -753,7 +781,7 @@ class PontosEntretenimentoApp {
         // Aplicar classes baseadas no tamanho da tela
         this.aplicarClassesResponsivas();
         
-        console.log('✅ Responsividade configurada');
+        console.log('Responsividade configurada');
     }
 
     /**
@@ -791,9 +819,7 @@ class PontosEntretenimentoApp {
                 this.aplicarClassesResponsivas();
                 this.ajustarLayoutParaTamanhoTela();
                 // Trigger map resize se existir
-                if (window.mapManager && window.mapManager.map) {
-                    window.mapManager.map.invalidateSize();
-                }
+                this.forcarRedimensionamentoMapa();
             }, 300);
         };
         
