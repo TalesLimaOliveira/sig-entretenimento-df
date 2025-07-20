@@ -162,7 +162,7 @@ class UserMenu {
     }
 
     addPoint() {
-        // Implementar abertura do formulário de adicionar ponto
+        // !TODO: Implement add point form opening for users
         if (window.addPointModal) {
             window.addPointModal.open();
         } else {

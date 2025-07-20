@@ -158,7 +158,7 @@ class AddPointModal {
     }
 
     setupEventListeners() {
-        console.log('🔧 Configurando event listeners...');
+        console.log('Configurando event listeners...');
         
         // Form submission
         const form = document.getElementById('add-point-form');
@@ -477,7 +477,7 @@ class AddPointModal {
         console.log('✅ Formulário validado com sucesso');
 
         const pointData = this.collectFormData();
-        console.log('📊 Dados coletados:', pointData);
+        console.log('Dados coletados:', pointData);
         
         try {
             const submitBtn = document.getElementById('submit-add-point');
@@ -501,7 +501,7 @@ class AddPointModal {
             } else {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adicionando...';
                 
-                console.log('💾 Tentando salvar ponto...');
+                console.log('Tentando salvar ponto...');
                 await this.submitPoint(pointData);
                 console.log('✅ Ponto salvo com sucesso');
                 
@@ -510,7 +510,7 @@ class AddPointModal {
                 
                 // Refresh map if available
                 if (window.mapManager) {
-                    console.log('🗺️ Recarregando mapa...');
+                    console.log('Recarregando mapa...');
                     setTimeout(() => window.mapManager.carregarPontos(), 500);
                 }
             }
@@ -538,7 +538,7 @@ class AddPointModal {
     }
 
     validateForm() {
-        console.log('🔍 Validando formulário...');
+        console.log('Validando formulário...');
         
         if (!this.selectedPosition) {
             console.error('❌ Localização não selecionada');

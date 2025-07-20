@@ -19,11 +19,11 @@ class DatabaseManager {
         this.init();
     }
 
-    async init() {
+    init() {
         try {
             console.log('Inicializando DatabaseManager com nova estrutura...');
             this.carregarCategorias();
-            await this.carregarTodosDados();
+            this.carregarTodosDados();
             this.migrarDadosAntigos();
             console.log('DatabaseManager inicializado com sucesso');
         } catch (error) {
@@ -35,7 +35,7 @@ class DatabaseManager {
     /**
      * Carrega todos os dados dos arquivos JSON
      */
-    async carregarTodosDados() {
+    carregarTodosDados() {
         try {
             // Carregar dados do localStorage primeiro
             const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
@@ -48,13 +48,16 @@ class DatabaseManager {
             this.hiddenPoints = hiddenPoints ? JSON.parse(hiddenPoints) : [];
             this.usuarios = usuarios ? JSON.parse(usuarios) : {};
 
-            // Se não há pontos confirmados, tentar carregar do db.json
+            // Se não há pontos confirmados, tentar carregar do db.json de forma assíncrona
             if (this.confirmedPoints.length === 0) {
                 console.log('Nenhum ponto confirmado encontrado, tentando carregar do db.json...');
-                await this.carregarDoPrincipalDb();
+                this.carregarDoPrincipalDbAsync().catch(error => {
+                    console.error('Erro capturado ao carregar db.json:', error);
+                    // Não fazer nada, deixar usar dados padrão
+                });
             }
 
-            // Se ainda não há pontos, carregar dados padrão
+            // Se ainda não há pontos no localStorage, carregar dados padrão
             if (this.confirmedPoints.length === 0) {
                 console.log('Carregando dados padrao...');
                 this.inicializarPontosDefault();
@@ -71,9 +74,9 @@ class DatabaseManager {
     }
 
     /**
-     * Carrega dados do arquivo db.json principal
+     * Carrega dados do arquivo db.json principal (versão assíncrona)
      */
-    async carregarDoPrincipalDb() {
+    async carregarDoPrincipalDbAsync() {
         try {
             const response = await fetch('./db.json');
             if (!response.ok) {
@@ -232,7 +235,7 @@ class DatabaseManager {
      * Inicializar dados padrão quando não há dados salvos
      */
     inicializarDadosDefault() {
-        console.log('🔧 Inicializando dados padrão...');
+        console.log('Inicializando dados padrão...');
         this.inicializarPontosDefault();
         this.carregarCategorias(); // Garantir que categorias estejam carregadas
         console.log('Dados padrao inicializados');
@@ -970,3 +973,15 @@ class DatabaseManager {
         return degrees * (Math.PI / 180);
     }
 }
+
+// Criar instância global
+const databaseManager = new DatabaseManager();
+
+// Exportar para uso em módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = DatabaseManager;
+}
+
+// Disponibilizar globalmente
+window.DatabaseManager = DatabaseManager;
+window.databaseManager = databaseManager;

@@ -44,8 +44,8 @@ class MapManager {
             [-15.3, -47.2]  // Northeast
         );
         
-        // Inicializar
-        this.init();
+        // Não inicializar automaticamente - aguardar DOM
+        // this.init(); será chamado pelo AppInitializer
     }
 
     /**
@@ -91,15 +91,20 @@ class MapManager {
      * @throws {Error} Se requisitos não atendidos
      */
     _validarPreRequisitos() {
+        // Verificar se Leaflet está disponível
+        if (typeof L === 'undefined') {
+            throw new Error('Leaflet não está carregado');
+        }
+        
+        // Verificar se o DOM está pronto
+        if (document.readyState === 'loading') {
+            throw new Error('DOM ainda não está pronto');
+        }
+        
         // Verificar se o container existe
         const container = document.getElementById(this.containerId);
         if (!container) {
             throw new Error(`Container '${this.containerId}' não encontrado`);
-        }
-        
-        // Verificar se Leaflet está disponível
-        if (typeof L === 'undefined') {
-            throw new Error('Leaflet não está carregado');
         }
     }
 
@@ -582,7 +587,7 @@ class MapManager {
      * @private
      */
     _adicionarControleCoordenadas() {
-        // Implementar se necessário
+        // !TODO: Implement specific map controls if needed
         // Por enquanto, coordenadas são mostradas no console no click
     }
 
@@ -610,7 +615,7 @@ class MapManager {
      * @private
      */
     _removerControlesAdmin() {
-        // Implementar se controles específicos forem adicionados
+        // !TODO: Implement removal of specific controls if added
         // Por enquanto, apenas desabilita modo de adição
         this.modoAdicao = false;
     }
@@ -746,18 +751,17 @@ class MapManager {
         
         const pontos = window.databaseManager.buscarPorCategoria('todos', userRole, username);
         
+        // Mostrar feedback visual imediato
+        this._mostrarCarregamento(true);
+        
         // Limpar marcadores existentes
         this.marcadores.forEach(marcador => {
             this.map.removeLayer(marcador);
         });
         this.marcadores.clear();
 
-        // Adicionar novos marcadores
-        pontos.forEach(ponto => {
-            this.adicionarMarcador(ponto);
-        });
-
-        // ${pontos.length} pontos carregados no mapa
+        // Carregar em lotes para melhor performance
+        this._carregarPontosEmLotes(pontos);
     }
 
     /**
@@ -799,8 +803,9 @@ class MapManager {
                 ponto.categoria = 'geral';
             }
 
-            // Criar ícone personalizado
-            const icone = this.criarIconePersonalizado(categoria || { id: 'geral', cor: '#999', icon: 'fas fa-map-marker-alt' }, ponto);
+            // Criar ícone personalizado (com cache para performance)
+            const isPendente = ponto.status === 'pendente';
+            const icone = this._obterIconeCache(categoria || { id: 'geral', cor: '#999', icon: 'fas fa-map-marker-alt' }, isPendente);
 
             // Criar coordenadas (latitude, longitude)
             // Verificar se temos coordenadas no formato array ou propriedades separadas
@@ -1123,10 +1128,14 @@ class MapManager {
 
     /**
      * Recarregar pontos baseado no papel do usuário
+     * Otimizado com carregamento em lotes
      */
     recarregarPontos(userRole = 'visitor', username = null) {
         try {
             console.log(`🔄 Recarregando pontos para ${userRole}...`);
+            
+            // Mostrar indicador de carregamento
+            this._mostrarCarregamento(true);
             
             // Obter pontos baseado no perfil
             let pontos;
@@ -1151,14 +1160,8 @@ class MapManager {
             // Recriar grupos e carregar pontos
             this._criarGruposBasicos();
             
-            // Carregar pontos um por um para debug
-            pontos.forEach((ponto, index) => {
-                try {
-                    this.adicionarMarcador(ponto);
-                } catch (error) {
-                    console.error(`❌ Erro ao adicionar ponto ${index}:`, ponto.nome, error);
-                }
-            });
+            // Carregar pontos em lotes para melhor performance
+            this._carregarPontosEmLotes(pontos);
 
             // Aplicar filtro atual ou "todos" se não há categoria ativa
             const categoriaParaFiltrar = this.activeCategory || 'todos';
@@ -1403,15 +1406,176 @@ class MapManager {
             }, 100);
         }
     }
+
+    /**
+     * Mostrar/Ocultar indicador de carregamento do mapa
+     * @private
+     */
+    _mostrarCarregamento(mostrar) {
+        const mapContainer = document.getElementById(this.containerId);
+        if (!mapContainer) return;
+        
+        let loadingIndicator = mapContainer.querySelector('.map-loading');
+        
+        if (mostrar && !loadingIndicator) {
+            loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'map-loading';
+            loadingIndicator.innerHTML = `
+                <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255,255,255,0.9);
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    font-family: Arial, sans-serif;
+                ">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="
+                            width: 20px;
+                            height: 20px;
+                            border: 2px solid #3498db;
+                            border-top: 2px solid transparent;
+                            border-radius: 50%;
+                            animation: spin 1s linear infinite;
+                        "></div>
+                        <span>Carregando pontos...</span>
+                    </div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            mapContainer.appendChild(loadingIndicator);
+        } else if (!mostrar && loadingIndicator) {
+            loadingIndicator.remove();
+        }
+    }
+
+    /**
+     * Carregar pontos em lotes para melhor performance
+     * @private
+     */
+    _carregarPontosEmLotes(pontos) {
+        const BATCH_SIZE = 50; // Processar 50 pontos por vez
+        const BATCH_DELAY = 10; // 10ms entre cada lote
+        
+        let indice = 0;
+        const totalPontos = pontos.length;
+        
+        const processarLote = () => {
+            const loteAtual = pontos.slice(indice, indice + BATCH_SIZE);
+            
+            // Processar lote atual
+            loteAtual.forEach(ponto => {
+                try {
+                    this.adicionarMarcador(ponto);
+                } catch (error) {
+                    console.error(`❌ Erro ao adicionar ponto ${ponto.id}:`, error);
+                }
+            });
+            
+            indice += BATCH_SIZE;
+            
+            // Atualizar progresso visual
+            const progresso = Math.min(100, Math.round((indice / totalPontos) * 100));
+            this._atualizarProgressoCarregamento(progresso);
+            
+            // Processar próximo lote ou finalizar
+            if (indice < totalPontos) {
+                setTimeout(processarLote, BATCH_DELAY);
+            } else {
+                this._finalizarCarregamento(totalPontos);
+            }
+        };
+        
+        // Iniciar processamento
+        console.log(`📍 Iniciando carregamento de ${totalPontos} pontos em lotes...`);
+        processarLote();
+    }
+
+    /**
+     * Atualizar progresso do carregamento
+     * @private
+     */
+    _atualizarProgressoCarregamento(progresso) {
+        const mapContainer = document.getElementById(this.containerId);
+        const loadingIndicator = mapContainer?.querySelector('.map-loading span');
+        if (loadingIndicator) {
+            loadingIndicator.textContent = `Carregando pontos... ${progresso}%`;
+        }
+    }
+
+    /**
+     * Finalizar carregamento com feedback
+     * @private
+     */
+    _finalizarCarregamento(totalPontos) {
+        console.log(`✅ ${totalPontos} pontos carregados com sucesso`);
+        
+        // Remover indicador de carregamento após um delay
+        setTimeout(() => {
+            this._mostrarCarregamento(false);
+        }, 500);
+        
+        // Dispatch evento de carregamento completo
+        window.dispatchEvent(new CustomEvent('mapaPontosCarregados', { 
+            detail: { totalPontos } 
+        }));
+    }
+
+    /**
+     * Cache de ícones para evitar recriação desnecessária
+     * @private
+     */
+    _obterIconeCache(categoria, isPendente = false) {
+        const cacheKey = `${categoria.id}_${isPendente}`;
+        
+        if (!this._iconeCache) {
+            this._iconeCache = new Map();
+        }
+        
+        if (!this._iconeCache.has(cacheKey)) {
+            const icone = this._criarIconeOtimizado(categoria, isPendente);
+            this._iconeCache.set(cacheKey, icone);
+        }
+        
+        return this._iconeCache.get(cacheKey);
+    }
+
+    /**
+     * Criar ícone otimizado (simplificado)
+     * @private
+     */
+    _criarIconeOtimizado(categoria, isPendente = false) {
+        const tamanho = window.innerWidth <= 768 ? 28 : 24;
+        const cor = categoria?.cor || '#999';
+        const icon = categoria?.icon || 'fas fa-map-marker-alt';
+        const corBorda = isPendente ? '#f59e0b' : 'white';
+        
+        return L.divIcon({
+            className: 'marcador-otimizado',
+            html: `<div class="marker-icon" style="background:${cor}; border-color:${corBorda}"><i class="${icon}"></i></div>`,
+            iconSize: [tamanho, tamanho],
+            iconAnchor: [tamanho / 2, tamanho / 2],
+            popupAnchor: [0, -(tamanho / 2)]
+        });
+    }
 }
 
-// Criar instância global
-let mapManager = null;
+// Criar instância global sem inicializar automaticamente
+const mapManager = new MapManager();
 
-// Função para inicializar o mapa
+// Função para inicializar o mapa após DOM estar pronto
 function inicializarMapa(containerId = 'map') {
-    if (!mapManager) {
-        mapManager = new MapManager(containerId);
+    if (!mapManager.map) {
+        mapManager.init();
     }
     return mapManager;
 }
@@ -1423,4 +1587,32 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Disponibilizar globalmente
 window.MapManager = MapManager;
+window.mapManager = mapManager;
 window.inicializarMapa = inicializarMapa;
+
+// Adicionar CSS otimizado para marcadores
+if (!document.querySelector('#map-markers-css')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'map-markers-css';
+    styleSheet.textContent = `
+        .marcador-otimizado .marker-icon {
+            width: 100%;
+            height: 100%;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60%;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .marcador-otimizado .marker-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}

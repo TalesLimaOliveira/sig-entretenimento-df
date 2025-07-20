@@ -8,10 +8,10 @@ class ModalManager {
     }
 
     init() {
-        console.log('📱 Inicializando ModalManager...');
+        console.log('Inicializando ModalManager...');
         this.criarEstilos();
         this.configurarEventos();
-        console.log('✅ ModalManager inicializado com sucesso');
+        console.log('ModalManager inicializado com sucesso');
     }
 
     criarEstilos() {
@@ -246,3 +246,15 @@ class ModalManager {
         });
     }
 }
+
+// Criar instância global
+const modalManager = new ModalManager();
+
+// Exportar para uso em módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ModalManager;
+}
+
+// Disponibilizar globalmente
+window.ModalManager = ModalManager;
+window.modalManager = modalManager;

@@ -1,10 +1,10 @@
 /**
- * Sistema de Autenticação
- * Gerencia login, logout e controle de acesso
+ * Authentication System
+ * Manages login, logout and access control
  *
  * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
- * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
+ * @note This file contains AI-generated code snippets
  */
 
 class AuthManager {
@@ -15,34 +15,32 @@ class AuthManager {
     }
 
     /**
-     * Inicializa o sistema de autenticação
+     * Initialize authentication system
      */
     init() {
-        console.log('🔐 Inicializando AuthManager...');
+        console.log('Initializing AuthManager...');
         this.loadSession();
         this.setupEventListeners();
-        console.log('✅ AuthManager inicializado com sucesso');
+        console.log('AuthManager initialized successfully');
     }
 
     /**
-     * Configurar event listeners
+     * Configure event listeners
      */
     setupEventListeners() {
-        // Auto-logout quando a aba perde foco por muito tempo
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.markInactivity();
             }
         });
 
-        // Verificar sessão a cada 5 minutos
         setInterval(() => {
             this.validateSession();
         }, 5 * 60 * 1000);
     }
 
     /**
-     * Dados dos usuários do sistema
+     * System users data
      */
     getUsers() {
         return {
@@ -51,7 +49,7 @@ class AuthManager {
                 email: 'admin',
                 password: 'admin',
                 role: 'administrator',
-                name: 'Administrador do Sistema',
+                name: 'System Administrator',
                 permissions: ['view', 'create', 'edit', 'delete', 'approve', 'manage_users', 'hide_points'],
                 lastLogin: null
             },
@@ -60,7 +58,7 @@ class AuthManager {
                 email: 'user',
                 password: 'user',
                 role: 'user',
-                name: 'Usuário Comum',
+                name: 'Regular User',
                 permissions: ['view', 'create_pending', 'suggest_changes', 'favorite'],
                 lastLogin: null
             }
@@ -68,17 +66,16 @@ class AuthManager {
     }
 
     /**
-     * Realizar login
-     * @param {string} identifier - Nome de usuário ou email
-     * @param {string} password - Senha
-     * @returns {Promise<Object>} Resultado do login
+     * Perform login
+     * @param {string} identifier - Username or email
+     * @param {string} password - Password
+     * @returns {Promise<Object>} Login result
      */
     async login(identifier, password) {
         try {
             const users = this.getUsers();
             let user = null;
 
-            // Buscar usuário por username ou email
             for (const [key, userData] of Object.entries(users)) {
                 if (userData.username === identifier || userData.email === identifier) {
                     user = userData;
@@ -87,22 +84,25 @@ class AuthManager {
             }
 
             if (!user) {
-                throw new Error('Usuário não encontrado');
+                throw new Error('User not found');
             }
 
             if (user.password !== password) {
-                throw new Error('Senha incorreta');
+                throw new Error('Incorrect password');
             }
 
-            // Atualizar último login
             user.lastLogin = new Date().toISOString();
-            
-            // Criar sessão
             const sessionData = {
                 user: {
                     username: user.username,
                     name: user.name,
                     email: user.email,
+            
+            const sessionData = {
+                user: {
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
                     role: user.role,
                     permissions: user.permissions,
                     lastLogin: user.lastLogin
@@ -111,24 +111,22 @@ class AuthManager {
                 expiresAt: Date.now() + this.sessionTimeout
             };
 
-            // Salvar sessão
             localStorage.setItem('pontosDF_session', JSON.stringify(sessionData));
             this.currentUser = sessionData.user;
 
-            // Disparar evento de login
             this.dispatchAuthEvent('login', this.currentUser);
 
             return {
                 success: true,
                 user: this.currentUser,
-                message: 'Login realizado com sucesso'
+                message: 'Login successful'
             };
 
         } catch (error) {
             return {
                 success: false,
                 error: error.message,
-                message: 'Falha na autenticação'
+                message: 'Authentication failed'
             };
         }
     }
@@ -148,7 +146,7 @@ class AuthManager {
         // Disparar evento de logout
         this.dispatchAuthEvent('logout', user);
 
-        console.log('✅ Logout realizado com sucesso');
+        console.log('Logout completed successfully');
 
         // Redirecionar para página principal se estiver no admin
         if (this.isAdminPage()) {
@@ -363,3 +361,5 @@ if (typeof module !== 'undefined' && module.exports) {
 // Disponibilizar globalmente
 window.AuthManager = AuthManager;
 window.authManager = authManager;
+
+console.log('🔐 AuthManager inicializado e disponibilizado globalmente');

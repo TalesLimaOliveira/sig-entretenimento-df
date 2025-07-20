@@ -402,15 +402,25 @@
         window.modalManager = new ModalManager();
         
         // Inicializar app admin
-        document.addEventListener('DOMContentLoaded', () => {
-            // Verificar se usuário tem permissão de admin
-            if (!authManager.isAdmin()) {
-                window.location.href = 'index.html';
-                return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Verificar se usuário tem permissão de admin
+                if (!authManager.isAdmin()) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Inicializar funcionalidades administrativas
+                window.adminManager = new AdminManager();
+                
+                // Aguardar inicialização completa
+                await window.adminManager.init();
+                
+                console.log('Admin panel totalmente carregado');
+            } catch (error) {
+                console.error('Erro ao inicializar admin panel:', error);
+                alert('Erro ao carregar painel administrativo. Verifique o console para detalhes.');
             }
-            
-            // Inicializar funcionalidades administrativas
-            window.adminManager = new AdminManager();
         });
     </script>
 

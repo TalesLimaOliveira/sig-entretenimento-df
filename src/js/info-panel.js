@@ -33,12 +33,12 @@ class InfoPanelManager {
      * Inicializa o gerenciador do painel
      */
     init() {
-        console.log('📋 Inicializando InfoPanelManager...');
+        console.log('Inicializando InfoPanelManager...');
         
         this.setupElements();
         this.setupEventListeners();
         
-        console.log('✅ InfoPanelManager inicializado');
+        console.log('InfoPanelManager inicializado');
     }
 
     /**
@@ -459,7 +459,7 @@ class InfoPanelManager {
         const throttleTime = type === 'error' ? 5000 : 2000;
         
         if (lastShown && (now - lastShown) < throttleTime) {
-            console.log(`🔇 Notificação throttled: ${message}`);
+            console.log(`Notificação throttled: ${message}`);
             return;
         }
         
@@ -741,8 +741,12 @@ class InfoPanelManager {
         }
 
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                this.handleDeletePoint(ponto.id);
+            deleteBtn.addEventListener('click', async () => {
+                try {
+                    await this.handleDeletePoint(ponto.id);
+                } catch (error) {
+                    console.error('Erro no evento de delete:', error);
+                }
             });
         }
     }
@@ -761,10 +765,15 @@ class InfoPanelManager {
      * Manipular remoção de ponto
      * @param {number} pontoId - ID do ponto
      */
-    handleDeletePoint(pontoId) {
+    async handleDeletePoint(pontoId) {
         if (window.mapManager && typeof window.mapManager.removerPonto === 'function') {
-            window.mapManager.removerPonto(pontoId);
-            this.hide(); // Fechar painel após remoção
+            try {
+                await window.mapManager.removerPonto(pontoId);
+                this.hide(); // Fechar painel após remoção
+            } catch (error) {
+                console.error('Erro ao remover ponto:', error);
+                alert('Erro ao remover ponto. Tente novamente.');
+            }
         }
     }
 

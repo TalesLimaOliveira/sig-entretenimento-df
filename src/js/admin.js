@@ -26,7 +26,7 @@ class AdminManager {
     /**
      * Inicializar o gerenciador administrativo
      */
-    init() {
+    async init() {
         console.log('🛠️ Inicializando AdminManager...');
         
         // Verificar permissões
@@ -40,7 +40,7 @@ class AdminManager {
         this.setupInterface();
         
         // Carregar dados iniciais
-        this.loadInitialData();
+        await this.loadInitialData();
         
         // Configurar event listeners
         this.setupEventListeners();
@@ -702,7 +702,7 @@ class AdminManager {
      * Configurar tooltips
      */
     setupTooltips() {
-        // Implementar tooltips se necessário
+        // !TODO: Implement informative tooltips in admin interface
     }
 
     /**
@@ -1046,7 +1046,7 @@ class AdminManager {
      */
     rejeitarSugestao(sugestaoId) {
         if (confirm('Rejeitar esta sugestão?')) {
-            // Implementar lógica de rejeição
+            // !TODO: Implement point rejection logic with user feedback
             this.showNotification('Funcionalidade em desenvolvimento', 'info');
         }
     }

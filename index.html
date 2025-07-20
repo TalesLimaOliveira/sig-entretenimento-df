@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pontos de Entretenimento DF</title>
     
-    <!-- Favicon -->
+    <!-- Favico                console.log('DOM pronto');
+            }
+            
+            async checkDependencies() {
+                console.log('Verificando dependências...');
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ff69b4%22/><text x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22>👠</text></svg>" type="image/svg+xml">
     
     <!-- CSS - Layout Responsivo Otimizado -->
@@ -35,14 +39,14 @@
                 <!-- Navigation Buttons -->
                 <nav class="header-navigation">
                     <div class="nav-buttons-container">
+                        <button class="nav-btn active category-btn" data-categoria="todos">
+                            <i class="fas fa-globe"></i>
+                            <span class="nav-btn-text">Todos</span>
+                        </button>
                         <!-- Favoritos - só aparece se usuário comum estiver logado -->
                         <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
                             <i class="fas fa-heart"></i>
                             <span class="nav-btn-text">Favoritos</span>
-                        </button>
-                        <button class="nav-btn active category-btn" data-categoria="todos">
-                            <i class="fas fa-globe"></i>
-                            <span class="nav-btn-text">Todos</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="geral">
                             <i class="fas fa-map-marker-alt"></i>
@@ -72,34 +76,31 @@
                 </nav>
                 
                 <div class="header-actions">
-                    <!-- Mobile Menu Button -->
-                    <button class="mobile-menu-btn" id="mobile-menu-btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <!-- Mobile Menu Dropdown -->
-                    <div class="mobile-menu-dropdown" id="mobile-menu-dropdown">
-                        <button class="mobile-menu-item theme-btn" id="theme-btn">
-                            <i class="fas fa-moon" id="theme-icon"></i>
-                            <span>Alternar Tema</span>
-                        </button>
-                        <button class="mobile-menu-item login-btn" id="mobile-login-btn">
-                            <i class="fas fa-user"></i>
-                            <span>Entrar</span>
-                        </button>
-                    </div>
-                    
                     <!-- Desktop Actions -->
                     <div class="desktop-actions">
                         <!-- Theme Button -->
-                        <button class="theme-btn desktop-theme-btn" id="desktop-theme-btn">
+                        <button class="theme-btn desktop" id="desktop-theme-btn" title="Alternar tema">
                             <i class="fas fa-moon" id="desktop-theme-icon"></i>
                         </button>
                         
                         <!-- Login Button -->
-                        <button class="login-btn desktop-login-btn" id="desktop-login-btn">
+                        <button class="login-btn desktop" id="desktop-login-btn">
                             <i class="fas fa-user"></i>
-                            <span class="login-btn-text">Login</span>
+                            <span class="login-btn-text">ENTRAR</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Mobile Actions - sempre visíveis em mobile/tablet -->
+                    <div class="mobile-actions">
+                        <!-- Theme Button Mobile -->
+                        <button class="theme-btn mobile" id="mobile-theme-btn" title="Alternar tema">
+                            <i class="fas fa-moon" id="mobile-theme-icon"></i>
+                        </button>
+                        
+                        <!-- Login Button Mobile -->
+                        <button class="login-btn mobile" id="mobile-login-btn">
+                            <i class="fas fa-user"></i>
+                            <span class="login-btn-text">ENTRAR</span>
                         </button>
                     </div>
                 </div>
@@ -197,19 +198,19 @@
             }
             
             async init() {
-                console.log('🚀 Iniciando sistema de inicialização...');
+                console.log('Iniciando sistema de inicialização...');
                 
                 try {
                     await this.waitForDOM();
                     await this.checkDependencies();
-                    await this.initializeManagers();
+                    await this.waitForManagers();
                     await this.initializeApp();
                     
-                    console.log('🎉 Sistema inicializado com sucesso!');
+                    console.log('Sistema inicializado com sucesso!');
                     this.initialized = true;
                     
                 } catch (error) {
-                    console.error('❌ Erro crítico na inicialização:', error);
+                    console.error('Erro crítico na inicialização:', error);
                     this.showError(error);
                 }
             }
@@ -237,56 +238,66 @@
                     throw new Error('Elemento do mapa não encontrado');
                 }
                 
-                console.log('✅ Dependências verificadas');
+                console.log('Dependências verificadas');
             }
             
-            async initializeManagers() {
-                console.log('📦 Inicializando managers...');
+            async waitForManagers() {
+                console.log('Aguardando managers serem carregados...');
                 
-                const managersToInit = [
-                    { name: 'databaseManager', class: DatabaseManager, critical: true },
-                    { name: 'authManager', class: AuthManager, critical: false },
-                    { name: 'modalManager', class: ModalManager, critical: false },
-                    { name: 'themeManager', class: ThemeManager, critical: false },
-                    { name: 'mapManager', class: MapManager, critical: true }
+                const managersToCheck = [
+                    { name: 'databaseManager', critical: true },
+                    { name: 'authManager', critical: false },
+                    { name: 'modalManager', critical: false },
+                    { name: 'themeManager', critical: false },
+                    { name: 'mapManager', critical: true }
                 ];
                 
-                for (const manager of managersToInit) {
-                    try {
-                        console.log(`🔧 Inicializando ${manager.name}...`);
-                        window[manager.name] = new manager.class();
+                // Aguardar um pouco para os scripts carregarem
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                for (const manager of managersToCheck) {
+                    const maxAttempts = 50; // 5 segundos máximo
+                    let attempts = 0;
+                    
+                    while (!window[manager.name] && attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (window[manager.name]) {
+                        console.log(`${manager.name} carregado`);
                         this.managers[manager.name] = window[manager.name];
-                        console.log(`✅ ${manager.name} inicializado`);
-                        
-                        // Pequena pausa entre managers
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                        
-                    } catch (error) {
-                        console.error(`❌ Erro ao inicializar ${manager.name}:`, error);
+                    } else {
+                        const error = `${manager.name} não foi carregado`;
+                        console.error(error);
                         
                         if (manager.critical) {
-                            throw new Error(`Manager crítico falhou: ${manager.name} - ${error.message}`);
+                            throw new Error(`Manager crítico falhou: ${error}`);
                         } else {
-                            this.errors.push(`${manager.name}: ${error.message}`);
+                            this.errors.push(error);
                         }
                     }
                 }
                 
                 if (this.errors.length > 0) {
-                    console.warn('⚠️ Alguns managers não críticos falharam:', this.errors);
+                    console.warn('Alguns managers não críticos falharam:', this.errors);
                 }
                 
-                console.log('✅ Managers inicializados');
+                console.log('Managers carregados');
             }
             
             async initializeApp() {
-                console.log('🎯 Inicializando aplicação principal...');
+                console.log('Inicializando aplicação principal...');
                 
                 // Aguardar um pouco mais
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
                 window.app = new PontosEntretenimentoApp();
-                console.log('✅ Aplicação inicializada');
+                
+                // CRÍTICO: Chamar o método init() da aplicação
+                await window.app.init();
+                
+                console.log('Aplicação inicializada e pronta');
             }
             
             showError(error) {
@@ -302,13 +313,13 @@
                 document.body.innerHTML = `
                     <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif;">
                         <div style="text-align: center; color: #ef4444; margin-bottom: 2rem;">
-                            <h1>❌ Erro ao carregar a aplicação</h1>
+                            <h1>Erro ao carregar a aplicação</h1>
                             <p><strong>Detalhes:</strong> ${error.message}</p>
                         </div>
                         
                         ${this.errors.length > 0 ? `
                             <div style="margin-bottom: 2rem;">
-                                <h3>⚠️ Warnings:</h3>
+                                <h3>Warnings:</h3>
                                 <ul style="color: #f59e0b;">
                                     ${this.errors.map(err => `<li>${err}</li>`).join('')}
                                 </ul>
@@ -316,7 +327,7 @@
                         ` : ''}
                         
                         <details style="margin: 1rem 0;">
-                            <summary style="cursor: pointer; font-weight: bold;">📋 Informações técnicas</summary>
+                            <summary style="cursor: pointer; font-weight: bold;">Informações técnicas</summary>
                             <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 12px; margin-top: 1rem;">${error.stack || 'Stack trace não disponível'}</pre>
                         </details>
                     </div>
@@ -326,7 +337,22 @@
         
         // Iniciar o sistema
         const initializer = new AppInitializer();
-        initializer.init();
+        initializer.init().catch(error => {
+            console.error('Erro ao inicializar aplicação:', error);
+            // Mostrar erro específico para o usuário
+            const loadingScreen = document.querySelector('.loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = `
+                    <div style="text-align: center; color: red;">
+                        <h3>Erro ao carregar aplicação</h3>
+                        <p>Verifique a conexão com a internet e recarregue a página.</p>
+                        <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 10px;">
+                            Recarregar
+                        </button>
+                    </div>
+                `;
+            }
+        });
     </script>
 </body>
 </html>

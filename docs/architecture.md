@@ -38,15 +38,12 @@
 - **Gerenciador de Mapas**: `src/js/map.js` (`MapManager`)
   - **Propriedades principais**:
     - `activeCategory`: Categoria atualmente filtrada no mapa
-- **Sistema de Temas Aprimorado**: `src/js/enhanced-theme-system.js` (`EnhancedThemeSystem`)
+- **Sistema de Temas**: `src/js/theme.js` (`ThemeManager`)
   - **Características principais**:
     - `currentTheme`: Tema ativo ('light' ou 'dark')
-    - `isAutoMode`: Estado do modo automático
-    - Cores aprimoradas com azuis escurecidos e cinzas confortáveis
-    - API programática completa com eventos customizados
+    - Sistema de troca programática
     - Persistência de preferências do usuário
     - Detecção automática de preferência do sistema
-- **Gerenciador de Temas Legacy**: `src/js/theme.js` (`ThemeManager`) - **DEPRECIADO**
 - **Painel de Informações**: `src/js/info-panel.js` (`InfoPanelManager`)
 - **Responsabilidade**: Interface do usuário, interações visuais, controle de aparência
 
@@ -195,30 +192,13 @@ EnhancedThemeSystem {
 ### Pontos de Extensão
 1. **Novos Tipos de Dados**: Adicionar em `DatabaseManager`
 2. **Novos Componentes**: Seguir padrão de modules em `src/components/`
-3. **Novos Temas**: Configurar em `EnhancedThemeSystem.themes`
-4. **Novas Cores**: Adicionar variáveis CSS em `enhanced-theme-colors.css`
-5. **Novas Funcionalidades**: Integrar via `PontosEntretenimentoApp`
+3. **Novos Temas**: Configurar em `ThemeManager`
+4. **Novas Funcionalidades**: Integrar via `PontosEntretenimentoApp`
 
 ### Convenções para Extensão
-- Seguir padrão de nomenclatura existente (inglês para código, português para comentários)
+- Seguir padrão de nomenclatura existente (inglês para código)
 - Implementar tratamento de erros consistente
 - Adicionar logs apropriados sem emojis
 - Manter compatibilidade com diferentes papéis de usuário
 - Utilizar CSS Variables para elementos temáticos
 - Disparar eventos customizados para comunicação entre componentes
-
-### Adicionando Novos Temas
-```javascript
-// Exemplo de extensão do sistema de temas
-const themeSystem = new EnhancedThemeSystem();
-
-// Adicionar configuração customizada
-themeSystem.themes.custom = {
-    '--bg-primary': '#2c1810',
-    '--text-primary': '#f4e5d3',
-    // ... outras variáveis
-};
-
-// Aplicar tema customizado
-themeSystem.setTheme('custom');
-```

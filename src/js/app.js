@@ -63,136 +63,133 @@ class PontosEntretenimentoApp {
      */
     async init() {
         try {
-            console.log('Iniciando aplicacao SIG Entretenimento DF...');
+            console.log('Initializing SIG Entretenimento DF application...');
             
             // Aguardar DOM estar pronto
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => this._inicializar());
+                document.addEventListener('DOMContentLoaded', () => this._initialize());
             } else {
-                await this._inicializar();
+                await this._initialize();
             }
         } catch (error) {
-            console.error('Erro critico ao inicializar aplicacao:', error);
-            this._mostrarErroInicializacao(error);
+            console.error('Critical error during application initialization:', error);
+            this._showInitializationError(error);
         }
     }
 
     /**
-     * Processo completo de inicialização sequencial
+     * Complete sequential initialization process
      * 
-     * Implementa o fluxo de inicialização em etapas bem definidas,
-     * garantindo que cada dependência esteja disponível antes de prosseguir.
+     * Implements the initialization flow in well-defined stages,
+     * ensuring each dependency is available before proceeding.
      * 
      * @private
      */
-    async _inicializar() {
+    async _initialize() {
         try {
-            console.log('Aguardando managers...');
-            await this.aguardarManagers();
-            console.log('Managers carregados');
+            console.log('Waiting for managers...');
+            await this.waitForManagers();
+            console.log('Managers loaded');
 
-            console.log('Configurando responsividade...');
+            console.log('Configuring responsiveness...');
             this.configurarResponsividade();
-            console.log('Responsividade configurada');
+            console.log('Responsiveness configured');
             
-            console.log('Verificando autenticacao...');
-            this.verificarAutenticacao();
-            console.log('Autenticacao verificada');
+            console.log('Verifying authentication...');
+            this.verifyAuthentication();
+            console.log('Authentication verified');
             
-            console.log('Configurando interface...');
-            this.configurarInterface();
-            console.log('Interface configurada');
+            console.log('Configuring interface...');
+            this.configureInterface();
+            console.log('Interface configured');
             
-            console.log('Configurando eventos...');
-            this.configurarEventos();
-            console.log('Eventos configurados');
+            console.log('Configuring events...');
+            this.configureEvents();
+            console.log('Events configured');
             
-            // Atualizar ícones de tema após configuração
-            this.atualizarIconesTema();
+            this.updateThemeIcons();
             
-            console.log('Carregando dados...');
-            await this.carregarDados();
-            console.log('Dados carregados');
+            console.log('Loading data...');
+            this.carregarDados();
+            console.log('Data loaded');
             
-            console.log('Finalizando inicializacao...');
+            console.log('Finalizing initialization...');
             this.removerLoadingScreen();
-            this._marcarComoInicializado();
-            console.log('Aplicacao inicializada com sucesso!');
+            this._markAsInitialized();
+            console.log('Application initialized successfully');
             
         } catch (error) {
-            console.error('Erro durante inicializacao:', error);
-            this._mostrarErroInicializacao(error);
+            console.error('Error during initialization:', error);
+            this._showInitializationError(error);
         }
     }
 
     /**
-     * Marca aplicação como inicializada
+     * Mark application as initialized
      * @private
      */
-    _marcarComoInicializado() {
+    _markAsInitialized() {
         this.isInitialized = true;
         document.body.classList.add('app-initialized');
     }
 
     /**
-     * Mostra erro de inicialização e remove loading
+     * Show initialization error and remove loading
      * @private
      */
-    _mostrarErroInicializacao(error) {
-        this.mostrarErro('Erro durante o carregamento. Recarregue a página.');
+    _showInitializationError(error) {
+        this.mostrarErro('Error during loading. Please reload the page.');
         this.removerLoadingScreen();
+        console.error('Critical error during application initialization:', error);
     }
 
     /**
-     * Aguarda todos os managers estarem disponíveis
+     * Wait for all managers to be available
      * 
-     * Implementa polling com timeout para verificar se todos os managers
-     * necessários foram carregados e estão funcionais.
+     * Implements polling with timeout to check if all necessary
+     * managers have been loaded and are functional.
      * 
-     * @private (renomeado para compatibilidade)
+     * @private
      */
-    async aguardarManagers() {
-        const TIMEOUT_MS = 10000; // 10 segundos
+    async waitForManagers() {
+        const TIMEOUT_MS = 10000; // 10 seconds
         const CHECK_INTERVAL_MS = 50; // 50ms
         const start = Date.now();
         
-        console.log('Aguardando managers...');
+        console.log('Waiting for managers...');
         
         while (Date.now() - start < TIMEOUT_MS) {
-            const managersReady = this.verificarManagers();
+            const managersReady = this.checkManagers();
             
             if (managersReady.allReady) {
-                console.log('Todos os managers estao prontos:', managersReady.ready);
+                console.log('All managers are ready:', managersReady.ready);
                 return;
             }
             
-            // Verificar se pelo menos os essenciais estão prontos
             if (managersReady.hasMinimal) {
-                console.log('Managers essenciais prontos:', managersReady.ready);
-                console.log('Managers faltando:', managersReady.missing);
+                console.log('Essential managers ready:', managersReady.ready);
+                console.log('Missing managers:', managersReady.missing);
                 return;
             }
             
             await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL_MS));
         }
         
-        // Se chegou aqui, houve timeout
-        const managersStatus = this.verificarManagers();
-        console.error('Timeout ao aguardar managers. Status:', managersStatus);
+        const managersStatus = this.checkManagers();
+        console.error('Timeout waiting for managers. Status:', managersStatus);
         
-        // Tenta continuar se tiver pelo menos os essenciais
         if (managersStatus.hasMinimal) {
-            console.warn('Continuando com managers essenciais:', managersStatus.ready);
+            console.warn('Continuing with essential managers:', managersStatus.ready);
             return;
         }
         
-        throw new Error('Managers essenciais não foram carregados no tempo limite');
+        throw new Error('Essential managers were not loaded within time limit');
     }
 
     /**
-     * Verifica quais managers estão prontos
+     * Check which managers are ready
      */
-    verificarManagers() {
+    checkManagers() {
         const managers = {
             databaseManager: window.databaseManager,
             authManager: window.authManager,
@@ -220,56 +217,53 @@ class PontosEntretenimentoApp {
         };
     }
 
-    verificarAutenticacao() {
+    verifyAuthentication() {
         try {
             if (window.authManager && window.authManager.isAuthenticated()) {
                 const user = window.authManager.getCurrentUser();
-                this.configurarUsuarioLogado(user);
+                this.configureLoggedUser(user);
             } else {
-                this.configurarUsuarioVisitante();
+                this.configureVisitorUser();
             }
         } catch (error) {
-            console.error('Erro ao verificar autenticacao:', error);
-            this.configurarUsuarioVisitante();
+            console.error('Error verifying authentication:', error);
+            this.configureVisitorUser();
         }
     }
 
     /**
-     * Configurar interface para usuário logado
+     * Configure interface for logged user
      */
-    configurarUsuarioLogado(user) {
-        console.log(`Usuario logado: ${user.name} (${user.role})`);
+    configureLoggedUser(user) {
+        console.log(`Logged user: ${user.name} (${user.role})`);
         
-        // Atualizar botão do header
-        this.atualizarBotaoLogin(user);
+        this.updateLoginButton(user);
         
-        // Configurar interface baseada no papel
         if (user.role === 'administrator') {
             this.isAdmin = true;
-            this.configurarInterfaceAdmin();
+            this.configureAdminInterface();
         } else if (user.role === 'user') {
             this.isAdmin = false;
-            this.configurarInterfaceUsuario();
+            this.configureUserInterface();
         }
         
-        // Mostrar/ocultar botão de favoritos baseado no tipo de usuário
-        this.atualizarVisibilidadeFavoritos(user.role);
+        this.updateFavoritesVisibility(user.role);
     }
 
     /**
-     * Configurar interface para visitante
+     * Configure interface for visitor
      */
-    configurarUsuarioVisitante() {
-        console.log('Usuario visitante');
+    configureVisitorUser() {
+        console.log('Visitor user');
         this.isAdmin = false;
-        this.configurarBotaoLogin();
-        this.atualizarVisibilidadeFavoritos('visitor');
+        this.configureLoginButton();
+        this.updateFavoritesVisibility('visitor');
     }
 
     /**
-     * Configurar botão de login para visitantes
+     * Configure login button for visitors
      */
-    configurarBotaoLogin() {
+    configureLoginButton() {
         const loginBtn = document.getElementById('header-login-btn');
         if (loginBtn) {
             loginBtn.innerHTML = '<i class="fas fa-user"></i> ENTRAR';
@@ -280,15 +274,14 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Atualizar botão após login
+     * Update button after login
      */
-    atualizarBotaoLogin(user) {
+    updateLoginButton(user) {
         const loginBtn = document.getElementById('header-login-btn');
         if (loginBtn) {
             const isAdmin = user.role === 'admin';
             const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
             
-            // Substituir por botão de usuário com dropdown
             loginBtn.outerHTML = `
                 <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="user-info-btn">
                     <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
@@ -297,69 +290,53 @@ class PontosEntretenimentoApp {
                 </button>
             `;
             
-            // Configurar event listener para o menu
-            const userInfoBtn = document.getElementById('user-info-btn');
-            if (userInfoBtn) {
-                userInfoBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (window.userMenu) {
-                        window.userMenu.toggle(userInfoBtn);
-                    }
-                });
-            }
+            this.configureUserMenu();
         }
     }
 
     /**
-     * Configurar interface para administrador
+     * Configure interface for administrator
      */
-    configurarInterfaceAdmin() {
-        console.log('Configurando interface para administrador');
-        // Admin pode ver pontos pendentes e tem acesso a todas as funcionalidades
-        this.adicionarBotoesAdmin();
+    configureAdminInterface() {
+        console.log('Configuring administrator interface');
+        this.addAdminButtons();
     }
 
     /**
-     * Configurar interface para usuário comum
+     * Configure interface for regular user
      */
-    configurarInterfaceUsuario() {
-        console.log('Configurando interface para usuario comum');
-        // Adicionar categoria de favoritos
-        this.adicionarCategoriaFavoritos();
-        
-        // Configurar botões de ação do usuário
-        this.configurarAcoesUsuario();
+    configureUserInterface() {
+        console.log('Configuring user interface');
+        this.addFavoritesCategory();
+        this.configureUserActions();
     }
 
     /**
-     * Adicionar categoria de favoritos
+     * Add favorites category
      */
-    adicionarCategoriaFavoritos() {
-        const favoritosBtn = document.querySelector('[data-categoria="favoritos"]');
-        if (favoritosBtn) {
-            favoritosBtn.classList.remove('hidden');
+    addFavoritesCategory() {
+        const favoritesBtn = document.querySelector('[data-categoria="favoritos"]');
+        if (favoritesBtn) {
+            favoritesBtn.classList.remove('hidden');
         }
     }
 
     /**
-     * Atualizar visibilidade do botão de favoritos baseado no papel do usuário
+     * Update favorites button visibility based on user role
      */
-    atualizarVisibilidadeFavoritos(userRole) {
-        const favoritosBtn = document.querySelector('[data-categoria="favoritos"]');
-        if (favoritosBtn) {
+    updateFavoritesVisibility(userRole) {
+        const favoritesBtn = document.querySelector('[data-categoria="favoritos"]');
+        if (favoritesBtn) {
             if (userRole === 'user') {
-                // Mostrar para usuários comuns
-                favoritosBtn.classList.remove('hidden');
+                favoritesBtn.classList.remove('hidden');
             } else {
-                // Ocultar para administradores e visitantes
-                favoritosBtn.classList.add('hidden');
+                favoritesBtn.classList.add('hidden');
                 
-                // Se favoritos estava ativo, mudar para "todos"
-                if (favoritosBtn.classList.contains('active')) {
-                    favoritosBtn.classList.remove('active');
-                    const todosBtn = document.querySelector('[data-categoria="todos"]');
-                    if (todosBtn) {
-                        todosBtn.classList.add('active');
+                if (favoritesBtn.classList.contains('active')) {
+                    favoritesBtn.classList.remove('active');
+                    const allBtn = document.querySelector('[data-categoria="todos"]');
+                    if (allBtn) {
+                        allBtn.classList.add('active');
                         this.filtrarPorCategoria('todos');
                     }
                 }
@@ -368,48 +345,45 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Adicionar botões de administrador
+     * Add administrator buttons
      */
-    adicionarBotoesAdmin() {
-        // Implementar botões específicos do admin se necessário
-        console.log('🔧 Adicionando funcionalidades de administrador');
+    addAdminButtons() {
+        console.log('Adding administrator functionalities');
     }
 
     /**
-     * Configurar ações para usuário comum
+     * Configure actions for regular user
      */
-    configurarAcoesUsuario() {
-        // Implementar ações específicas do usuário
-        console.log('Configurando acoes para usuario comum');
+    configureUserActions() {
+        console.log('Configuring user actions');
     }
 
     /**
-     * Mostrar menu do usuário
+     * Show user menu
      */
-    mostrarMenuUsuario(user) {
-        // Implementação simples com confirm/prompt - em produção seria um dropdown
+    showUserMenu(user) {
         if (user.role === 'administrator') {
-            const opcao = confirm(`Olá ${user.name}!\n\nDeseja acessar o painel administrativo?\n\nOK = Painel Admin\nCancelar = Logout`);
-            if (opcao) {
+            const option = confirm(`Hello ${user.name}!\n\nDo you want to access the administrative panel?\n\nOK = Admin Panel\nCancel = Logout`);
+            if (option) {
                 window.location.href = 'admin.html';
             } else {
-                window.authManager.logout();
+                if (window.authManager) window.authManager.logout();
                 location.reload();
             }
         } else {
-            const logout = confirm(`Olá ${user.name}!\n\nDeseja fazer logout?`);
+            const logout = confirm(`Hello ${user.name}!\n\nDo you want to logout?`);
             if (logout) {
-                window.authManager.logout();
+                if (window.authManager) window.authManager.logout();
                 location.reload();
             }
         }
     }
 
-    configurarInterface() {
+    configureInterface() {
         try {
-            console.log('Configurando interface...');
+            console.log('Configuring interface...');
             this.configurarMenuCategorias();
-            this.configurarEstatisticas();
+            this.atualizarEstatisticas();
             console.log('Interface configurada');
         } catch (error) {
             console.error('Erro ao configurar interface:', error);
@@ -417,12 +391,11 @@ class PontosEntretenimentoApp {
         }
     }
 
-    configurarEstatisticas() {
-        // Método vazio por enquanto - estatísticas são atualizadas em atualizarEstatisticas()
+    configureStatistics() {
+        // !TODO: Implement application statistics configuration logic
     }
 
-    configurarEventos() {
-        // Eventos de categoria
+    configureEvents() {
         document.addEventListener('click', (e) => {
             if (e.target.matches('[data-categoria]')) {
                 const categoria = e.target.dataset.categoria;
@@ -430,73 +403,42 @@ class PontosEntretenimentoApp {
             }
         });
 
-        // Eventos de autenticação
         document.addEventListener('authStateChanged', (e) => {
             const { type, user } = e.detail;
             if (type === 'login') {
-                this.configurarUsuarioLogado(user);
+                this.configureLoggedUser(user);
                 this.recarregarDados();
             } else if (type === 'logout') {
-                this.configurarUsuarioVisitante();
+                this.configureVisitorUser();
                 this.recarregarDados();
             }
         });
 
-        // Configurar novos botões responsivos
-        this.configurarBotoesResponsivos();
+        this.configureResponsiveButtons();
 
-        // Eventos de ações que requerem login
         document.addEventListener('click', (e) => {
-            // Botão de favoritar
             if (e.target.matches('#btn-favorite') || e.target.closest('#btn-favorite')) {
                 this.handleFavoriteAction(e);
             }
             
-            // Botão de sugerir mudança
             if (e.target.matches('#btn-suggest') || e.target.closest('#btn-suggest')) {
                 this.handleSuggestAction(e);
             }
         });
     }
 
-    /**
-     * Configura os novos botões responsivos
-     */
-    configurarBotoesResponsivos() {
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenuDropdown = document.getElementById('mobile-menu-dropdown');
-        
-        if (mobileMenuBtn && mobileMenuDropdown) {
-            mobileMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                mobileMenuDropdown.classList.toggle('open');
-            });
-            
-            // Fechar menu ao clicar fora
-            document.addEventListener('click', (e) => {
-                if (!mobileMenuBtn.contains(e.target) && !mobileMenuDropdown.contains(e.target)) {
-                    mobileMenuDropdown.classList.remove('open');
-                }
-            });
-        }
-
-        // Theme buttons - desktop e mobile
+    configureResponsiveButtons() {
         const desktopThemeBtn = document.getElementById('desktop-theme-btn');
-        const mobileThemeBtn = document.querySelector('.mobile-menu-item.theme-btn');
+        const mobileThemeBtn = document.getElementById('mobile-theme-btn');
         
         if (desktopThemeBtn) {
             desktopThemeBtn.addEventListener('click', () => this.toggleTheme());
         }
         
         if (mobileThemeBtn) {
-            mobileThemeBtn.addEventListener('click', () => {
-                this.toggleTheme();
-                mobileMenuDropdown.classList.remove('open');
-            });
+            mobileThemeBtn.addEventListener('click', () => this.toggleTheme());
         }
 
-        // Login buttons - desktop e mobile
         const desktopLoginBtn = document.getElementById('desktop-login-btn');
         const mobileLoginBtn = document.getElementById('mobile-login-btn');
         
@@ -505,10 +447,7 @@ class PontosEntretenimentoApp {
         }
         
         if (mobileLoginBtn) {
-            mobileLoginBtn.addEventListener('click', () => {
-                this.handleLoginClick();
-                mobileMenuDropdown.classList.remove('open');
-            });
+            mobileLoginBtn.addEventListener('click', () => this.handleLoginClick());
         }
     }
 
@@ -518,16 +457,16 @@ class PontosEntretenimentoApp {
     toggleTheme() {
         if (window.themeManager) {
             window.themeManager.toggleTheme();
-            this.atualizarIconesTema();
+            this.updateThemeIcons();
         }
     }
 
     /**
      * Atualiza os ícones dos botões de tema
      */
-    atualizarIconesTema() {
+    updateThemeIcons() {
         const desktopThemeIcon = document.getElementById('desktop-theme-icon');
-        const mobileThemeIcon = document.getElementById('theme-icon');
+        const mobileThemeIcon = document.getElementById('mobile-theme-icon');
         
         const isDark = document.body.classList.contains('theme-dark');
         const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
@@ -564,15 +503,15 @@ class PontosEntretenimentoApp {
     handleFavoriteAction(e) {
         e.preventDefault();
         
-        if (!window.authManager.isAuthenticated()) {
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
             window.loginModal.open({
                 pendingAction: () => this.handleFavoriteAction(e)
             });
             return;
         }
         
-        // Implementar lógica de favoritar
-        const pontoId = this.getCurrentPontoId(); // Método para obter ID do ponto atual
+        // !TODO: Implement favorites logic for logged users
+        const pointId = this.getCurrentPointId();
         if (pontoId) {
             this.toggleFavorito(pontoId);
         }
@@ -584,14 +523,14 @@ class PontosEntretenimentoApp {
     handleSuggestAction(e) {
         e.preventDefault();
         
-        if (!window.authManager.isAuthenticated()) {
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
             window.loginModal.open({
                 pendingAction: () => this.handleSuggestAction(e)
             });
             return;
         }
         
-        // Implementar lógica de sugerir mudança
+        // !TODO: Implement suggestion system for point changes
         const pontoId = this.getCurrentPontoId();
         if (pontoId) {
             this.abrirModalSugestao(pontoId);
@@ -603,7 +542,8 @@ class PontosEntretenimentoApp {
      */
     recarregarDados() {
         if (window.mapManager) {
-            const user = window.authManager.getCurrentUser();
+            const user = window.authManager && window.authManager.getCurrentUser ? 
+                window.authManager.getCurrentUser() : null;
             window.mapManager.recarregarPontos(user ? user.role : 'visitor', user ? user.username : null);
         }
         this.atualizarEstatisticas();
@@ -614,7 +554,8 @@ class PontosEntretenimentoApp {
      */
     toggleFavorito(pontoId) {
         try {
-            const user = window.authManager.getCurrentUser();
+            const user = window.authManager && window.authManager.getCurrentUser ? 
+                window.authManager.getCurrentUser() : null;
             if (!user) return;
             
             const foiAdicionado = window.databaseManager.toggleFavorito(pontoId, user.username);
@@ -649,11 +590,10 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Obter ID do ponto atual
+     * Get current point ID
      */
     getCurrentPontoId() {
-        // Implementar lógica para obter o ID do ponto atualmente selecionado
-        // Por enquanto, retorna null - seria implementado baseado no info-panel
+        // !TODO: Implement logic to get currently selected point ID
         return null;
     }
 
@@ -661,12 +601,15 @@ class PontosEntretenimentoApp {
      * Mostrar notificação
      */
     mostrarNotificacao(mensagem, tipo = 'info') {
-        // Implementação simples de notificação
-        console.log(`${tipo.toUpperCase()}: ${mensagem}`);
-        // Em produção, seria uma notificação visual
+        // Usar errorHandler para notificações de sucesso
+        if (window.errorHandler && tipo === 'success') {
+            window.errorHandler.showSuccess(mensagem);
+        } else {
+            console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+        }
     }
 
-    async carregarDados() {
+    carregarDados() {
         try {
             console.log('Carregando dados...');
             
@@ -681,15 +624,15 @@ class PontosEntretenimentoApp {
                 return;
             }
             
-            // Não precisamos chamar carregarDados no databaseManager
-            // pois os dados já são carregados no constructor
+            // Inicializar o mapa se ainda não foi inicializado
+            if (!window.mapManager.map) {
+                console.log('Inicializando mapa...');
+                window.mapManager.init();
+            }
+            
+            // Renderizar pontos e atualizar estatísticas
             this.renderizarPontos();
             this.atualizarEstatisticas();
-            
-            // Forçar redimensionamento após carregar dados
-            setTimeout(() => {
-                this.forcarRedimensionamentoMapa();
-            }, 500);
             
             console.log('Dados carregados com sucesso');
         } catch (error) {
@@ -729,7 +672,7 @@ class PontosEntretenimentoApp {
 
             // Verificar se é filtro de favoritos e usuário está logado
             if (categoria === 'favoritos') {
-                if (!window.authManager.isAuthenticated()) {
+                if (!window.authManager || !window.authManager.isAuthenticated()) {
                     // Usuário não logado tentando ver favoritos - abrir modal de login
                     window.loginModal.open({
                         pendingAction: () => this.filtrarPorCategoria('favoritos')
@@ -740,7 +683,8 @@ class PontosEntretenimentoApp {
 
             // Filtrar marcadores se o mapa estiver disponível
             if (window.mapManager && typeof window.mapManager.filtrarPorCategoria === 'function') {
-                const user = window.authManager.getCurrentUser();
+                const user = window.authManager && window.authManager.getCurrentUser ? 
+                    window.authManager.getCurrentUser() : null;
                 window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
             } else {
                 console.warn('MapManager nao disponivel para filtrar');
@@ -764,7 +708,7 @@ class PontosEntretenimentoApp {
                 return;
             }
             
-            console.log('🔄 Iniciando renderização de pontos via app...');
+            console.log('Iniciando renderização de pontos via app...');
             
             // Usar o método recarregarPontos do MapManager em vez de renderizar manualmente
             const user = window.authManager?.getCurrentUser();
@@ -775,11 +719,9 @@ class PontosEntretenimentoApp {
             window.mapManager.recarregarPontos(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
-            setTimeout(() => {
-                this.filtrarPorCategoria('todos');
-            }, 500);
+            this.filtrarPorCategoria('todos');
             
-            console.log('✅ Renderização delegada para MapManager');
+            console.log('Renderização delegada para MapManager');
         } catch (error) {
             console.error('Erro ao renderizar pontos:', error);
         }
@@ -817,7 +759,10 @@ class PontosEntretenimentoApp {
 
     mostrarErro(mensagem) {
         console.error(mensagem);
-        // Implementar notificação de erro se necessário
+        // Usar error handler para exibir pop-up interativo
+        if (window.errorHandler) {
+            window.errorHandler.showCustomError(mensagem);
+        }
     }
 
     removerLoadingScreen() {

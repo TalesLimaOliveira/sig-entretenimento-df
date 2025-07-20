@@ -34,7 +34,7 @@ class ThemeManager {
      * Inicializa o gerenciador de temas
      */
     init() {
-        console.log('🎨 Inicializando ThemeManager...');
+        console.log('Initializing ThemeManager...');
         this.loadTheme();
         this.setupToggleButton();
         this.applyTheme();
@@ -42,7 +42,7 @@ class ThemeManager {
         // Aplica o filtro de modo escuro por padrão na primeira vez
         this.applyDefaultDarkFilter();
         
-        console.log(`✅ Tema aplicado: ${this.currentTheme}`);
+        console.log(`Theme applied: ${this.currentTheme}`);
     }
 
     /**
@@ -55,14 +55,14 @@ class ThemeManager {
             if (mapContainer) {
                 // Aplica sempre o filtro de modo escuro por padrão
                 mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
-                console.log('🌙 Filtro de modo escuro aplicado por padrão');
+                console.log('Dark mode filter applied by default');
             } else {
                 // Se ainda não foi carregado, tenta novamente após mais tempo
                 setTimeout(() => {
                     const mapContainer = document.querySelector('.leaflet-container');
                     if (mapContainer) {
                         mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
-                        console.log('🌙 Filtro de modo escuro aplicado por padrão (segunda tentativa)');
+                        console.log('Dark mode filter applied by default (second attempt)');
                     }
                 }, 1500);
             }
@@ -82,7 +82,7 @@ class ThemeManager {
                     const mapContainer = document.querySelector('.leaflet-container');
                     if (mapContainer && !mapContainer.style.filter) {
                         mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
-                        console.log('🌙 Filtro de modo escuro aplicado via observer');
+                        console.log('Dark mode filter applied via observer');
                         observer.disconnect(); // Para de observar após aplicar
                     }
                 }
@@ -282,7 +282,7 @@ class ThemeManager {
         this.applyTheme();
         this.updateButtonState();
         
-        console.log(`🎨 Tema alterado para: ${theme}`);
+        console.log(`Theme changed to: ${theme}`);
         
         // Dispatch evento customizado para outros componentes
         this.dispatchThemeChange();
@@ -340,3 +340,15 @@ class ThemeManager {
         this.setTheme(this.DEFAULT_THEME);
     }
 }
+
+// Criar instância global
+const themeManager = new ThemeManager();
+
+// Exportar para uso em módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ThemeManager;
+}
+
+// Disponibilizar globalmente
+window.ThemeManager = ThemeManager;
+window.themeManager = themeManager;
