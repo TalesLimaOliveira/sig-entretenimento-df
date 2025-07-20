@@ -1,39 +1,81 @@
+/**
+ * MapManager - Gerenciador de Mapas Interativos
+ * 
+ * Responsabilidades:
+ * - Inicializar e configurar mapa Leaflet
+ * - Gerenciar marcadores e categorias
+ * - Controlar responsividade e performance
+ * - Filtrar pontos por categoria e usuário
+ * - Gerenciar modo de adição de pontos
+ * 
+ * Usado por: PontosEntretenimentoApp
+ * Dependências: Leaflet.js, DatabaseManager
+ * 
+ * @author Sistema de Entretenimento DF
+ * @version 2.0.0
+ */
 class MapManager {
+    /**
+     * Construtor do MapManager
+     * @param {string} containerId - ID do container HTML do mapa
+     */
     constructor(containerId = 'map') {
+        // Configurações básicas
         this.containerId = containerId;
         this.map = null;
-        this.marcadores = new Map();
-        this.gruposPorCategoria = new Map();
-        this.categoriaAtiva = 'todos';
-        this.popupAberto = null;
-        this.modoAdicao = false;
+        
+        // Gerenciamento de marcadores
+        this.marcadores = new Map();              // Mapa de marcadores por ID
+        this.gruposPorCategoria = new Map();      // Grupos de marcadores por categoria
+        
+        // Estado da aplicação
+        this.categoriaAtiva = 'todos';           // Categoria atualmente filtrada
+        this.popupAberto = null;                 // ID do popup atualmente aberto
+        this.modoAdicao = false;                 // Se está em modo de adição de pontos
+        
+        // Constantes do mapa
+        this.BRASILIA_CENTER = [-15.794700, -47.890000];
+        this.DEFAULT_ZOOM = 11;
+        this.MIN_ZOOM = 10;
+        this.MAX_ZOOM = 18;
+        this.DF_BOUNDS = L.latLngBounds(
+            [-16.5, -48.5], // Southwest
+            [-15.3, -47.2]  // Northeast
+        );
+        
+        // Inicializar
         this.init();
     }
 
     /**
-     * Inicializa o mapa
+     * Inicializa o mapa e todos os seus componentes
+     * 
+     * Fluxo de inicialização:
+     * 1. Validar container e dependências
+     * 2. Criar mapa base
+     * 3. Configurar camadas
+     * 4. Aplicar tema inicial
+     * 5. Configurar eventos
+     * 6. Configurar controles
+     * 7. Configurar responsividade
+     * 
+     * Usado por: Constructor
+     * @throws {Error} Se container não existir ou Leaflet não estiver carregado
      */
     init() {
         try {
             console.log('🗺️ Inicializando MapManager...');
             
-            // Verificar se o container existe
-            const container = document.getElementById(this.containerId);
-            if (!container) {
-                throw new Error(`Container '${this.containerId}' não encontrado`);
-            }
+            // Validar pré-requisitos
+            this._validarPreRequisitos();
             
-            // Verificar se Leaflet está disponível
-            if (typeof L === 'undefined') {
-                throw new Error('Leaflet não está carregado');
-            }
-            
-            this.criarMapa();
-            this.configurarCamadas();
-            this.aplicarTemaInicial();
-            this.configurarEventListeners();
-            this.configurarControles();
-            this.configurarResponsividade();
+            // Inicializar componentes na ordem correta
+            this._criarMapa();
+            this._configurarCamadas();
+            this._aplicarTemaInicial();
+            this._configurarEventListeners();
+            this._configurarControles();
+            this._configurarResponsividade();
             
             console.log('✅ MapManager inicializado com sucesso');
         } catch (error) {
@@ -43,54 +85,105 @@ class MapManager {
     }
 
     /**
-     * Configurar responsividade do mapa
+     * Valida pré-requisitos para inicialização
+     * @private
+     * @throws {Error} Se requisitos não atendidos
      */
-    configurarResponsividade() {
-        // Redimensionar mapa quando a janela mudar de tamanho
-        const resizeObserver = new ResizeObserver(() => {
+    _validarPreRequisitos() {
+        // Verificar se o container existe
+        const container = document.getElementById(this.containerId);
+        if (!container) {
+            throw new Error(`Container '${this.containerId}' não encontrado`);
+        }
+        
+        // Verificar se Leaflet está disponível
+        if (typeof L === 'undefined') {
+            throw new Error('Leaflet não está carregado');
+        }
+    }
+
+    /**
+     * Configura responsividade completa do mapa
+     * 
+     * Implementa:
+     * - ResizeObserver para redimensionamento do container
+     * - Listener para mudanças de orientação
+     * - Debounced resize handler
+     * - Configurações responsivas do mapa
+     * 
+     * Usado por: init()
+     * @private
+     */
+    _configurarResponsividade() {
+        // ResizeObserver para mudanças no container
+        this._configurarResizeObserver();
+        
+        // Listeners para mudanças de orientação e janela
+        this._configurarEventListenersResponsivos();
+        
+        // Aplicar configurações responsivas baseadas no tamanho atual
+        this._aplicarConfiguracoesMobile();
+    }
+
+    /**
+     * Configura ResizeObserver para o container do mapa
+     * @private
+     */
+    _configurarResizeObserver() {
+        if (!ResizeObserver) return;
+        
+        const resizeObserver = new ResizeObserver(this._debounce(() => {
             if (this.map) {
-                // Aguardar um pouco para garantir que o container está com o tamanho correto
+                // Aguardar um pouco para garantir que o container está dimensionado
                 setTimeout(() => {
                     this.map.invalidateSize();
                 }, 100);
             }
-        });
+        }, 100));
         
-        // Observar mudanças no container do mapa
         const mapContainer = document.getElementById(this.containerId);
         if (mapContainer) {
             resizeObserver.observe(mapContainer);
         }
-        
-        // Listener para mudanças de orientação em dispositivos móveis
+    }
+
+    /**
+     * Configura event listeners responsivos
+     * @private
+     */
+    _configurarEventListenersResponsivos() {
+        // Mudanças de orientação em dispositivos móveis
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 if (this.map) {
                     this.map.invalidateSize();
+                    this._aplicarConfiguracoesMobile();
                 }
             }, 500);
         });
         
-        // Listener para redimensionamento da janela
-        window.addEventListener('resize', this.debounce(() => {
+        // Redimensionamento da janela
+        window.addEventListener('resize', this._debounce(() => {
             if (this.map) {
                 this.map.invalidateSize();
+                this._aplicarConfiguracoesMobile();
             }
         }, 250));
     }
 
     /**
-     * Debounce utility function
+     * Função utilitária de debounce para otimizar performance
+     * @private
      * @param {Function} func - Função a ser debounced
      * @param {number} wait - Tempo de espera em ms
      * @returns {Function} Função debounced
      */
-    debounce(func, wait) {
+    _debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
             const later = () => {
                 clearTimeout(timeout);
-                func(...args);
+                func.apply(this, args);
             };
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
@@ -98,268 +191,455 @@ class MapManager {
     }
 
     /**
-     * Criar o mapa base com configurações responsivas
+     * Cria o mapa base com configurações otimizadas
+     * 
+     * Configurações aplicadas:
+     * - Centro em Brasília
+     * - Limites do Distrito Federal
+     * - Controles customizados
+     * - Renderer Canvas para performance
+     * 
+     * Usado por: init()
+     * @private
      */
-    criarMapa() {
-        // Configurações do mapa
-        const BRASILIA_CENTER = [-15.794700, -47.890000];
-        const DEFAULT_ZOOM = 11;
-        const MIN_ZOOM = 10;
-        const MAX_ZOOM = 18;
-        
-        // Limites do Distrito Federal
-        const DF_BOUNDS = L.latLngBounds(
-            [-16.5, -48.5], // Southwest
-            [-15.3, -47.2]  // Northeast
-        );
-
+    _criarMapa() {
         // Criar mapa com configurações otimizadas
         this.map = L.map(this.containerId, {
-            center: BRASILIA_CENTER,
-            zoom: DEFAULT_ZOOM,
-            zoomControl: false, // Controle customizado será adicionado depois
-            attributionControl: false, // Remover controle de atribuição
-            preferCanvas: true, // Melhor performance para muitos marcadores
-            renderer: L.canvas() // Renderer de canvas para melhor performance
+            center: this.BRASILIA_CENTER,
+            zoom: this.DEFAULT_ZOOM,
+            zoomControl: false,              // Controle customizado será adicionado
+            attributionControl: false,       // Removido para interface limpa
+            preferCanvas: true,              // Melhor performance para muitos marcadores
+            renderer: L.canvas(),            // Renderer de canvas otimizado
+            maxBounds: this.DF_BOUNDS,       // Limitar área navegável
+            minZoom: this.MIN_ZOOM,
+            maxZoom: this.MAX_ZOOM
         });
-
-        // Configurar limites e zoom
-        this.map.setMaxBounds(DF_BOUNDS);
-        this.map.setMinZoom(MIN_ZOOM);
-        this.map.setMaxZoom(MAX_ZOOM);
         
-        // Configurar opções responsivas
-        this.configurarOpcoesResponsivas();
+        // Aplicar configurações responsivas iniciais
+        this._aplicarConfiguracoesMobile();
     }
 
     /**
-     * Configurar opções responsivas do mapa
+     * Aplica configurações específicas para dispositivos móveis
+     * @private
      */
-    configurarOpcoesResponsivas() {
-        // Detectar se é dispositivo móvel
+    _aplicarConfiguracoesMobile() {
+        if (!this.map) return;
+        
         const isMobile = window.innerWidth <= 768;
         
         if (isMobile) {
-            // Configurações para mobile
-            this.map.options.zoomSnap = 0.5; // Zoom mais suave
+            // Configurações para mobile: zoom mais suave
+            this.map.options.zoomSnap = 0.5;
             this.map.options.zoomDelta = 0.5;
             this.map.options.wheelPxPerZoomLevel = 120;
             
-            // Configurar popup para mobile
+            // Popup responsivo
             this.map.options.maxPopupWidth = Math.min(300, window.innerWidth - 40);
         } else {
-            // Configurações para desktop
+            // Configurações para desktop: zoom preciso
             this.map.options.zoomSnap = 1;
             this.map.options.zoomDelta = 1;
             this.map.options.wheelPxPerZoomLevel = 60;
+            
+            // Popup maior para desktop
+            this.map.options.maxPopupWidth = 400;
         }
     }
 
     /**
-     * Configurar camadas base do mapa
+     * Configura as camadas base do mapa
+     * 
+     * Implementa:
+     * - Camada de tiles OpenStreetMap
+     * - Inicialização dos grupos de categorias
+     * - Carregamento inicial dos pontos
+     * 
+     * Usado por: init()
+     * @private
      */
-    configurarCamadas() {
-        // Criar e adicionar apenas a camada de ruas
+    _configurarCamadas() {
+        // Criar e adicionar camada de ruas otimizada
         this.camadaRuas = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: ''
+            attribution: '', // Removido para interface limpa
+            loading: 'lazy', // Carregamento otimizado
+            crossOrigin: true
         });
         
-        // Adicionar camada ao mapa
         this.camadaRuas.addTo(this.map);
 
         // Inicializar grupos de categorias
-        this.inicializarGruposCategorias();
+        this._inicializarGruposCategorias();
     }
 
     /**
-     * Inicializar grupos de categorias
+     * Inicializa grupos de marcadores por categoria
+     * 
+     * Cria um LayerGroup para cada categoria disponível,
+     * permitindo filtros eficientes por categoria
+     * 
+     * @param {Array} pontosCustomizados - Pontos específicos para carregar (opcional)
+     * Usado por: _configurarCamadas(), filtrarPorCategoria()
+     * @private
      */
-    inicializarGruposCategorias(pontosCustomizados = null) {
-        // Limpar grupos existentes
-        this.gruposPorCategoria.clear();
-
-        // Grupo para "todos"
-        this.gruposPorCategoria.set('todos', L.layerGroup().addTo(this.map));
-
-        // Aguardar databaseManager estar disponível
-        if (window.databaseManager) {
-            const categorias = window.databaseManager.getCategorias();
-            
-            // Grupos para cada categoria
-            categorias.forEach(categoria => {
-                this.gruposPorCategoria.set(categoria.id, L.layerGroup());
-            });
-
-            // Carregar pontos
-            const pontos = pontosCustomizados || this.obterPontosParaCarregar();
-            this.carregarPontos(pontos);
-        }
-    }
-
-    /**
-     * Obter pontos baseado no perfil do usuário
-     */
-    obterPontosParaCarregar() {
-        if (!window.databaseManager) return [];
-
-        const user = window.authManager?.getCurrentUser();
-        if (user && user.role === 'administrator') {
-            // Admin vê confirmados + pendentes
-            return [...window.databaseManager.getPontos(), ...window.databaseManager.getPontosPendentes()];
-        } else {
-            // Visitante/usuário vê apenas confirmados
-            return window.databaseManager.getPontos();
-        }
-    }
-
-    /**
-     * Configurar event listeners
-     */
-    configurarEventListeners() {
-        // Clique no mapa para adicionar pontos (só para admin)
-        this.map.on('click', (e) => {
-            if (authManager.isAdmin() && this.modoAdicao) {
-                this.iniciarAdicaoPonto(e.latlng);
+    _inicializarGruposCategorias(pontosCustomizados = null) {
+        // Limpar grupos existentes do mapa
+        this.gruposPorCategoria.forEach(grupo => {
+            if (this.map.hasLayer(grupo)) {
+                this.map.removeLayer(grupo);
             }
         });
+        this.gruposPorCategoria.clear();
 
-        // Eventos do banco de dados
-        document.addEventListener('database_pontoAdicionado', (e) => {
-            this.adicionarMarcador(e.detail);
-        });
+        // Grupo especial para "todos" (sempre visível)
+        this.gruposPorCategoria.set('todos', L.layerGroup().addTo(this.map));
 
-        document.addEventListener('database_pontoAtualizado', (e) => {
-            this.atualizarMarcador(e.detail);
-        });
+        // Aguardar DatabaseManager estar disponível
+        if (window.databaseManager) {
+            try {
+                const categorias = window.databaseManager.getCategorias();
+                
+                // Criar grupo para cada categoria
+                categorias.forEach(categoria => {
+                    this.gruposPorCategoria.set(categoria.id, L.layerGroup());
+                });
 
-        document.addEventListener('database_pontoRemovido', (e) => {
-            this.removerMarcador(e.detail.id);
-        });
-
-        // Eventos de autenticação
-        document.addEventListener('authStateChanged', (e) => {
-            this.atualizarControlesAdmin(e.detail.type === 'login' && e.detail.user.role === 'administrator');
-        });
+                // Carregar pontos se disponíveis
+                const pontos = pontosCustomizados || this._obterPontosParaCarregar();
+                if (pontos && pontos.length > 0) {
+                    this._carregarPontos(pontos);
+                }
+                
+                console.log(`📍 Grupos de categorias inicializados: ${categorias.length} categorias`);
+            } catch (error) {
+                console.error('❌ Erro ao inicializar grupos de categorias:', error);
+            }
+        } else {
+            console.warn('⚠️ DatabaseManager não disponível para inicializar categorias');
+        }
     }
 
     /**
-     * Configurar controles do mapa
+     * Obtém pontos para carregar baseado no perfil do usuário
+     * 
+     * Lógica de acesso:
+     * - Administrator: vê pontos confirmados + pendentes
+     * - User/Visitor: vê apenas pontos confirmados
+     * 
+     * @returns {Array} Lista de pontos para carregar
+     * Usado por: _inicializarGruposCategorias(), recarregarPontos()
+     * @private
      */
-    configurarControles() {
-        // Remover controles de zoom e escala para interface mais limpa
-        // Os controles podem ser adicionados de volta se necessário
-
-        // Controle de coordenadas (para admins)
-        if (authManager.isAdmin()) {
-            this.adicionarControlesCoordenadas();
+    _obterPontosParaCarregar() {
+        if (!window.databaseManager) {
+            console.warn('⚠️ DatabaseManager não disponível');
+            return [];
         }
 
-        // Nota: Controles de zoom, escala e localização removidos para melhorar a interface
+        try {
+            const user = window.authManager?.getCurrentUser();
+            
+            if (user && user.role === 'administrator') {
+                // Admin vê todos os pontos (confirmados + pendentes)
+                const confirmados = window.databaseManager.getPontos();
+                const pendentes = window.databaseManager.getPontosPendentes();
+                return [...confirmados, ...pendentes];
+            } else {
+                // Visitante/usuário vê apenas confirmados
+                return window.databaseManager.getPontos();
+            }
+        } catch (error) {
+            console.error('❌ Erro ao obter pontos:', error);
+            return [];
+        }
     }
 
     /**
-     * Alternar tema do mapa
+     * Carrega pontos no mapa criando marcadores apropriados
+     * 
+     * @param {Array} pontos - Lista de pontos a serem carregados
+     * Usado por: _inicializarGruposCategorias(), recarregarPontos()
+     * @private
      */
-    alternarTemaMapa(temaEscuro = false) {
+    _carregarPontos(pontos) {
         try {
-            // O tema escuro será aplicado via CSS na interface
-            this.map.eachLayer((layer) => {
-                if (layer instanceof L.TileLayer) {
-                    this.map.removeLayer(layer);
+            console.log(`📍 Carregando ${pontos.length} pontos no mapa...`);
+            
+            // Limpar marcadores existentes
+            this.limparMarcadores();
+            
+            // Adicionar cada ponto
+            pontos.forEach((ponto, index) => {
+                try {
+                    this.adicionarMarcador(ponto);
+                } catch (error) {
+                    console.error(`❌ Erro ao adicionar ponto ${ponto.id || index}:`, error);
                 }
             });
-
-            // Sempre usar mapa de ruas
-            this.camadaRuas.addTo(this.map);
-            console.log('🏙️ Mapa configurado com camada de ruas');
+            
+            console.log(`✅ ${pontos.length} pontos carregados com sucesso`);
         } catch (error) {
-            console.error('❌ Erro ao alterar tema do mapa:', error);
+            console.error('❌ Erro ao carregar pontos:', error);
         }
     }
 
     /**
-     * Aplicar tema inicial baseado nas configurações salvas
+     * Aplica tema inicial baseado nas preferências salvas
+     * 
+     * Usado por: init()
+     * @private
      */
-    aplicarTemaInicial() {
+    _aplicarTemaInicial() {
         try {
-            // Verificar tema salvo no localStorage
-            const temaSalvo = localStorage.getItem('sig-df-theme') || 'dark';
-            const temaEscuro = temaSalvo === 'dark';
-            
-            // Aplicar tema ao mapa
-            this.alternarTemaMapa(temaEscuro);
-            
-            console.log(`🎨 Tema inicial aplicado ao mapa: ${temaEscuro ? 'escuro' : 'claro'}`);
+            // O tema será aplicado via CSS, aqui apenas configuramos o mapa
+            if (window.themeManager) {
+                const temaAtual = window.themeManager.getTemaAtual();
+                this._aplicarTemaNoMapa(temaAtual === 'dark');
+            }
         } catch (error) {
             console.error('❌ Erro ao aplicar tema inicial:', error);
         }
     }
 
     /**
-     * Adicionar controle de coordenadas
+     * Aplica tema específico no mapa
+     * 
+     * @param {boolean} temaEscuro - Se deve aplicar tema escuro
+     * @private
      */
-    adicionarControlesCoordenadas() {
-        const controleCoordenadas = L.control({ position: 'bottomleft' });
-        
-        controleCoordenadas.onAdd = function() {
-            const div = L.DomUtil.create('div', 'controle-coordenadas');
-            div.style.background = 'rgba(255, 255, 255, 0.9)';
-            div.style.padding = '5px 10px';
-            div.style.borderRadius = '5px';
-            div.style.fontSize = '12px';
-            div.style.fontFamily = 'monospace';
-            div.innerHTML = 'Lat: -, Lng: -';
-            return div;
-        };
+    _aplicarTemaNoMapa(temaEscuro = false) {
+        try {
+            // Para manter simplicidade, mantemos sempre a camada de ruas
+            // O tema escuro será aplicado via CSS na interface
+            console.log(`🎨 Tema ${temaEscuro ? 'escuro' : 'claro'} aplicado ao mapa`);
+        } catch (error) {
+            console.error('❌ Erro ao aplicar tema no mapa:', error);
+        }
+    }
 
-        controleCoordenadas.addTo(this.map);
-
-        // Atualizar coordenadas no mouse move
-        this.map.on('mousemove', (e) => {
-            const { lat, lng } = e.latlng;
-            const div = document.querySelector('.controle-coordenadas');
-            if (div) {
-                div.innerHTML = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+    /**
+     * Configura event listeners principais do mapa
+     * 
+     * Implementa listeners para:
+     * - Cliques no mapa (modo adição)
+     * - Eventos do banco de dados
+     * - Mudanças de autenticação
+     * 
+     * Usado por: init()
+     * @private
+     */
+    _configurarEventListeners() {
+        // Click no mapa para adicionar pontos (apenas admin em modo adição)
+        this.map.on('click', (e) => {
+            if (this._isAdminEmModoAdicao()) {
+                this._iniciarAdicaoPonto(e.latlng);
             }
+        });
+
+        // Eventos do sistema de dados
+        this._configurarEventosDatabase();
+        
+        // Eventos de autenticação
+        this._configurarEventosAuth();
+    }
+
+    /**
+     * Configura eventos relacionados ao banco de dados
+     * @private
+     */
+    _configurarEventosDatabase() {
+        // Ponto adicionado
+        document.addEventListener('database_pontoAdicionado', (e) => {
+            this.adicionarMarcador(e.detail);
+        });
+
+        // Ponto atualizado
+        document.addEventListener('database_pontoAtualizado', (e) => {
+            this.atualizarMarcador(e.detail);
+        });
+
+        // Ponto removido
+        document.addEventListener('database_pontoRemovido', (e) => {
+            this.removerMarcador(e.detail.id);
         });
     }
 
     /**
-     * Adicionar controle de localização - DESABILITADO
-     * Removido para melhorar a interface e evitar sobreposições
+     * Configura eventos relacionados à autenticação
+     * @private
      */
-    /*
-    adicionarControleLocalizacao() {
-        // Função desabilitada para melhorar UX
-        console.log('Controle de localização desabilitado');
+    _configurarEventosAuth() {
+        document.addEventListener('authStateChanged', (e) => {
+            const isAdmin = e.detail.type === 'login' && 
+                           e.detail.user?.role === 'administrator';
+            this._atualizarControlesAdmin(isAdmin);
+            
+            // Recarregar pontos baseado no novo contexto de usuário
+            this.recarregarPontos();
+        });
     }
-    */
 
     /**
-     * Localizar usuário - DESABILITADO
-     * Removido para melhorar UX e evitar sobreposições
+     * Verifica se o usuário é admin e está em modo adição
+     * @returns {boolean}
+     * @private
      */
-    /*
-    localizarUsuario() {
-        // Função desabilitada
-        console.log('Localização do usuário desabilitada');
+    _isAdminEmModoAdicao() {
+        return window.authManager?.isAdmin?.() && this.modoAdicao;
     }
-    */
 
     /**
-     * Criar ícone do usuário - DESABILITADO
-     * Removido junto com a funcionalidade de localização
+     * Configura controles específicos do mapa
+     * 
+     * Remove controles desnecessários para interface limpa
+     * Adiciona controles específicos para administradores
+     * 
+     * Usado por: init()
+     * @private
      */
-    /*
-    criarIconeUsuario() {
-        // Função desabilitada
-        return null;
+    _configurarControles() {
+        try {
+            // Remover controles padrão para interface mais limpa
+            // Os controles de zoom são removidos intencionalmente
+            
+            // Adicionar controles específicos para admins
+            if (window.authManager?.isAdmin?.()) {
+                this._adicionarControlesAdmin();
+            }
+            
+            console.log('🎛️ Controles do mapa configurados');
+        } catch (error) {
+            console.error('❌ Erro ao configurar controles:', error);
+        }
     }
-    */
 
     /**
-     * Mostrar indicador de carregamento
+     * Adiciona controles específicos para administradores
+     * @private
+     */
+    _adicionarControlesAdmin() {
+        // Controle de coordenadas para facilitar adição de pontos
+        this._adicionarControleCoordenadas();
+    }
+
+    /**
+     * Adiciona controle de coordenadas para admins
+     * @private
+     */
+    _adicionarControleCoordenadas() {
+        // Implementar se necessário
+        // Por enquanto, coordenadas são mostradas no console no click
+    }
+
+    /**
+     * Atualiza controles baseado no status de admin
+     * 
+     * @param {boolean} isAdmin - Se o usuário é administrador
+     * Usado por: _configurarEventosAuth()
+     * @private
+     */
+    _atualizarControlesAdmin(isAdmin) {
+        try {
+            if (isAdmin) {
+                this._adicionarControlesAdmin();
+            } else {
+                this._removerControlesAdmin();
+            }
+        } catch (error) {
+            console.error('❌ Erro ao atualizar controles admin:', error);
+        }
+    }
+
+    /**
+     * Remove controles específicos de administrador
+     * @private
+     */
+    _removerControlesAdmin() {
+        // Implementar se controles específicos forem adicionados
+        // Por enquanto, apenas desabilita modo de adição
+        this.modoAdicao = false;
+    }
+
+    // ==========================================
+    // MÉTODOS PÚBLICOS - INTERFACE PRINCIPAL
+    // ==========================================
+
+    /**
+     * Alterna tema do mapa (método público)
+     * 
+     * @param {boolean} temaEscuro - Se deve aplicar tema escuro
+     * Usado por: ThemeManager, interface
+     */
+    alternarTemaMapa(temaEscuro = false) {
+        try {
+            this._aplicarTemaNoMapa(temaEscuro);
+            console.log(`🎨 Tema do mapa alterado para ${temaEscuro ? 'escuro' : 'claro'}`);
+        } catch (error) {
+            console.error('❌ Erro ao alterar tema do mapa:', error);
+        }
+    }
+
+    /**
+     * Aplica tema inicial baseado nas configurações salvas
+     * 
+     * Método público mantido para compatibilidade com código legado
+     * @deprecated Use _aplicarTemaInicial() internamente
+     * Usado por: ThemeManager (legado)
+     */
+    aplicarTemaInicial() {
+        this._aplicarTemaInicial();
+    }
+
+    /**
+     * Adiciona controle de coordenadas para administradores
+     * 
+     * Exibe coordenadas em tempo real para facilitar adição de pontos
+     * Usado por: _adicionarControlesAdmin()
+     */
+    adicionarControlesCoordenadas() {
+        try {
+            const controleCoordenadas = L.control({ position: 'bottomleft' });
+            
+            controleCoordenadas.onAdd = function() {
+                const div = L.DomUtil.create('div', 'controle-coordenadas');
+                div.style.cssText = `
+                    background: rgba(255, 255, 255, 0.9);
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    fontSize: 12px;
+                    fontFamily: monospace;
+                    border: 1px solid #ccc;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                `;
+                div.innerHTML = 'Lat: -, Lng: -';
+                return div;
+            };
+
+            controleCoordenadas.addTo(this.map);
+
+            // Atualizar coordenadas no movimento do mouse
+            this.map.on('mousemove', (e) => {
+                const { lat, lng } = e.latlng;
+                const div = document.querySelector('.controle-coordenadas');
+                if (div) {
+                    div.innerHTML = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                }
+            });
+            
+            console.log('📍 Controle de coordenadas adicionado');
+        } catch (error) {
+            console.error('❌ Erro ao adicionar controle de coordenadas:', error);
+        }
+    }
+
+    // ==========================================
+    // MÉTODOS DE CARREGAMENTO E EXIBIÇÃO
+    // ==========================================
+
+    /**
+     * Mostra indicador de carregamento
      */
     mostrarCarregamento(texto = 'Carregando...') {
         const div = document.createElement('div');

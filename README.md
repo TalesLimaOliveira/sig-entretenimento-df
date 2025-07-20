@@ -1,70 +1,35 @@
 # 🗺️ SIG Entretenimento DF
 
-Sistema de Informações Geográficas para pontos de entretenimento do Distrito Federal.
+Sistema de Informações Geográficas interativo para pontos de entretenimento do Distrito Federal, desenvolvido com Clean Architecture e foco em manutenibilidade.
 
-## 🚀 Sobre o Projeto
+## 📖 Resumo do Projeto
 
-Aplicação web que apresenta um mapa interativo com pontos de entretenimento do Distrito Federal, desenvolvida com Clean Architecture e boas práticas de programação.
+O **SIG Entretenimento DF** é uma aplicação web que apresenta um mapa interativo com pontos de interesse cultural, gastronômico, esportivo e de entretenimento do Distrito Federal. O sistema permite visualização, filtragem por categorias, sistema de favoritos para usuários logados e funcionalidades administrativas para gerenciamento de conteúdo.
 
-## ✨ Funcionalidades
-
-- 🗺️ Mapa interativo com Leaflet
-- 📍 Marcadores categorizados por tipo de entretenimento
-- 🔍 Filtros por categoria
-- 📊 Estatísticas em tempo real
-- 🌙 Tema claro/escuro
-- 🔐 Sistema de autenticação para administradores
-- � Design responsivo
-
-## 🛠️ Tecnologias
-
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Mapas**: Leaflet.js
-- **Armazenamento**: LocalStorage
-- **Arquitetura**: Clean Architecture
-- **Estilo**: CSS custom com variáveis
-
-## 📋 Correções Implementadas
-
-### ❌ Problemas Identificados e Corrigidos:
-
-1. **Inicialização Assíncrona**
-   - ✅ Implementado sistema robusto de inicialização
-   - ✅ Verificação de dependências antes da inicialização
-   - ✅ Tratamento de erros em todos os managers
-
-2. **Ordem de Carregamento**
-   - ✅ Aguarda DOM completamente carregado
-   - ✅ Inicialização sequencial com delays apropriados
-   - ✅ Verificação de disponibilidade de elementos
-
-3. **Tratamento de Erros**
-   - ✅ Try-catch em todos os métodos críticos
-   - ✅ Logs detalhados para debug
-   - ✅ Tela de erro informativa com stack trace
-
-4. **Verificações de Segurança**
-   - ✅ Verificação de existência de managers antes do uso
-   - ✅ Verificação de elementos DOM antes da manipulação
-   - ✅ Fallbacks para funcionalidades não críticas
+### Principais Diferenciais
+- **Arquitetura Limpa**: Separação clara de responsabilidades
+- **Código Documentado**: Preparado para manutenção por equipes e IAs
+- **Responsivo**: Funciona perfeitamente em desktop e mobile
+- **Extensível**: Fácil adição de novas funcionalidades
 
 ## 🚀 Como Executar
 
-1. **Clone o repositório**
+### Pré-requisitos
+- **Python 3.x** instalado
+- **Navegador moderno** (Chrome, Firefox, Safari, Edge)
+- **Conexão com internet** (para bibliotecas CDN)
+
+### Passos para Execução
+
+1. **Clone ou baixe o projeto**
    ```bash
-   git clone [url-do-repositorio]
+   git clone https://github.com/seu-usuario/sig-entretenimento-df.git
    cd sig-entretenimento-df
    ```
 
-2. **Execute um servidor local**
+2. **Inicie o servidor local**
    ```bash
-   # Python 3
    python -m http.server 8000
-   
-   # Ou Node.js
-   npx serve .
-   
-   # Ou qualquer servidor web local
    ```
 
 3. **Acesse no navegador**
@@ -72,199 +37,194 @@ Aplicação web que apresenta um mapa interativo com pontos de entretenimento do
    http://localhost:8000
    ```
 
-## 🧪 Testes
+### Scripts Disponíveis
 
-- **Teste Simples**: Acesse `/test-simple.html` para verificar funcionalidades básicas
-- **Console**: Verifique logs detalhados no console do desenvolvedor
+Se você tem Node.js instalado, pode usar os scripts do `package.json`:
+
+```bash
+npm install          # Instalar dependências de desenvolvimento
+npm start           # Iniciar servidor Python
+npm run serve       # Iniciar servidor HTTP alternativo
+npm run api         # Iniciar JSON Server (se necessário)
+```
 
 ## 📁 Estrutura do Projeto
 
 ```
 ├── index.html              # Página principal
-├── admin.html              # Página de administração
-├── test-simple.html        # Teste básico
+├── admin.html              # Painel administrativo
+├── limpar-cache.html       # Utilitário de limpeza
+├── package.json            # Configurações e scripts
+├── README.md               # Este arquivo
+│
+├── database/               # Dados em JSON
+│   ├── pontos_confirmados.json
+│   ├── pontos_pendentes.json
+│   ├── pontos_ocultos.json
+│   └── usuarios.json
+│
 ├── src/
-│   ├── js/
-│   │   ├── app.js          # Aplicação principal
-│   │   ├── database.js     # Gerenciador de dados
-│   │   ├── auth.js         # Sistema de autenticação
-│   │   ├── map.js          # Gerenciador do mapa
-│   │   └── theme.js        # Gerenciador de temas
-│   ├── css/
-│   │   ├── main.css        # Estilos principais
-│   │   ├── colors.css      # Variáveis de cores
-│   │   └── components.css  # Componentes reutilizáveis
-│   └── components/
-│       └── modal.js        # Sistema de modais
+│   ├── css/               # Estilos
+│   │   ├── colors.css     # Variáveis de cores e temas
+│   │   ├── main.css       # Estilos principais
+│   │   ├── components.css # Componentes reutilizáveis
+│   │   └── admin.css      # Estilos específicos do admin
+│   │
+│   ├── js/                # JavaScript
+│   │   ├── app.js         # Aplicação principal
+│   │   ├── database.js    # Gerenciador de dados
+│   │   ├── auth.js        # Sistema de autenticação
+│   │   ├── map.js         # Gerenciador de mapas
+│   │   ├── theme.js       # Sistema de temas
+│   │   ├── info-panel.js  # Painel de informações
+│   │   └── admin.js       # Funcionalidades administrativas
+│   │
+│   └── components/        # Componentes modais
+│       ├── login-modal.js
+│       ├── add-point-modal.js
+│       ├── suggestion-modal.js
+│       ├── user-menu.js
+│       └── error-handler.js
+│
+└── docs/                  # Documentação técnica
+    ├── architecture.md    # Arquitetura do sistema
+    ├── development-guide.md # Guia de desenvolvimento
+    ├── data-flow.md       # Fluxos de dados
+    └── migration-guide.md # Guia de migração
 ```
 
-## 🔧 Padrões de Código
+## ✨ Funcionalidades Principais
 
-### Clean Code Aplicado:
-- ✅ Nomes descritivos para variáveis e funções
-- ✅ Funções pequenas com responsabilidade única
-- ✅ Comentários JSDoc para documentação
-- ✅ Tratamento consistente de erros
-- ✅ Separação de responsabilidades
+### Para Todos os Usuários
+- 🗺️ **Mapa Interativo**: Visualização de pontos com Leaflet.js
+- 🔍 **Filtros por Categoria**: Cultura, Gastronomia, Vida Noturna, Esportes, Geral
+- 📱 **Interface Responsiva**: Adaptável a diferentes tamanhos de tela
+- 🌙 **Modo Claro/Escuro**: Alternância de temas
+- ℹ️ **Painel de Informações**: Detalhes completos de cada ponto
 
-### Clean Architecture:
-- ✅ Separação em camadas (UI, Business Logic, Data)
-- ✅ Dependency Injection via window globals
-- ✅ Managers especializados por domínio
-- ✅ Event-driven communication
+### Para Usuários Logados
+- ❤️ **Sistema de Favoritos**: Marcar pontos preferidos
+- 💬 **Sugestões de Mudanças**: Propor alterações nos pontos
+- 👤 **Perfil de Usuário**: Gerenciamento da conta
 
-## 🔐 Credenciais de Teste
+### Para Administradores
+- ➕ **Adicionar Pontos**: Criar novos pontos de interesse
+- ✏️ **Editar Informações**: Modificar dados existentes
+- 🔍 **Moderar Conteúdo**: Aprovar/reprovar sugestões
+- 📊 **Painel Administrativo**: Interface dedicada para gestão
+- 🗂️ **Gerenciar Usuários**: Controle de acesso
+- 📤 **Exportar Dados**: Backup das informações
 
-- **Usuário**: admin
-- **Senha**: admin123
+## 🛠️ Tecnologias Utilizadas
 
-## 🐛 Troubleshooting
+### Frontend
+- **HTML5**: Estrutura semântica
+- **CSS3**: Grid, Flexbox, Custom Properties
+- **JavaScript ES6+**: Módulos, Classes, Async/Await
+- **Leaflet.js**: Biblioteca de mapas interativos
+- **Font Awesome**: Ícones vetoriais
 
-### Se a aplicação não carregar:
+### Armazenamento
+- **LocalStorage**: Persistência local dos dados
+- **JSON Files**: Backup e dados iniciais
 
-1. **Verifique o console** para logs de erro
-2. **Teste básico** em `/test-simple.html`
-3. **Limpe o localStorage** se necessário:
-   ```javascript
-   localStorage.clear();
-   ```
-4. **Verifique a conexão** com CDNs externos (Leaflet, FontAwesome)
+### Arquitetura
+- **Clean Architecture**: Separação em camadas
+- **Event-Driven**: Comunicação via eventos customizados
+- **Responsive Design**: Mobile-first approach
 
-### Logs de Debug:
-A aplicação possui logs detalhados:
-- 🚀 Inicialização
-- ✅ Sucessos
-- ❌ Erros
-- ⚠️ Warnings
-- 🔧 Debug
+## 🏗️ Arquitetura e Organização
 
-## 📝 Licença
+### Camadas da Aplicação
 
-Este projeto é open source e está disponível sob a licença MIT.
+1. **Camada de Aplicação** (`app.js`)
+   - Coordenação geral da aplicação
+   - Gerenciamento do ciclo de vida
+   - Configuração de responsividade
 
-## 👥 Contribuição
+2. **Camada de Negócio** (`database.js`, `auth.js`)
+   - Regras de negócio
+   - Validações de dados
+   - Controle de acesso
 
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
+3. **Camada de Apresentação** (`map.js`, `theme.js`, `info-panel.js`)
+   - Interface do usuário
+   - Interações visuais
+   - Componentes reutilizáveis
+
+4. **Camada de Infraestrutura** (`components/`, `css/`)
+   - Recursos externos
+   - Componentes base
+   - Estilos globais
+
+### Padrões Implementados
+- **Singleton**: Managers globais
+- **Observer**: Sistema de eventos
+- **Factory**: Criação de componentes
+- **Strategy**: Comportamentos baseados em papel do usuário
+
+## 🎯 Estado Atual do Projeto
+
+### ✅ Implementado
+- Sistema completo de mapas com Leaflet
+- Autenticação com diferentes níveis de acesso
+- Interface responsiva e acessível
+- Sistema de favoritos
+- Painel administrativo funcional
+- Documentação técnica completa
+- Tratamento robusto de erros
+
+### 🔄 Em Desenvolvimento
+- Sistema de notificações visuais
+- Upload de imagens para pontos
+- Sistema de avaliações
+- API REST para sincronização
+
+### 📋 Funcionalidades Futuras
+- PWA (Progressive Web App)
+- Notificações push
+- Geolocalização automática
+- Integração com redes sociais
+- Sistema de comentários
+
+## 📚 Documentação Técnica
+
+Para desenvolvedores e equipes de manutenção, consulte:
+
+- **[Arquitetura do Sistema](docs/architecture.md)**: Visão geral da estrutura
+- **[Guia de Desenvolvimento](docs/development-guide.md)**: Padrões e convenções
+- **[Fluxos de Dados](docs/data-flow.md)**: Como os dados fluem pela aplicação
+- **[Guia de Migração](docs/migration-guide.md)**: Migração para outras tecnologias
+
+## 🤝 Manutenção e Evolução
+
+### Para Desenvolvedores
+O código foi estruturado seguindo princípios de **Clean Code** e **SOLID**, facilitando:
+- Adição de novas funcionalidades
+- Manutenção por diferentes equipes
+- Migração para outros frameworks (React, Vue, Angular)
+- Evolução para React Native
+
+### Para Assistentes de IA
+A documentação inclui:
+- Comentários detalhados em todo o código
+- Arquitetura bem definida e documentada
+- Padrões consistentes de nomenclatura
+- Separação clara de responsabilidades
+
+## 📄 Licença
+
+Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 🔗 Links Úteis
+
+- **Demo Online**: [Em breve]
+- **Documentação**: [docs/](docs/)
+- **Issues**: [GitHub Issues]
+- **Contribuições**: [CONTRIBUTING.md]
 
 ---
 
-**Desenvolvido com ❤️ para o Distrito Federal** 🏛️
-5. **Admin**: Clique em "LOGIN" para acessar funcionalidades administrativas.
+**Desenvolvido com ❤️ para o Distrito Federal**
 
-## 🎨 Personalização de Temas
-
-### Como alterar cores:
-
-1. **Edite** `src/css/colors.css`
-2. **Modifique** as variáveis em `:root` para cores base
-3. **Ajuste** `.theme-light` para personalizar tema claro  
-4. **Ajuste** as variáveis padrão para personalizar tema escuro
-
-### Exemplo de personalização:
-```css
-:root {
-    --primary: #your-color;        /* Cor principal */
-    --secondary: #your-color;      /* Cor secundária */
-    --accent: #your-color;         /* Cor de destaque */
-}
-```
-
-## ⚙️ Configurações
-
-### Tema padrão:
-- **Localização**: `src/js/theme.js`
-- **Variável**: `DEFAULT_THEME = 'dark'` (escuro como padrão)
-- **Para mudar**: Altere para `'light'` se desejar claro como padrão
-
-### Centro do mapa:
-- **Localização**: `src/js/map.js`
-- **Coordenadas**: `[-15.794700, -47.890000]` (Brasília)
-
-### Dados dos pontos:
-- **Localização**: `db.json`
-- **Formato**: Array de objetos com propriedades: id, nome, categoria, coordenadas, etc.
-
-## 🏗️ Arquitetura
-
-### Estrutura Clean Code:
-```
-src/
-├── css/
-│   ├── colors.css     # Sistema de cores e temas
-│   ├── main.css       # Estilos principais
-│   └── components.css # Componentes (modais, etc.)
-├── js/
-│   ├── app.js         # Aplicação principal
-│   ├── theme.js       # Gerenciador de temas
-│   ├── map.js         # Gerenciador de mapas
-│   ├── database.js    # Gerenciador de dados
-│   └── auth.js        # Autenticação
-└── components/
-    └── modal.js       # Componente de modais
-```
-
-### Princípios aplicados:
-- **Single Responsibility**: Cada classe tem uma responsabilidade específica
-- **Clean Architecture**: Separação de camadas e responsabilidades
-- **Error Handling**: Tratamento robusto de erros
-- **Logging**: Sistema de logs para debugging
-- **Modularização**: Código organizado em módulos
-
-## 🔧 Desenvolvimento
-
-### Adicionando novos pontos:
-1. **Programaticamente**: Use `app.adicionarPonto(dados)` no console
-2. **Via interface**: Faça login como admin e use os controles
-
-### Debugging:
-- **Console**: Logs detalhados em todas as operações
-- **Tema**: Eventos de mudança de tema são logados
-- **Inicialização**: Processo completo é rastreado
-
-### Estrutura de dados:
-```javascript
-{
-  "id": "unique-id",
-  "nome": "Nome do Local",
-  "categoria": "cultura|gastronomia|vida-noturna|lazer|natureza",
-  "coordenadas": [-15.794700, -47.890000],
-  "endereco": "Endereço completo",
-  "descricao": "Descrição do local"
-}
-```
-
-## 📋 Checklist de Funcionalidades
-
-- ✅ **Loading Screen**: Removido após inicialização completa
-- ✅ **Tema Escuro/Claro**: Funcionando com persistência
-- ✅ **Mapa**: Carregando e renderizando corretamente
-- ✅ **Filtros**: Categorias funcionais
-- ✅ **Responsivo**: Layout adaptável
-- ✅ **Error Handling**: Tratamento robusto de erros
-- ✅ **Clean Code**: Arquitetura limpa e documentada
-- ✅ **Console Clean**: Sem erros no console do navegador
-
-## 🚨 Solução de Problemas
-
-### Loading infinito:
-- **Verificar**: Se todos os managers são carregados
-- **Console**: Checar logs de inicialização
-- **Timeout**: Aplicação tem timeout de 15s para inicialização
-
-### Tema não funciona:
-- **localStorage**: Pode estar bloqueado
-- **Button**: Verificar se existe elemento com id="theme-toggle"
-- **CSS**: Verificar se classes .theme-light/.theme-dark existem
-
-### Mapa não carrega:
-- **Internet**: Verificar conexão (usa CDN do Leaflet)
-- **Container**: Verificar se elemento #map existe
-- **JavaScript**: Verificar se MapManager foi inicializado
-
----
-
-**Versão**: 2.0.0 | **Tema padrão**: Escuro | **Arquitetura**: Clean Code
+*Projeto acadêmico do Instituto Federal de Brasília (IFB)*

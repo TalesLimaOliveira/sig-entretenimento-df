@@ -1,86 +1,150 @@
 /**
- * Aplicação Principal - Clean Architecture
+ * PontosEntretenimentoApp - Aplicação Principal
  * 
- * Responsabilidades:
- * - Inicializar todos os gerenciadores
- * - Coordenar a aplicação
- * - Gerenciar o ciclo de vida da aplicação
- * - Controlar o loading e responsividade
+ * Esta classe é o ponto central de coordenação da aplicação, implementando
+ * os princípios de Clean Architecture. Ela gerencia o ciclo de vida completo
+ * da aplicação, desde a inicialização até o carregamento dos dados.
+ * 
+ * Responsabilidades Principais:
+ * - Coordenar inicialização de todos os managers
+ * - Gerenciar estado global da aplicação (categoria ativa, usuário, etc.)
+ * - Controlar responsividade e adaptação mobile
+ * - Orquestrar comunicação entre componentes
+ * - Gerenciar loading e tratamento de erros
+ * 
+ * Fluxo de Inicialização:
+ * 1. Aguardar DOM estar pronto
+ * 2. Aguardar todos os managers estarem disponíveis
+ * 3. Configurar responsividade
+ * 4. Verificar autenticação
+ * 5. Configurar interface baseada no usuário
+ * 6. Configurar eventos globais
+ * 7. Carregar e renderizar dados
+ * 8. Remover tela de loading
+ * 
+ * Usado por: index.html (instanciação)
+ * Dependências: DatabaseManager, AuthManager, MapManager, ThemeManager
  * 
  * @author Sistema de Entretenimento DF
  * @version 2.0.0
  */
 class PontosEntretenimentoApp {
+    /**
+     * Construtor da aplicação principal
+     * 
+     * Inicializa propriedades básicas e inicia o processo de carregamento
+     */
     constructor() {
-        this.isAdmin = false;
-        this.categoriaAtiva = 'todos';
-        this.isInitialized = false;
+        // Estado da aplicação
+        this.isAdmin = false;                    // Se usuário atual é administrador
+        this.categoriaAtiva = 'todos';           // Categoria atualmente filtrada
+        this.isInitialized = false;              // Se aplicação foi totalmente inicializada
         
+        // Configurações de responsividade
+        this.breakpoints = {
+            mobile: 768,
+            tablet: 1024,
+            desktop: 1200
+        };
+        
+        // Iniciar aplicação
         this.init();
     }
 
     /**
      * Inicialização principal da aplicação
+     * 
+     * Ponto de entrada que aguarda o DOM estar pronto antes de prosseguir
+     * com a inicialização completa. Implementa tratamento robusto de erros.
+     * 
+     * Usado por: constructor
      */
     async init() {
         try {
-            console.log('🚀 Iniciando aplicação...');
+            console.log('🚀 Iniciando aplicação SIG Entretenimento DF...');
             
+            // Aguardar DOM estar pronto
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => this.inicializar());
+                document.addEventListener('DOMContentLoaded', () => this._inicializar());
             } else {
-                await this.inicializar();
+                await this._inicializar();
             }
         } catch (error) {
             console.error('❌ Erro crítico ao inicializar aplicação:', error);
-            this.mostrarErro('Erro ao carregar a aplicação. Recarregue a página.');
-            this.removerLoadingScreen(); // Remove loading mesmo com erro
+            this._mostrarErroInicializacao(error);
         }
     }
 
     /**
-     * Processo completo de inicialização
+     * Processo completo de inicialização sequencial
+     * 
+     * Implementa o fluxo de inicialização em etapas bem definidas,
+     * garantindo que cada dependência esteja disponível antes de prosseguir.
+     * 
+     * @private
      */
-    async inicializar() {
+    async _inicializar() {
         try {
             console.log('⏳ Aguardando managers...');
             await this.aguardarManagers();
             console.log('✅ Managers carregados');
 
-            // Configurar responsividade desde o início
+            console.log('📱 Configurando responsividade...');
             this.configurarResponsividade();
+            console.log('✅ Responsividade configurada');
             
-            console.log('🔄 Verificando autenticação...');
+            console.log('🔐 Verificando autenticação...');
             this.verificarAutenticacao();
             console.log('✅ Autenticação verificada');
             
-            console.log('🔄 Configurando interface...');
+            console.log('🎨 Configurando interface...');
             this.configurarInterface();
             console.log('✅ Interface configurada');
             
-            console.log('🔄 Configurando eventos...');
+            console.log('⚡ Configurando eventos...');
             this.configurarEventos();
             console.log('✅ Eventos configurados');
             
-            console.log('🔄 Carregando dados...');
+            console.log('📊 Carregando dados...');
             await this.carregarDados();
             console.log('✅ Dados carregados');
             
-            console.log('🔄 Removendo loading screen...');
+            console.log('🎯 Finalizando inicialização...');
             this.removerLoadingScreen();
-            console.log('✅ Aplicação inicializada com sucesso!');
-            
-            this.isInitialized = true;
+            this._marcarComoInicializado();
+            console.log('🎉 Aplicação inicializada com sucesso!');
             
         } catch (error) {
             console.error('❌ Erro durante inicialização:', error);
-            this.mostrarErro('Erro durante o carregamento. Recarregue a página.');
-            this.removerLoadingScreen(); // Remove loading mesmo com erro
+            this._mostrarErroInicializacao(error);
         }
     }
 
     /**
-     * Aguarda todos os gerenciadores estarem prontos
+     * Marca aplicação como inicializada
+     * @private
+     */
+    _marcarComoInicializado() {
+        this.isInitialized = true;
+        document.body.classList.add('app-initialized');
+    }
+
+    /**
+     * Mostra erro de inicialização e remove loading
+     * @private
+     */
+    _mostrarErroInicializacao(error) {
+        this.mostrarErro('Erro durante o carregamento. Recarregue a página.');
+        this.removerLoadingScreen();
+    }
+
+    /**
+     * Aguarda todos os managers estarem disponíveis
+     * 
+     * Implementa polling com timeout para verificar se todos os managers
+     * necessários foram carregados e estão funcionais.
+     * 
+     * @private (renomeado para compatibilidade)
      */
     async aguardarManagers() {
         const TIMEOUT_MS = 10000; // 10 segundos
