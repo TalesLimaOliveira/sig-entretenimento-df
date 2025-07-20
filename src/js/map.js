@@ -175,7 +175,10 @@ class MapManager {
     /**
      * Inicializar grupos de categorias
      */
-    inicializarGruposCategorias() {
+    inicializarGruposCategorias(pontosCustomizados = null) {
+        // Limpar grupos existentes
+        this.gruposPorCategoria.clear();
+
         // Grupo para "todos"
         this.gruposPorCategoria.set('todos', L.layerGroup().addTo(this.map));
 
@@ -187,6 +190,26 @@ class MapManager {
             categorias.forEach(categoria => {
                 this.gruposPorCategoria.set(categoria.id, L.layerGroup());
             });
+
+            // Carregar pontos
+            const pontos = pontosCustomizados || this.obterPontosParaCarregar();
+            this.carregarPontos(pontos);
+        }
+    }
+
+    /**
+     * Obter pontos baseado no perfil do usuário
+     */
+    obterPontosParaCarregar() {
+        if (!window.databaseManager) return [];
+
+        const user = window.authManager?.getCurrentUser();
+        if (user && user.role === 'administrator') {
+            // Admin vê confirmados + pendentes
+            return [...window.databaseManager.getPontos(), ...window.databaseManager.getPontosPendentes()];
+        } else {
+            // Visitante/usuário vê apenas confirmados
+            return window.databaseManager.getPontos();
         }
     }
 
@@ -383,7 +406,12 @@ class MapManager {
             return;
         }
         
-        const pontos = window.databaseManager.buscarPorCategoria('todos');
+        // Obter contexto do usuário atual
+        const user = window.authManager?.getCurrentUser();
+        const userRole = user?.role || 'visitor';
+        const username = user?.username || null;
+        
+        const pontos = window.databaseManager.buscarPorCategoria('todos', userRole, username);
         
         // Limpar marcadores existentes
         this.marcadores.forEach(marcador => {
@@ -438,7 +466,7 @@ class MapManager {
             }
 
             // Criar ícone personalizado
-            const icone = this.criarIconePersonalizado(categoria);
+            const icone = this.criarIconePersonalizado(categoria, ponto);
 
             // Criar coordenadas (latitude, longitude)
             // Verificar se temos coordenadas no formato array ou propriedades separadas
@@ -606,19 +634,37 @@ class MapManager {
      * @param {Object} categoria - Dados da categoria
      * @returns {Object} Ícone Leaflet
      */
-    criarIconePersonalizado(categoria) {
+    criarIconePersonalizado(categoria, ponto = null) {
         // Tamanho aumentado para melhor usabilidade em touch
         const tamanho = window.innerWidth <= 768 ? 32 : 28; // Maior em mobile
         const borderWidth = window.innerWidth <= 768 ? 4 : 3;
+        
+        // Verificar se é ponto pendente
+        const isPendente = ponto && ponto.status === 'pendente';
+        const corBorda = isPendente ? '#f59e0b' : 'white'; // Borda dourada para pendentes
+        const indicadorPendente = isPendente ? `
+            <div style="
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 8px;
+                height: 8px;
+                background: #f59e0b;
+                border-radius: 50%;
+                border: 1px solid white;
+                z-index: 1000;
+            "></div>
+        ` : '';
         
         return L.divIcon({
             className: 'marcador-personalizado',
             html: `
                 <div style="
+                    position: relative;
                     background-color: ${categoria?.cor || '#999'};
                     width: ${tamanho}px;
                     height: ${tamanho}px;
-                    border: ${borderWidth}px solid white;
+                    border: ${borderWidth}px solid ${corBorda};
                     border-radius: 50%;
                     box-shadow: 0 3px 8px rgba(0,0,0,0.4);
                     display: flex;
@@ -631,6 +677,7 @@ class MapManager {
                     transform: none;
                 ">
                     <i class="${categoria?.icon || 'fas fa-map-marker-alt'}"></i>
+                    ${indicadorPendente}
                 </div>
             `,
             iconSize: [tamanho, tamanho],
@@ -643,7 +690,7 @@ class MapManager {
      * Filtrar pontos por categoria
      * @param {string} categoria - Categoria a filtrar
      */
-    filtrarPorCategoria(categoria) {
+    filtrarPorCategoria(categoria, username = null) {
         // Garantir que os grupos existam
         if (!this.gruposPorCategoria.size) {
             this.inicializarGruposCategorias();
@@ -652,6 +699,12 @@ class MapManager {
         // Remover categoria atual
         if (this.gruposPorCategoria.has(this.categoriaAtiva)) {
             this.map.removeLayer(this.gruposPorCategoria.get(this.categoriaAtiva));
+        }
+
+        // Lógica especial para favoritos
+        if (categoria === 'favoritos' && username) {
+            this.filtrarFavoritos(username);
+            return;
         }
 
         // Adicionar nova categoria
@@ -666,7 +719,68 @@ class MapManager {
             }
         }
 
-        // Filtrando por categoria: ${categoria}
+        console.log(`🗺️ Filtrando por categoria: ${categoria}`);
+    }
+
+    /**
+     * Filtrar apenas pontos favoritos do usuário
+     */
+    filtrarFavoritos(username) {
+        // Remover todos os grupos ativos
+        this.gruposPorCategoria.forEach((grupo, categoria) => {
+            if (this.map.hasLayer(grupo)) {
+                this.map.removeLayer(grupo);
+            }
+        });
+
+        // Criar grupo temporário para favoritos
+        const grupoFavoritos = L.layerGroup();
+        const favoritos = window.databaseManager.getFavoritos(username);
+
+        favoritos.forEach(ponto => {
+            const marker = this.criarMarcador(ponto);
+            if (marker) {
+                grupoFavoritos.addLayer(marker);
+            }
+        });
+
+        // Adicionar ao mapa
+        this.map.addLayer(grupoFavoritos);
+        this.categoriaAtiva = 'favoritos';
+
+        // Armazenar grupo temporariamente
+        this.gruposPorCategoria.set('favoritos', grupoFavoritos);
+
+        console.log(`💕 Exibindo ${favoritos.length} pontos favoritos`);
+    }
+
+    /**
+     * Recarregar pontos baseado no papel do usuário
+     */
+    recarregarPontos(userRole = 'visitor', username = null) {
+        try {
+            // Obter pontos baseado no perfil
+            let pontos;
+            if (userRole === 'administrator') {
+                pontos = [...window.databaseManager.getPontos(), ...window.databaseManager.getPontosPendentes()];
+            } else {
+                pontos = window.databaseManager.getPontos(); // Apenas confirmados
+            }
+
+            // Limpar grupos existentes
+            this.gruposPorCategoria.clear();
+            this.pontosCarregados.clear();
+
+            // Recriar grupos
+            this.inicializarGruposCategorias(pontos);
+
+            // Aplicar filtro atual
+            this.filtrarPorCategoria(this.categoriaAtiva, username);
+
+            console.log(`🔄 Pontos recarregados para ${userRole}: ${pontos.length} pontos`);
+        } catch (error) {
+            console.error('Erro ao recarregar pontos:', error);
+        }
     }
 
     /**
@@ -811,7 +925,13 @@ class MapManager {
      */
     buscarProximos(raio = 2) {
         const centro = this.map.getCenter();
-        const pontos = databaseManager.buscarPorProximidade(centro.lat, centro.lng, raio);
+        
+        // Obter contexto do usuário atual
+        const user = window.authManager?.getCurrentUser();
+        const userRole = user?.role || 'visitor';
+        const username = user?.username || null;
+        
+        const pontos = databaseManager.buscarPorProximidade(centro.lat, centro.lng, raio, userRole, username);
         
         // Destacar pontos próximos
         this.destacarPontos(pontos.map(p => p.id));
@@ -857,7 +977,12 @@ class MapManager {
      * @returns {Object} Bounds do Leaflet
      */
     obterBoundsPontos() {
-        const pontos = databaseManager.buscarPorCategoria('todos');
+        // Obter contexto do usuário atual
+        const user = window.authManager?.getCurrentUser();
+        const userRole = user?.role || 'visitor';
+        const username = user?.username || null;
+        
+        const pontos = databaseManager.buscarPorCategoria('todos', userRole, username);
         if (pontos.length === 0) return null;
 
         const coordenadas = pontos.map(p => p.coordenadas);

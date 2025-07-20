@@ -85,8 +85,16 @@
                     <button class="nav-tab" data-tab="pontos" onclick="app.mostrarTab('pontos')">
                         <i class="fas fa-map-marker-alt"></i> Pontos
                     </button>
-                    <button class="nav-tab" data-tab="categorias" onclick="app.mostrarTab('categorias')">
-                        <i class="fas fa-tags"></i> Categorias
+                    <button class="nav-tab" data-tab="pendentes" onclick="app.mostrarTab('pendentes')">
+                        <i class="fas fa-clock"></i> Pendentes
+                        <span class="badge" id="pendentes-count">0</span>
+                    </button>
+                    <button class="nav-tab" data-tab="ocultos" onclick="app.mostrarTab('ocultos')">
+                        <i class="fas fa-eye-slash"></i> Ocultos
+                    </button>
+                    <button class="nav-tab" data-tab="sugestoes" onclick="app.mostrarTab('sugestoes')">
+                        <i class="fas fa-edit"></i> Sugestões
+                        <span class="badge" id="sugestoes-count">0</span>
                     </button>
                     <button class="nav-tab" data-tab="usuarios" onclick="app.mostrarTab('usuarios')">
                         <i class="fas fa-users"></i> Usuários
@@ -381,6 +389,7 @@
     <script src="src/components/modal.js"></script>
     
     <!-- Admin Scripts -->
+    <script src="src/components/cache-clean-modal.js"></script>
     <script src="src/js/admin.js"></script>
     
     <!-- Main App -->

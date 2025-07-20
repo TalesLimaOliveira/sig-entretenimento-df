@@ -47,20 +47,20 @@ class AuthManager {
         return {
             admin: {
                 username: 'admin',
-                password: 'admin123',
+                email: 'admin',
+                password: 'admin',
                 role: 'administrator',
                 name: 'Administrador do Sistema',
-                email: 'admin@pontosdf.com',
-                permissions: ['view', 'create', 'edit', 'delete', 'manage_users'],
+                permissions: ['view', 'create', 'edit', 'delete', 'approve', 'manage_users', 'hide_points'],
                 lastLogin: null
             },
             user: {
                 username: 'user',
-                password: 'user123',
+                email: 'user',
+                password: 'user',
                 role: 'user',
                 name: 'Usuário Comum',
-                email: 'user@pontosdf.com',
-                permissions: ['view'],
+                permissions: ['view', 'create_pending', 'suggest_changes', 'favorite'],
                 lastLogin: null
             }
         };
@@ -68,14 +68,22 @@ class AuthManager {
 
     /**
      * Realizar login
-     * @param {string} username - Nome de usuário
+     * @param {string} identifier - Nome de usuário ou email
      * @param {string} password - Senha
      * @returns {Promise<Object>} Resultado do login
      */
-    async login(username, password) {
+    async login(identifier, password) {
         try {
             const users = this.getUsers();
-            const user = users[username];
+            let user = null;
+
+            // Buscar usuário por username ou email
+            for (const [key, userData] of Object.entries(users)) {
+                if (userData.username === identifier || userData.email === identifier) {
+                    user = userData;
+                    break;
+                }
+            }
 
             if (!user) {
                 throw new Error('Usuário não encontrado');

@@ -29,7 +29,8 @@ class AdminManager {
         console.log('🛠️ Inicializando AdminManager...');
         
         // Verificar permissões
-        if (!authManager.isAdmin()) {
+        if (!window.authManager?.isAdmin()) {
+            console.warn('❌ Usuário não é administrador');
             this.redirectToLogin();
             return;
         }
@@ -161,7 +162,7 @@ class AdminManager {
      * Carregar pontos no mapa
      */
     loadMapPoints() {
-        const pontos = databaseManager.obterTodos();
+        const pontos = window.databaseManager?.obterTodos() || [];
         
         pontos.forEach(ponto => {
             const marker = L.marker([ponto.latitude, ponto.longitude])
@@ -170,12 +171,12 @@ class AdminManager {
                     <div class="popup-admin">
                         <h4>${ponto.nome}</h4>
                         <p><strong>Categoria:</strong> ${ponto.categoria}</p>
-                        <p><strong>Endereço:</strong> ${ponto.endereco}</p>
+                        <p><strong>Endereço:</strong> ${ponto.endereco || 'N/A'}</p>
                         <div class="popup-actions">
-                            <button class="btn btn-sm btn-primary" onclick="adminManager.editPoint(${ponto.id})">
+                            <button class="btn btn-sm btn-primary" onclick="window.adminManager.editPoint(${ponto.id})">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="adminManager.deletePoint(${ponto.id})">
+                            <button class="btn btn-sm btn-danger" onclick="window.adminManager.deletePoint(${ponto.id})">
                                 <i class="fas fa-trash"></i> Excluir
                             </button>
                         </div>
@@ -193,13 +194,30 @@ class AdminManager {
      * Carregar estatísticas
      */
     async loadStatistics() {
-        const stats = databaseManager.getEstatisticas();
-        
-        // Atualizar cards de estatísticas
-        document.getElementById('stat-total-pontos').textContent = stats.totalPontos;
-        document.getElementById('stat-categorias').textContent = this.categorias.length;
-        document.getElementById('stat-usuarios').textContent = authManager.getTotalUsers();
-        document.getElementById('stat-hoje').textContent = this.getPointsAddedToday();
+        try {
+            const stats = window.databaseManager?.getEstatisticas?.() || {
+                totalPontos: 0,
+                pontosPorCategoria: {},
+                pontosRecentes: []
+            };
+            
+            // Atualizar cards de estatísticas (com fallback se elementos não existirem)
+            const statElements = {
+                'stat-total-pontos': stats.totalPontos,
+                'stat-categorias': Object.keys(stats.pontosPorCategoria || {}).length,
+                'stat-usuarios': window.authManager?.getTotalUsers?.() || 0,
+                'stat-hoje': this.getPointsAddedToday()
+            };
+
+            Object.entries(statElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            });
+        } catch (error) {
+            console.error('❌ Erro ao carregar estatísticas:', error);
+        }
     }
 
     /**
@@ -220,7 +238,7 @@ class AdminManager {
      * Carregar dados de pontos
      */
     loadPointsData() {
-        const pontos = databaseManager.obterTodos();
+        const pontos = window.databaseManager?.obterTodos() || [];
         const tbody = document.getElementById('pontos-tbody');
         
         if (!tbody) return;
@@ -244,20 +262,16 @@ class AdminManager {
                 <td>
                     <span class="badge badge-primary">${ponto.categoria}</span>
                 </td>
-                <td>${ponto.endereco}</td>
+                <td>${ponto.endereco || 'N/A'}</td>
                 <td>
-                    <span class="status-badge status-active">Ativo</span>
+                    <span class="status-badge ${ponto.status === 'aprovado' ? 'status-active' : 'status-pending'}">${ponto.status || 'Ativo'}</span>
                 </td>
-                <td>${new Date(ponto.dataCriacao || Date.now()).toLocaleDateString()}</td>
                 <td>
                     <div class="table-actions">
-                        <button class="action-btn action-btn-view" onclick="adminManager.viewPoint(${ponto.id})">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn action-btn-edit" onclick="adminManager.editPoint(${ponto.id})">
+                        <button class="btn btn-sm btn-primary" onclick="window.adminManager.editPoint(${ponto.id})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn action-btn-delete" onclick="adminManager.deletePoint(${ponto.id})">
+                        <button class="btn btn-sm btn-danger" onclick="window.adminManager.deletePoint(${ponto.id})" title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -348,6 +362,19 @@ class AdminManager {
     }
 
     /**
+     * Obter pontos adicionados hoje
+     */
+    getPointsAddedToday() {
+        const pontos = window.databaseManager?.obterTodos() || [];
+        const hoje = new Date().toDateString();
+        
+        return pontos.filter(ponto => {
+            const dataAdicao = new Date(ponto.dataAdicao || ponto.dataCriacao || Date.now());
+            return dataAdicao.toDateString() === hoje;
+        }).length;
+    }
+
+    /**
      * Mostrar tab específica
      * @param {string} tabName - Nome da tab
      */
@@ -385,8 +412,14 @@ class AdminManager {
                 this.loadPointsData();
                 this.populateFilters();
                 break;
-            case 'categorias':
-                this.loadCategoriesData();
+            case 'pendentes':
+                this.mostrarPontosPendentes();
+                break;
+            case 'ocultos':
+                this.mostrarPontosOcultos();
+                break;
+            case 'sugestoes':
+                this.mostrarSugestoes();
                 break;
             case 'usuarios':
                 this.loadUsersData();
@@ -395,6 +428,9 @@ class AdminManager {
                 this.loadReportsData();
                 break;
         }
+        
+        // Atualizar contadores sempre que trocar de aba
+        this.atualizarContadores();
     }
 
     /**
@@ -746,6 +782,327 @@ class AdminManager {
      */
     mostrarLogs() {
         alert('Funcionalidade em desenvolvimento');
+    }
+
+    /**
+     * Gerenciar pontos pendentes
+     */
+    mostrarPontosPendentes() {
+        const pontosPendentes = databaseManager.getPontosPendentes();
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> Pontos Pendentes de Aprovação</h2>
+                    <p>Total: ${pontosPendentes.length} pontos aguardando aprovação</p>
+                </div>
+                
+                ${pontosPendentes.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Nenhum ponto pendente</h3>
+                        <p>Todos os pontos foram revisados!</p>
+                    </div>
+                ` : `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Enviado por</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pontosPendentes.map(ponto => `
+                                    <tr>
+                                        <td>
+                                            <strong>${ponto.nome}</strong><br>
+                                            <small class="text-muted">${ponto.endereco || 'Sem endereço'}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info">${ponto.categoria}</span>
+                                        </td>
+                                        <td>${ponto.adicionadoPor || 'Anônimo'}</td>
+                                        <td>${new Date(ponto.dataAdicao).toLocaleDateString('pt-BR')}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.aprovarPonto(${ponto.id})">
+                                                    <i class="fas fa-check"></i> Aprovar
+                                                </button>
+                                                <button class="btn btn-warning btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.rejeitarPonto(${ponto.id})">
+                                                    <i class="fas fa-times"></i> Rejeitar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Aprovar ponto pendente
+     */
+    aprovarPonto(pontoId) {
+        if (confirm('Aprovar este ponto?')) {
+            try {
+                databaseManager.aprovarPonto(pontoId, 'administrator');
+                this.showNotification('Ponto aprovado com sucesso!', 'success');
+                this.mostrarPontosPendentes(); // Recarregar lista
+                this.atualizarContadores();
+            } catch (error) {
+                this.showNotification('Erro ao aprovar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Rejeitar ponto pendente
+     */
+    rejeitarPonto(pontoId) {
+        if (confirm('Rejeitar este ponto? Ele será movido para pontos ocultos.')) {
+            try {
+                databaseManager.ocultarPonto(pontoId, 'administrator');
+                this.showNotification('Ponto rejeitado e ocultado', 'warning');
+                this.mostrarPontosPendentes(); // Recarregar lista
+                this.atualizarContadores();
+            } catch (error) {
+                this.showNotification('Erro ao rejeitar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Mostrar pontos ocultos
+     */
+    mostrarPontosOcultos() {
+        const pontosOcultos = databaseManager.getPontosOcultos();
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-eye-slash"></i> Pontos Ocultos</h2>
+                    <p>Total: ${pontosOcultos.length} pontos ocultos</p>
+                </div>
+                
+                ${pontosOcultos.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-eye"></i>
+                        <h3>Nenhum ponto oculto</h3>
+                        <p>Todos os pontos estão visíveis!</p>
+                    </div>
+                ` : `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Data Ocultação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pontosOcultos.map(ponto => `
+                                    <tr>
+                                        <td>
+                                            <strong>${ponto.nome}</strong><br>
+                                            <small class="text-muted">${ponto.endereco || 'Sem endereço'}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-secondary">${ponto.categoria}</span>
+                                        </td>
+                                        <td>${ponto.dataOcultacao ? new Date(ponto.dataOcultacao).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.restaurarPonto(${ponto.id})">
+                                                    <i class="fas fa-undo"></i> Restaurar
+                                                </button>
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Restaurar ponto oculto
+     */
+    restaurarPonto(pontoId) {
+        if (confirm('Restaurar este ponto? Ele ficará visível novamente.')) {
+            try {
+                databaseManager.restaurarPonto(pontoId, 'administrator');
+                this.showNotification('Ponto restaurado com sucesso!', 'success');
+                this.mostrarPontosOcultos(); // Recarregar lista
+                this.atualizarContadores();
+            } catch (error) {
+                this.showNotification('Erro ao restaurar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Mostrar sugestões pendentes
+     */
+    mostrarSugestoes() {
+        const sugestoes = databaseManager.getSugestoesPendentes();
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-edit"></i> Sugestões de Mudança</h2>
+                    <p>Total: ${sugestoes.length} sugestões pendentes</p>
+                </div>
+                
+                ${sugestoes.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Nenhuma sugestão pendente</h3>
+                        <p>Todas as sugestões foram revisadas!</p>
+                    </div>
+                ` : `
+                    <div class="suggestions-list">
+                        ${sugestoes.map(sugestao => {
+                            const ponto = databaseManager.getPontoById(sugestao.pontoId);
+                            return `
+                                <div class="suggestion-card">
+                                    <div class="suggestion-header">
+                                        <h4>${ponto ? ponto.nome : 'Ponto não encontrado'}</h4>
+                                        <span class="badge badge-warning">Pendente</span>
+                                    </div>
+                                    <div class="suggestion-content">
+                                        <p><strong>Sugerido por:</strong> ${sugestao.usuarioSugeriu}</p>
+                                        <p><strong>Data:</strong> ${new Date(sugestao.dataSugestao).toLocaleDateString('pt-BR')}</p>
+                                        
+                                        <h5>Mudanças propostas:</h5>
+                                        <div class="changes-list">
+                                            ${Object.entries(sugestao.sugestoes).map(([campo, valor]) => `
+                                                <div class="change-item">
+                                                    <strong>${campo}:</strong> ${valor}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    <div class="suggestion-actions">
+                                        <button class="btn btn-success btn-sm" onclick="adminManager.aprovarSugestao(${sugestao.id})">
+                                            <i class="fas fa-check"></i> Aprovar
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="adminManager.rejeitarSugestao(${sugestao.id})">
+                                            <i class="fas fa-times"></i> Rejeitar
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Aprovar sugestão
+     */
+    aprovarSugestao(sugestaoId) {
+        if (confirm('Aprovar esta sugestão? As mudanças serão aplicadas ao ponto.')) {
+            try {
+                databaseManager.aprovarSugestao(sugestaoId, 'administrator');
+                this.showNotification('Sugestão aprovada com sucesso!', 'success');
+                this.mostrarSugestoes(); // Recarregar lista
+                this.atualizarContadores();
+            } catch (error) {
+                this.showNotification('Erro ao aprovar sugestão: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Rejeitar sugestão
+     */
+    rejeitarSugestao(sugestaoId) {
+        if (confirm('Rejeitar esta sugestão?')) {
+            // Implementar lógica de rejeição
+            this.showNotification('Funcionalidade em desenvolvimento', 'info');
+        }
+    }
+
+    /**
+     * Atualizar contadores nas abas
+     */
+    atualizarContadores() {
+        const pendentesCount = databaseManager.getPontosPendentes().length;
+        const sugestoesCount = databaseManager.getSugestoesPendentes().length;
+        
+        const pendentesBadge = document.getElementById('pendentes-count');
+        const sugestoesBadge = document.getElementById('sugestoes-count');
+        
+        if (pendentesBadge) {
+            pendentesBadge.textContent = pendentesCount;
+            pendentesCount > 0 ? pendentesBadge.classList.add('pulse') : pendentesBadge.classList.remove('pulse');
+        }
+        
+        if (sugestoesBadge) {
+            sugestoesBadge.textContent = sugestoesCount;
+            sugestoesCount > 0 ? sugestoesBadge.classList.add('pulse') : sugestoesBadge.classList.remove('pulse');
+        }
+    }
+
+    /**
+     * Mostrar notificação
+     */
+    showNotification(message, type = 'info') {
+        // Implementação simples de notificação
+        const colors = {
+            success: '#27ae60',
+            error: '#e74c3c',
+            warning: '#f39c12',
+            info: '#3498db'
+        };
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            z-index: 10001;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 4000);
     }
 }
 

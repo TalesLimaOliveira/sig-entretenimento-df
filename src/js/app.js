@@ -153,17 +153,157 @@ class PontosEntretenimentoApp {
 
     verificarAutenticacao() {
         try {
-            if (window.authManager && typeof window.authManager.isAuthenticated === 'function') {
-                this.isAdmin = window.authManager.isAuthenticated();
-                this.atualizarInterfaceAdmin();
-                console.log(`🔐 Status admin: ${this.isAdmin}`);
+            if (window.authManager && window.authManager.isAuthenticated()) {
+                const user = window.authManager.getCurrentUser();
+                this.configurarUsuarioLogado(user);
             } else {
-                console.warn('⚠️ AuthManager não disponível');
-                this.isAdmin = false;
+                this.configurarUsuarioVisitante();
             }
         } catch (error) {
             console.error('❌ Erro ao verificar autenticação:', error);
+            this.configurarUsuarioVisitante();
+        }
+    }
+
+    /**
+     * Configurar interface para usuário logado
+     */
+    configurarUsuarioLogado(user) {
+        console.log(`👤 Usuário logado: ${user.name} (${user.role})`);
+        
+        // Atualizar botão do header
+        this.atualizarBotaoLogin(user);
+        
+        // Configurar interface baseada no papel
+        if (user.role === 'administrator') {
+            this.isAdmin = true;
+            this.configurarInterfaceAdmin();
+        } else if (user.role === 'user') {
             this.isAdmin = false;
+            this.configurarInterfaceUsuario();
+        }
+    }
+
+    /**
+     * Configurar interface para visitante
+     */
+    configurarUsuarioVisitante() {
+        console.log('👤 Usuário visitante');
+        this.isAdmin = false;
+        this.configurarBotaoLogin();
+    }
+
+    /**
+     * Configurar botão de login para visitantes
+     */
+    configurarBotaoLogin() {
+        const loginBtn = document.getElementById('header-login-btn');
+        if (loginBtn) {
+            loginBtn.innerHTML = '<i class="fas fa-user-shield"></i> LOGIN';
+            loginBtn.onclick = () => {
+                window.loginModal.open();
+            };
+        }
+    }
+
+    /**
+     * Atualizar botão após login
+     */
+    atualizarBotaoLogin(user) {
+        const loginBtn = document.getElementById('header-login-btn');
+        if (loginBtn) {
+            // Substituir por botão de usuário com dropdown
+            loginBtn.outerHTML = `
+                <button class="user-info" id="user-info-btn">
+                    <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
+                    <span class="user-name">${user.name}</span>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </button>
+            `;
+            
+            // Configurar event listener para o menu
+            const userInfoBtn = document.getElementById('user-info-btn');
+            if (userInfoBtn) {
+                userInfoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (window.userMenu) {
+                        window.userMenu.toggle(userInfoBtn);
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Configurar interface para administrador
+     */
+    configurarInterfaceAdmin() {
+        console.log('🔐 Configurando interface para administrador');
+        // Admin pode ver pontos pendentes e tem acesso a todas as funcionalidades
+        this.adicionarBotoesAdmin();
+    }
+
+    /**
+     * Configurar interface para usuário comum
+     */
+    configurarInterfaceUsuario() {
+        console.log('👤 Configurando interface para usuário comum');
+        // Adicionar categoria de favoritos
+        this.adicionarCategoriaFavoritos();
+        
+        // Configurar botões de ação do usuário
+        this.configurarAcoesUsuario();
+    }
+
+    /**
+     * Adicionar categoria de favoritos
+     */
+    adicionarCategoriaFavoritos() {
+        const navContainer = document.querySelector('.nav-buttons-container');
+        if (navContainer && !document.querySelector('[data-categoria="favoritos"]')) {
+            const favoritesBtn = document.createElement('button');
+            favoritesBtn.className = 'nav-btn category-btn';
+            favoritesBtn.setAttribute('data-categoria', 'favoritos');
+            favoritesBtn.innerHTML = '<i class="fas fa-heart"></i> Favoritos';
+            navContainer.appendChild(favoritesBtn);
+        }
+    }
+
+    /**
+     * Adicionar botões de administrador
+     */
+    adicionarBotoesAdmin() {
+        // Implementar botões específicos do admin se necessário
+        console.log('🔧 Adicionando funcionalidades de administrador');
+    }
+
+    /**
+     * Configurar ações para usuário comum
+     */
+    configurarAcoesUsuario() {
+        // Implementar ações específicas do usuário
+        console.log('👤 Configurando ações para usuário comum');
+    }
+
+    /**
+     * Mostrar menu do usuário
+     */
+    mostrarMenuUsuario(user) {
+        // Implementação simples com confirm/prompt - em produção seria um dropdown
+        if (user.role === 'administrator') {
+            const opcao = confirm(`Olá ${user.name}!\n\nDeseja acessar o painel administrativo?\n\nOK = Painel Admin\nCancelar = Logout`);
+            if (opcao) {
+                window.location.href = 'admin.html';
+            } else {
+                window.authManager.logout();
+                location.reload();
+            }
+        } else {
+            const logout = confirm(`Olá ${user.name}!\n\nDeseja fazer logout?`);
+            if (logout) {
+                window.authManager.logout();
+                location.reload();
+            }
         }
     }
 
@@ -192,12 +332,138 @@ class PontosEntretenimentoApp {
             }
         });
 
-        // Eventos de modal
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('.admin-login')) {
-                this.mostrarModalLogin();
+        // Eventos de autenticação
+        document.addEventListener('authStateChanged', (e) => {
+            const { type, user } = e.detail;
+            if (type === 'login') {
+                this.configurarUsuarioLogado(user);
+                this.recarregarDados();
+            } else if (type === 'logout') {
+                this.configurarUsuarioVisitante();
+                this.recarregarDados();
             }
         });
+
+        // Eventos de ações que requerem login
+        document.addEventListener('click', (e) => {
+            // Botão de favoritar
+            if (e.target.matches('#btn-favorite') || e.target.closest('#btn-favorite')) {
+                this.handleFavoriteAction(e);
+            }
+            
+            // Botão de sugerir mudança
+            if (e.target.matches('#btn-suggest') || e.target.closest('#btn-suggest')) {
+                this.handleSuggestAction(e);
+            }
+        });
+    }
+
+    /**
+     * Handle ação de favoritar
+     */
+    handleFavoriteAction(e) {
+        e.preventDefault();
+        
+        if (!window.authManager.isAuthenticated()) {
+            window.loginModal.open({
+                pendingAction: () => this.handleFavoriteAction(e)
+            });
+            return;
+        }
+        
+        // Implementar lógica de favoritar
+        const pontoId = this.getCurrentPontoId(); // Método para obter ID do ponto atual
+        if (pontoId) {
+            this.toggleFavorito(pontoId);
+        }
+    }
+
+    /**
+     * Handle ação de sugerir mudança
+     */
+    handleSuggestAction(e) {
+        e.preventDefault();
+        
+        if (!window.authManager.isAuthenticated()) {
+            window.loginModal.open({
+                pendingAction: () => this.handleSuggestAction(e)
+            });
+            return;
+        }
+        
+        // Implementar lógica de sugerir mudança
+        const pontoId = this.getCurrentPontoId();
+        if (pontoId) {
+            this.abrirModalSugestao(pontoId);
+        }
+    }
+
+    /**
+     * Recarregar dados após mudança de autenticação
+     */
+    recarregarDados() {
+        if (window.mapManager) {
+            const user = window.authManager.getCurrentUser();
+            window.mapManager.recarregarPontos(user ? user.role : 'visitor', user ? user.username : null);
+        }
+        this.atualizarEstatisticas();
+    }
+
+    /**
+     * Toggle favorito
+     */
+    toggleFavorito(pontoId) {
+        try {
+            const user = window.authManager.getCurrentUser();
+            if (!user) return;
+            
+            const foiAdicionado = window.databaseManager.toggleFavorito(pontoId, user.username);
+            
+            // Atualizar interface
+            this.atualizarBotaoFavorito(pontoId, foiAdicionado);
+            
+            // Mostrar feedback
+            const mensagem = foiAdicionado ? 'Adicionado aos favoritos!' : 'Removido dos favoritos!';
+            this.mostrarNotificacao(mensagem, foiAdicionado ? 'success' : 'info');
+            
+        } catch (error) {
+            console.error('Erro ao favoritar:', error);
+            this.mostrarNotificacao('Erro ao atualizar favoritos', 'error');
+        }
+    }
+
+    /**
+     * Atualizar botão de favorito
+     */
+    atualizarBotaoFavorito(pontoId, isFavorito) {
+        const btn = document.getElementById('btn-favorite');
+        if (btn) {
+            if (isFavorito) {
+                btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+                btn.classList.add('favorited');
+            } else {
+                btn.innerHTML = '<i class="far fa-heart"></i> Favoritar';
+                btn.classList.remove('favorited');
+            }
+        }
+    }
+
+    /**
+     * Obter ID do ponto atual
+     */
+    getCurrentPontoId() {
+        // Implementar lógica para obter o ID do ponto atualmente selecionado
+        // Por enquanto, retorna null - seria implementado baseado no info-panel
+        return null;
+    }
+
+    /**
+     * Mostrar notificação
+     */
+    mostrarNotificacao(mensagem, tipo = 'info') {
+        // Implementação simples de notificação
+        console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+        // Em produção, seria uma notificação visual
     }
 
     async carregarDados() {
@@ -256,9 +522,21 @@ class PontosEntretenimentoApp {
                 btn.classList.toggle('active', btn.dataset.categoria === categoria);
             });
 
+            // Verificar se é filtro de favoritos e usuário está logado
+            if (categoria === 'favoritos') {
+                if (!window.authManager.isAuthenticated()) {
+                    // Usuário não logado tentando ver favoritos - abrir modal de login
+                    window.loginModal.open({
+                        pendingAction: () => this.filtrarPorCategoria('favoritos')
+                    });
+                    return;
+                }
+            }
+
             // Filtrar marcadores se o mapa estiver disponível
             if (window.mapManager && typeof window.mapManager.filtrarPorCategoria === 'function') {
-                window.mapManager.filtrarPorCategoria(categoria);
+                const user = window.authManager.getCurrentUser();
+                window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
             } else {
                 console.warn('⚠️ MapManager não disponível para filtrar');
             }
@@ -483,7 +761,12 @@ class PontosEntretenimentoApp {
     adicionarPonto(dadosPonto) {
         if (!this.isAdmin) return false;
         
-        const ponto = window.databaseManager.adicionarPonto(dadosPonto);
+        // Obter contexto do usuário atual
+        const user = window.authManager?.getCurrentUser();
+        const userRole = user?.role || 'visitor';
+        const username = user?.username || null;
+        
+        const ponto = window.databaseManager.adicionarPonto(dadosPonto, userRole, username);
         window.mapManager.adicionarMarcador(ponto);
         this.atualizarEstatisticas();
         return true;
@@ -492,7 +775,11 @@ class PontosEntretenimentoApp {
     removerPonto(pontoId) {
         if (!this.isAdmin) return false;
         
-        window.databaseManager.removerPonto(pontoId);
+        // Obter contexto do usuário atual
+        const user = window.authManager?.getCurrentUser();
+        const userRole = user?.role || 'visitor';
+        
+        window.databaseManager.removerPonto(pontoId, userRole);
         window.mapManager.removerMarcador(pontoId);
         this.atualizarEstatisticas();
         return true;

@@ -37,7 +37,67 @@ class ThemeManager {
         this.loadTheme();
         this.setupToggleButton();
         this.applyTheme();
+        
+        // Aplica o filtro de modo escuro por padrão na primeira vez
+        this.applyDefaultDarkFilter();
+        
         console.log(`✅ Tema aplicado: ${this.currentTheme}`);
+    }
+
+    /**
+     * Aplica o filtro de modo escuro por padrão na primeira visita
+     */
+    applyDefaultDarkFilter() {
+        // Aguarda um pouco para garantir que o mapa foi carregado
+        setTimeout(() => {
+            const mapContainer = document.querySelector('.leaflet-container');
+            if (mapContainer) {
+                // Aplica sempre o filtro de modo escuro por padrão
+                mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
+                console.log('🌙 Filtro de modo escuro aplicado por padrão');
+            } else {
+                // Se ainda não foi carregado, tenta novamente após mais tempo
+                setTimeout(() => {
+                    const mapContainer = document.querySelector('.leaflet-container');
+                    if (mapContainer) {
+                        mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
+                        console.log('🌙 Filtro de modo escuro aplicado por padrão (segunda tentativa)');
+                    }
+                }, 1500);
+            }
+        }, 500);
+        
+        // Também observa se o mapa é carregado dinamicamente
+        this.observeMapLoad();
+    }
+
+    /**
+     * Observa quando o container do mapa é carregado dinamicamente
+     */
+    observeMapLoad() {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    const mapContainer = document.querySelector('.leaflet-container');
+                    if (mapContainer && !mapContainer.style.filter) {
+                        mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
+                        console.log('🌙 Filtro de modo escuro aplicado via observer');
+                        observer.disconnect(); // Para de observar após aplicar
+                    }
+                }
+            });
+        });
+
+        // Observa mudanças no body para detectar quando o mapa é carregado
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Para de observar após 10 segundos para evitar overhead
+        setTimeout(() => {
+            observer.disconnect();
+        }, 10000);
     }
 
     /**
@@ -183,10 +243,15 @@ class ThemeManager {
         const mapContainer = document.querySelector('.leaflet-container');
         if (!mapContainer) return;
 
-        if (this.currentTheme === this.THEME_DARK) {
-            mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
-        } else {
-            mapContainer.style.filter = 'none';
+        // Sempre aplica o filtro de modo escuro por padrão, 
+        // independente do tema atual
+        mapContainer.style.filter = 'brightness(0.7) contrast(1.2)';
+        
+        // Se o usuário explicitamente escolher tema claro,
+        // mantem o filtro mas com menos intensidade
+        if (this.currentTheme === this.THEME_LIGHT) {
+            // Filtro mais suave para tema claro
+            mapContainer.style.filter = 'brightness(0.85) contrast(1.1)';
         }
     }
 

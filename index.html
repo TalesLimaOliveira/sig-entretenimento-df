@@ -32,9 +32,29 @@
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <div class="logo">
-                    <h1>🗺️ Pontos de Entretenimento DF</h1>
-                </div>
+                <!-- Navigation Buttons -->
+                <nav class="header-navigation">
+                    <div class="nav-buttons-container">
+                        <button class="nav-btn active category-btn" data-categoria="todos">
+                            <i class="fas fa-globe"></i> Todos
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="cultura">
+                            <i class="fas fa-theater-masks"></i> Cultura
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="gastronomia">
+                            <i class="fas fa-utensils"></i> Gastronomia
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="noturno">
+                            <i class="fas fa-glass-cheers"></i> Vida Noturna
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="esportes">
+                            <i class="fas fa-futbol"></i> Esportes
+                        </button>
+                        <button class="nav-btn category-btn" data-categoria="geral">
+                            <i class="fas fa-map-marker-alt"></i> Geral
+                        </button>
+                    </div>
+                </nav>
                 
                 <div class="header-actions">
                     <!-- Theme Switch -->
@@ -49,37 +69,14 @@
                         </label>
                     </div>
                     
-                    <button class="btn btn-primary admin-login">
+                    <!-- Login/User Button -->
+                    <button class="btn btn-primary header-login-btn" id="header-login-btn">
                         <i class="fas fa-user-shield"></i> LOGIN
                     </button>
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- Navigation Centralizada -->
-    <nav class="nav-centered">
-        <div class="nav-buttons-container">
-            <button class="nav-btn active category-btn" data-categoria="todos">
-                <i class="fas fa-globe"></i> Todos
-            </button>
-            <button class="nav-btn category-btn" data-categoria="cultura">
-                <i class="fas fa-theater-masks"></i> Cultura
-            </button>
-            <button class="nav-btn category-btn" data-categoria="gastronomia">
-                <i class="fas fa-utensils"></i> Gastronomia
-            </button>
-            <button class="nav-btn category-btn" data-categoria="noturno">
-                <i class="fas fa-glass-cheers"></i> Vida Noturna
-            </button>
-            <button class="nav-btn category-btn" data-categoria="esportes">
-                <i class="fas fa-futbol"></i> Esportes
-            </button>
-            <button class="nav-btn category-btn" data-categoria="geral">
-                <i class="fas fa-map-marker-alt"></i> Geral
-            </button>
-        </div>
-    </nav>
 
     <!-- Main Content -->
     <main class="main">
@@ -119,31 +116,11 @@
                 <div class="info-panel-content">
                     <!-- Aba: Visão Geral -->
                     <div id="tab-overview" class="info-panel-tab-content active">
-                        <!-- Botões de Ação -->
-                        <div class="info-panel-actions">
-                            <button class="info-panel-action-btn" id="btn-routes">
-                                <i class="fas fa-route"></i>
-                                Rotas
-                            </button>
-                            <button class="info-panel-action-btn" id="btn-favorite">
-                                <i class="fas fa-heart"></i>
-                                Favorito
-                            </button>
-                        </div>
-
                         <!-- Informações do Local -->
                         <div class="info-panel-details">
                             <div id="info-panel-body">
                                 <!-- Conteúdo será inserido dinamicamente -->
                             </div>
-                        </div>
-
-                        <!-- Botão Sugerir Mudança -->
-                        <div class="info-panel-footer">
-                            <button class="info-panel-suggest-btn" id="btn-suggest">
-                                <i class="fas fa-edit"></i>
-                                Sugerir mudança
-                            </button>
                         </div>
                     </div>
 
@@ -173,6 +150,10 @@
     <script src="src/js/map.js"></script>
     <script src="src/js/theme.js"></script>
     <script src="src/components/modal.js"></script>
+    <script src="src/components/login-modal.js"></script>
+    <script src="src/components/user-menu.js"></script>
+    <script src="src/components/add-point-modal.js"></script>
+    <script src="src/components/error-handler.js"></script>
     <script src="src/js/app.js"></script>
     
     <!-- Initialize -->

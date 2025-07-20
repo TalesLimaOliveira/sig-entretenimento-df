@@ -81,14 +81,21 @@ class InfoPanelManager {
         // Fechar com tecla ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isVisible) {
-                this.hide();
+                // Não fechar se houver modal aberto
+                const hasOpenModal = document.querySelector('.modal-backdrop[style*="flex"]') ||
+                                   document.querySelector('.modal-backdrop[style*="block"]');
+                if (!hasOpenModal) {
+                    this.hide();
+                }
             }
         });
 
         // Fechar ao clicar fora do painel (no mapa)
         document.addEventListener('click', (e) => {
             if (this.isVisible && !this.panel.contains(e.target) && 
-                !e.target.closest('.marcador-personalizado')) {
+                !e.target.closest('.marcador-personalizado') &&
+                !e.target.closest('.modal-backdrop') &&
+                !e.target.closest('.login-modal')) {
                 this.hide();
             }
         });
@@ -194,6 +201,7 @@ class InfoPanelManager {
 
         const categoria = window.databaseManager?.obterCategoria(ponto.categoria);
         const isAdmin = window.authManager?.isAdmin();
+        const user = window.authManager?.getCurrentUser();
 
         // Renderizar apenas o conteúdo da aba Overview
         this.panelBody.innerHTML = `
@@ -202,15 +210,254 @@ class InfoPanelManager {
                 ${this.renderContactInfo(ponto)}
                 ${this.renderAdditionalInfo(ponto)}
                 ${this.renderTags(ponto)}
+                ${this.renderUserActions(ponto, user)}
                 ${isAdmin ? this.renderAdminActions(ponto) : ''}
-                ${this.renderMetadata(ponto)}
             </div>
         `;
 
-        // Configurar eventos dos botões admin
+        // Configurar eventos dos botões
+        this.setupActionButtons(ponto, user);
+        
         if (isAdmin) {
             this.setupAdminButtons(ponto);
         }
+    }
+
+    /**
+     * Renderizar ações do usuário (favoritar, sugerir mudança)
+     */
+    renderUserActions(ponto, user) {
+        if (!ponto) return '';
+
+        const isAuthenticated = window.authManager?.isAuthenticated();
+        const isFavorito = isAuthenticated && user ? 
+            window.databaseManager?.isFavorito(ponto.id, user.username) : false;
+
+        return `
+            <div class="info-user-actions">
+                <div class="action-buttons-top">
+                    <button class="action-btn favorite-btn ${isFavorito ? 'favorited' : ''}" id="btn-favorite" data-ponto-id="${ponto.id}">
+                        <i class="fas fa-heart"></i>
+                        ${isFavorito ? 'Favoritado' : 'Favoritar'}
+                    </button>
+                    
+                    <button class="action-btn routes-btn" id="btn-routes" data-ponto-id="${ponto.id}" disabled>
+                        <i class="fas fa-route"></i>
+                        Rotas
+                    </button>
+                </div>
+                
+                <div class="action-buttons-bottom">
+                    <button class="action-btn suggest-btn" id="btn-suggest" data-ponto-id="${ponto.id}">
+                        <i class="fas fa-edit"></i>
+                        Sugerir mudança
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Configurar eventos dos botões de ação
+     */
+    setupActionButtons(ponto, user) {
+        // Botão de favoritar
+        const favoriteBtn = document.getElementById('btn-favorite');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleFavoriteClick(ponto);
+            });
+        }
+
+        // Botão de rotas (não funcional)
+        const routesBtn = document.getElementById('btn-routes');
+        if (routesBtn) {
+            routesBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showNotification('Funcionalidade de rotas em desenvolvimento', 'info');
+            });
+        }
+
+        // Botão de sugerir mudança
+        const suggestBtn = document.getElementById('btn-suggest');
+        if (suggestBtn) {
+            suggestBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleSuggestClick(ponto);
+            });
+        }
+    }
+
+    /**
+     * Handle clique no botão de favoritar
+     */
+    handleFavoriteClick(ponto) {
+        if (!window.authManager.isAuthenticated()) {
+            window.loginModal.open({
+                pendingAction: () => this.handleFavoriteClick(ponto)
+            });
+            return;
+        }
+
+        try {
+            const user = window.authManager.getCurrentUser();
+            const foiAdicionado = window.databaseManager.toggleFavorito(ponto.id, user.username);
+            
+            // Atualizar botão
+            const btn = document.getElementById('btn-favorite');
+            if (btn) {
+                if (foiAdicionado) {
+                    btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+                    btn.classList.add('favorited');
+                } else {
+                    btn.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
+                    btn.classList.remove('favorited');
+                }
+            }
+            
+            // Mostrar feedback
+            const mensagem = foiAdicionado ? 'Adicionado aos favoritos!' : 'Removido dos favoritos!';
+            this.showNotification(mensagem, foiAdicionado ? 'success' : 'info');
+            
+        } catch (error) {
+            console.error('Erro ao favoritar:', error);
+            this.showNotification('Erro ao atualizar favoritos', 'error');
+        }
+    }
+
+    /**
+     * Handle clique no botão de sugerir mudança
+     */
+    handleSuggestClick(ponto) {
+        if (!window.authManager.isAuthenticated()) {
+            window.loginModal.open({
+                pendingAction: () => this.handleSuggestClick(ponto)
+            });
+            return;
+        }
+
+        // Usar o novo modal de sugestão
+        if (window.suggestionModal) {
+            window.suggestionModal.open(ponto);
+        } else {
+            this.openSuggestionModal(ponto);
+        }
+    }
+
+    /**
+     * Abrir modal de sugestão de mudança
+     */
+    openSuggestionModal(ponto) {
+        // Implementação simples - em produção seria um modal mais sofisticado
+        const campos = [
+            'nome', 'descricao', 'endereco', 'telefone', 
+            'website', 'horario', 'preco'
+        ];
+        
+        const sugestoes = {};
+        let hasSuggestion = false;
+        
+        for (const campo of campos) {
+            const valorAtual = ponto[campo] || '';
+            const novoValor = prompt(`Sugerir novo ${campo}:\n\nValor atual: ${valorAtual}\n\nNovo valor (deixe vazio para não alterar):`);
+            
+            if (novoValor && novoValor.trim() !== '' && novoValor !== valorAtual) {
+                sugestoes[campo] = novoValor.trim();
+                hasSuggestion = true;
+            }
+        }
+        
+        if (hasSuggestion) {
+            try {
+                const user = window.authManager.getCurrentUser();
+                window.databaseManager.sugerirMudanca(ponto.id, sugestoes, user.username);
+                this.showNotification('Sugestão enviada para análise!', 'success');
+            } catch (error) {
+                console.error('Erro ao enviar sugestão:', error);
+                this.showNotification('Erro ao enviar sugestão', 'error');
+            }
+        }
+    }
+
+    /**
+     * Mostrar notificação
+     */
+    showNotification(message, type = 'info') {
+        // Usar o sistema de notificações global se disponível
+        if (window.notificationSystem) {
+            window.notificationSystem.show(message, type);
+            return;
+        }
+
+        // Fallback para implementação simples
+        this.showSimpleNotification(message, type);
+    }
+
+    /**
+     * Implementação simples de notificação como fallback
+     */
+    showSimpleNotification(message, type) {
+        const colors = {
+            success: '#10b981',
+            error: '#ef4444',
+            info: '#3b82f6',
+            warning: '#f59e0b'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `notification ${type} show`;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-${this.getNotificationIcon(type)}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type] || colors.info};
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            z-index: 10001;
+            max-width: 300px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Mostrar notificação
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateX(0)';
+        });
+        
+        // Remover após 4 segundos
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    /**
+     * Obter ícone para notificação
+     */
+    getNotificationIcon(type) {
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-circle',
+            info: 'info-circle',
+            warning: 'exclamation-triangle'
+        };
+        return icons[type] || icons.info;
     }
 
     /**
@@ -346,19 +593,6 @@ class InfoPanelManager {
                     <i class="fas fa-trash"></i>
                     Remover
                 </button>
-            </div>
-        `;
-    }
-
-    /**
-     * Renderizar metadados
-     * @param {Object} ponto - Dados do ponto
-     * @returns {string} HTML dos metadados
-     */
-    renderMetadata(ponto) {
-        return `
-            <div class="info-metadata">
-                ID: ${ponto.id} | Views: ${ponto.metadata?.views || 0}
             </div>
         `;
     }
