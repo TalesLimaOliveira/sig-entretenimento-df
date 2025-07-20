@@ -6,38 +6,25 @@
     <title>Pontos de Entretenimento DF</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ff69b4%22/><text x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22>👠</text></svg>" type="image/svg+xml">
     
-    <!-- CSS Frameworks -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- CSS - Layout Responsivo Otimizado -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- CSS Customizado -->
+    <link rel="stylesheet" href="src/css/colors.css">
     <link rel="stylesheet" href="src/css/main.css">
     <link rel="stylesheet" href="src/css/components.css">
-    <link rel="stylesheet" href="src/css/responsive.css">
     
-    <!-- Meta Tags -->
-    <meta name="description" content="Descubra e explore pontos de entretenimento no Distrito Federal. Mapa interativo com restaurantes, bares, museus, parques e muito mais.">
-    <meta name="keywords" content="DF, Distrito Federal, entretenimento, pontos turísticos, mapa, restaurantes, bares">
-    <meta name="author" content="Pontos de Entretenimento DF">
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="Pontos de Entretenimento DF">
-    <meta property="og:description" content="Mapa interativo com os melhores pontos de entretenimento do Distrito Federal">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/images/og-image.jpg">
-    
-    <!-- Preload -->
-    <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" as="script">
+    <!-- Meta -->
+    <meta name="description" content="Mapa interativo responsivo com pontos de entretenimento do Distrito Federal">
+    <meta name="keywords" content="DF, entretenimento, mapa, pontos turísticos, responsivo">
 </head>
 <body>
-    <!-- Loading Screen -->
+    <!-- Loading -->
     <div class="loading-screen">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2>🗺️ Carregando Pontos de Entretenimento DF</h2>
-            <p>Preparando seu mapa interativo...</p>
+            <div class="loading-text">Carregando Mapa...</div>
         </div>
     </div>
 
@@ -47,12 +34,23 @@
             <div class="header-content">
                 <div class="logo">
                     <h1>🗺️ Pontos de Entretenimento DF</h1>
-                    <p>Descubra os melhores lugares do Distrito Federal</p>
                 </div>
                 
                 <div class="header-actions">
-                    <button class="btn btn-primary admin-login" onclick="app.mostrarModalLogin()" title="Acesso administrativo">
-                        <i class="fas fa-user-shield"></i> Admin
+                    <!-- Theme Switch -->
+                    <div class="theme-switch">
+                        <input type="checkbox" id="theme-toggle" class="theme-toggle-checkbox">
+                        <label for="theme-toggle" class="theme-toggle-label">
+                            <span class="theme-toggle-inner">
+                                <i class="fas fa-moon"></i>
+                                <i class="fas fa-sun"></i>
+                            </span>
+                            <span class="theme-toggle-switch"></span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-primary admin-login">
+                        <i class="fas fa-user-shield"></i> LOGIN
                     </button>
                 </div>
             </div>
@@ -60,175 +58,271 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container-fluid">
-            <div class="app-layout">
-                
-                <!-- Sidebar -->
-                <aside class="sidebar">
-                    
-                    <!-- Menu de Categorias -->
-                    <div class="panel categories-panel">
-                        <h3><i class="fas fa-filter"></i> Categorias</h3>
-                        <div class="menu-container">
-                            <!-- Botões de categoria serão gerados dinamicamente -->
+    <main class="main">
+        <div class="container">
+            <!-- Painel Lateral de Informações -->
+            <div id="info-panel" class="info-panel hidden">
+                <!-- Header do Painel com Imagem e Nome -->
+                <div class="info-panel-header">
+                    <div class="info-panel-image-container">
+                        <img id="info-panel-image" class="info-panel-image" src="" alt="Imagem do local">
+                        <div class="info-panel-image-placeholder">
+                            <i class="fas fa-image"></i>
+                            <span>Sem imagem disponível</span>
+                        </div>
+                    </div>
+                    <div class="info-panel-title-container">
+                        <h2 id="info-panel-title">Nome do Local</h2>
+                    </div>
+                    <button id="info-panel-close" class="info-panel-close" aria-label="Fechar painel">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Abas do Painel -->
+                <div class="info-panel-tabs">
+                    <button class="info-panel-tab active" data-tab="overview">
+                        <i class="fas fa-info-circle"></i>
+                        Visão Geral
+                    </button>
+                    <button class="info-panel-tab" data-tab="reviews">
+                        <i class="fas fa-star"></i>
+                        Avaliação
+                    </button>
+                </div>
+
+                <!-- Conteúdo das Abas -->
+                <div class="info-panel-content">
+                    <!-- Aba: Visão Geral -->
+                    <div id="tab-overview" class="info-panel-tab-content active">
+                        <!-- Botões de Ação -->
+                        <div class="info-panel-actions">
+                            <button class="info-panel-action-btn" id="btn-routes">
+                                <i class="fas fa-route"></i>
+                                Rotas
+                            </button>
+                            <button class="info-panel-action-btn" id="btn-favorite">
+                                <i class="fas fa-heart"></i>
+                                Favorito
+                            </button>
+                        </div>
+
+                        <!-- Informações do Local -->
+                        <div class="info-panel-details">
+                            <div id="info-panel-body">
+                                <!-- Conteúdo será inserido dinamicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Botão Sugerir Mudança -->
+                        <div class="info-panel-footer">
+                            <button class="info-panel-suggest-btn" id="btn-suggest">
+                                <i class="fas fa-edit"></i>
+                                Sugerir mudança
+                            </button>
                         </div>
                     </div>
 
-                </aside>
-
-                <!-- Map Container -->
-                <div class="map-container">
-                    <div id="map" class="leaflet-map"></div>
-                    
-                    <!-- Map Controls -->
-                    <div class="map-controls">
-                        <button class="map-control-btn" onclick="mapManager.centralizarBrasilia()" title="Centralizar em Brasília">
-                            <i class="fas fa-home"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Map Status -->
-                    <div class="map-status">
-                        <div class="status-item">
-                            <span id="coordenadas">Coordenadas: -15.7975, -47.8919</span>
-                        </div>
-                        <div class="status-item">
-                            <span id="zoom-level">Zoom: 11</span>
+                    <!-- Aba: Avaliação -->
+                    <div id="tab-reviews" class="info-panel-tab-content">
+                        <div class="info-panel-placeholder">
+                            <i class="fas fa-comments"></i>
+                            <h3>Comentários e Avaliações</h3>
+                            <p>Esta funcionalidade estará disponível em breve.</p>
                         </div>
                     </div>
                 </div>
-
+            </div>
+            
+            <!-- Map -->
+            <div class="map-container">
+                <div id="map"></div>
+                
+                <!-- Botões de Navegação Flutuantes -->
+                <div class="floating-nav">
+                    <button class="nav-btn active category-btn" data-categoria="todos">
+                        <i class="fas fa-globe"></i> Todos
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="cultura">
+                        <i class="fas fa-theater-masks"></i> Cultura
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="gastronomia">
+                        <i class="fas fa-utensils"></i> Gastronomia
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="noturno">
+                        <i class="fas fa-glass-cheers"></i> Vida Noturna
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="esportes">
+                        <i class="fas fa-futbol"></i> Esportes
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="geral">
+                        <i class="fas fa-map-marker-alt"></i> Geral
+                    </button>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <p>© 2024 Pontos de Entretenimento DF. Desenvolvido com ❤️ para Brasília.</p>
-                </div>
-                
-                <div class="footer-links">
-                    <a href="admin.html">Administração</a>
-                </div>
-                
-                <div class="footer-tech">
-                    <span>Powered by Leaflet.js</span>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Modal Container -->
-    <div id="modal-container"></div>
-
     <!-- Scripts -->
-    
-    <!-- Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- Database & Auth -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="src/js/database.js"></script>
     <script src="src/js/auth.js"></script>
-    
-    <!-- Map & Components -->
+    <script src="src/js/info-panel.js"></script>
     <script src="src/js/map.js"></script>
+    <script src="src/js/theme.js"></script>
     <script src="src/components/modal.js"></script>
-    
-    <!-- Main App -->
     <script src="src/js/app.js"></script>
     
     <!-- Initialize -->
     <script>
-        // Verificar suporte do navegador
-        if (!window.localStorage) {
-            alert('Seu navegador não suporta localStorage. Algumas funcionalidades podem não funcionar corretamente.');
+        // Sistema de inicialização robusto
+        class AppInitializer {
+            constructor() {
+                this.managers = {};
+                this.errors = [];
+                this.initialized = false;
+            }
+            
+            async init() {
+                console.log('🚀 Iniciando sistema de inicialização...');
+                
+                try {
+                    await this.waitForDOM();
+                    await this.checkDependencies();
+                    await this.initializeManagers();
+                    await this.initializeApp();
+                    
+                    console.log('🎉 Sistema inicializado com sucesso!');
+                    this.initialized = true;
+                    
+                } catch (error) {
+                    console.error('❌ Erro crítico na inicialização:', error);
+                    this.showError(error);
+                }
+            }
+            
+            async waitForDOM() {
+                if (document.readyState === 'loading') {
+                    await new Promise(resolve => {
+                        document.addEventListener('DOMContentLoaded', resolve);
+                    });
+                }
+                console.log('✅ DOM pronto');
+            }
+            
+            async checkDependencies() {
+                console.log('� Verificando dependências...');
+                
+                // Verificar Leaflet
+                if (typeof L === 'undefined') {
+                    throw new Error('Leaflet não foi carregado');
+                }
+                
+                // Verificar elemento do mapa
+                const mapElement = document.getElementById('map');
+                if (!mapElement) {
+                    throw new Error('Elemento do mapa não encontrado');
+                }
+                
+                console.log('✅ Dependências verificadas');
+            }
+            
+            async initializeManagers() {
+                console.log('📦 Inicializando managers...');
+                
+                const managersToInit = [
+                    { name: 'databaseManager', class: DatabaseManager, critical: true },
+                    { name: 'authManager', class: AuthManager, critical: false },
+                    { name: 'modalManager', class: ModalManager, critical: false },
+                    { name: 'themeManager', class: ThemeManager, critical: false },
+                    { name: 'mapManager', class: MapManager, critical: true }
+                ];
+                
+                for (const manager of managersToInit) {
+                    try {
+                        console.log(`🔧 Inicializando ${manager.name}...`);
+                        window[manager.name] = new manager.class();
+                        this.managers[manager.name] = window[manager.name];
+                        console.log(`✅ ${manager.name} inicializado`);
+                        
+                        // Pequena pausa entre managers
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        
+                    } catch (error) {
+                        console.error(`❌ Erro ao inicializar ${manager.name}:`, error);
+                        
+                        if (manager.critical) {
+                            throw new Error(`Manager crítico falhou: ${manager.name} - ${error.message}`);
+                        } else {
+                            this.errors.push(`${manager.name}: ${error.message}`);
+                        }
+                    }
+                }
+                
+                if (this.errors.length > 0) {
+                    console.warn('⚠️ Alguns managers não críticos falharam:', this.errors);
+                }
+                
+                console.log('✅ Managers inicializados');
+            }
+            
+            async initializeApp() {
+                console.log('🎯 Inicializando aplicação principal...');
+                
+                // Aguardar um pouco mais
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                window.app = new PontosEntretenimentoApp();
+                console.log('✅ Aplicação inicializada');
+            }
+            
+            showError(error) {
+                console.error('Stack trace:', error.stack);
+                
+                // Remove loading screen
+                const loadingScreen = document.querySelector('.loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                }
+                
+                // Mostra erro detalhado
+                document.body.innerHTML = `
+                    <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif;">
+                        <div style="text-align: center; color: #ef4444; margin-bottom: 2rem;">
+                            <h1>❌ Erro ao carregar a aplicação</h1>
+                            <p><strong>Detalhes:</strong> ${error.message}</p>
+                        </div>
+                        
+                        ${this.errors.length > 0 ? `
+                            <div style="margin-bottom: 2rem;">
+                                <h3>⚠️ Warnings:</h3>
+                                <ul style="color: #f59e0b;">
+                                    ${this.errors.map(err => `<li>${err}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <details style="margin: 1rem 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">📋 Informações técnicas</summary>
+                            <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 12px; margin-top: 1rem;">${error.stack || 'Stack trace não disponível'}</pre>
+                        </details>
+                        
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <button onclick="location.reload()" style="padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                                🔄 Recarregar Página
+                            </button>
+                            <button onclick="window.open('/test-simple.html', '_blank')" style="margin-left: 1rem; padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                                🧪 Teste Simples
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
-        // Inicializar managers globais
-        window.databaseManager = new DatabaseManager();
-        window.authManager = new AuthManager();
-        window.modalManager = new ModalManager();
-        
-        // Limpar localStorage para forçar reinicialização (temporário)
-        localStorage.removeItem('pontosEntretenimento_v1');
-        localStorage.removeItem('categorias_v1');
-        
-        // Inicializar aplicação principal
-        window.app = new PontosEntretenimentoApp();
-        
-        // Debug temporário
-        setTimeout(() => {
-            console.log('🔍 Debug Info:');
-            console.log('- DatabaseManager:', window.databaseManager);
-            console.log('- Pontos:', window.databaseManager?.pontos?.length || 0);
-            console.log('- Categorias:', window.databaseManager?.categorias?.length || 0);
-            console.log('- MapManager:', window.mapManager);
-            console.log('- Marcadores:', window.mapManager?.marcadores?.size || 0);
-        }, 3000);
-        
-        // Debug mode (remover em produção)
-        if (localStorage.getItem('pontos-df-debug') === 'true') {
-            window.DEBUG = true;
-            console.log('🐛 Modo debug ativado');
-        }
-        
-        // Analytics (adicionar se necessário)
-        // gtag('config', 'GA_MEASUREMENT_ID');
+        // Iniciar o sistema
+        const initializer = new AppInitializer();
+        initializer.init();
     </script>
-
-    <!-- Styles críticos inline para evitar FOUC -->
-    <style>
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-        
-        .loading-content {
-            text-align: center;
-            max-width: 300px;
-        }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .app-loaded .loading-screen {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        body:not(.app-loaded) .main-content,
-        body:not(.app-loaded) .header,
-        body:not(.app-loaded) .footer {
-            display: none;
-        }
-    </style>
-
 </body>
 </html>

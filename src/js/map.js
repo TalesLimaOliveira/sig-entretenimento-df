@@ -1,11 +1,3 @@
-/**
- * Gerenciador de Mapas
- * Classe responsável por gerenciar o mapa Leaflet e marcadores
- * 
- * @author Seu Nome
- * @version 1.0.0
- */
-
 class MapManager {
     constructor(containerId = 'map') {
         this.containerId = containerId;
@@ -22,78 +14,198 @@ class MapManager {
      * Inicializa o mapa
      */
     init() {
-        this.criarMapa();
-        this.configurarCamadas();
-        this.configurarEventListeners();
-        this.configurarControles();
-        // MapManager inicializado
+        try {
+            console.log('🗺️ Inicializando MapManager...');
+            
+            // Verificar se o container existe
+            const container = document.getElementById(this.containerId);
+            if (!container) {
+                throw new Error(`Container '${this.containerId}' não encontrado`);
+            }
+            
+            // Verificar se Leaflet está disponível
+            if (typeof L === 'undefined') {
+                throw new Error('Leaflet não está carregado');
+            }
+            
+            this.criarMapa();
+            this.configurarCamadas();
+            this.aplicarTemaInicial();
+            this.configurarEventListeners();
+            this.configurarControles();
+            this.configurarResponsividade();
+            
+            console.log('✅ MapManager inicializado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar MapManager:', error);
+            throw error;
+        }
     }
 
     /**
-     * Criar o mapa base
+     * Configurar responsividade do mapa
+     */
+    configurarResponsividade() {
+        // Redimensionar mapa quando a janela mudar de tamanho
+        const resizeObserver = new ResizeObserver(() => {
+            if (this.map) {
+                // Aguardar um pouco para garantir que o container está com o tamanho correto
+                setTimeout(() => {
+                    this.map.invalidateSize();
+                }, 100);
+            }
+        });
+        
+        // Observar mudanças no container do mapa
+        const mapContainer = document.getElementById(this.containerId);
+        if (mapContainer) {
+            resizeObserver.observe(mapContainer);
+        }
+        
+        // Listener para mudanças de orientação em dispositivos móveis
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (this.map) {
+                    this.map.invalidateSize();
+                }
+            }, 500);
+        });
+        
+        // Listener para redimensionamento da janela
+        window.addEventListener('resize', this.debounce(() => {
+            if (this.map) {
+                this.map.invalidateSize();
+            }
+        }, 250));
+    }
+
+    /**
+     * Debounce utility function
+     * @param {Function} func - Função a ser debounced
+     * @param {number} wait - Tempo de espera em ms
+     * @returns {Function} Função debounced
+     */
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    /**
+     * Criar o mapa base com configurações responsivas
      */
     criarMapa() {
-        // Configurar centro do mapa (Brasília)
-        const centro = [-15.794700, -47.890000];
-        const zoom = 11;
-
-        // Criar mapa
-        this.map = L.map(this.containerId, {
-            center: centro,
-            zoom: zoom,
-            zoomControl: false, // Vamos adicionar controle customizado
-            attributionControl: true
-        });
-
-        // Configurar limites do mapa (DF)
-        const limites = L.latLngBounds(
+        // Configurações do mapa
+        const BRASILIA_CENTER = [-15.794700, -47.890000];
+        const DEFAULT_ZOOM = 11;
+        const MIN_ZOOM = 10;
+        const MAX_ZOOM = 18;
+        
+        // Limites do Distrito Federal
+        const DF_BOUNDS = L.latLngBounds(
             [-16.5, -48.5], // Southwest
             [-15.3, -47.2]  // Northeast
         );
-        this.map.setMaxBounds(limites);
-        this.map.setMinZoom(10);
-        this.map.setMaxZoom(18);
+
+        // Criar mapa com configurações otimizadas
+        this.map = L.map(this.containerId, {
+            center: BRASILIA_CENTER,
+            zoom: DEFAULT_ZOOM,
+            zoomControl: false, // Controle customizado será adicionado depois
+            attributionControl: true,
+            preferCanvas: true, // Melhor performance para muitos marcadores
+            renderer: L.canvas() // Renderer de canvas para melhor performance
+        });
+
+        // Configurar limites e zoom
+        this.map.setMaxBounds(DF_BOUNDS);
+        this.map.setMinZoom(MIN_ZOOM);
+        this.map.setMaxZoom(MAX_ZOOM);
+        
+        // Configurar opções responsivas
+        this.configurarOpcoesResponsivas();
     }
 
     /**
-     * Configurar camadas base
+     * Configurar opções responsivas do mapa
+     */
+    configurarOpcoesResponsivas() {
+        // Detectar se é dispositivo móvel
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Configurações para mobile
+            this.map.options.zoomSnap = 0.5; // Zoom mais suave
+            this.map.options.zoomDelta = 0.5;
+            this.map.options.wheelPxPerZoomLevel = 120;
+            
+            // Configurar popup para mobile
+            this.map.options.maxPopupWidth = Math.min(300, window.innerWidth - 40);
+        } else {
+            // Configurações para desktop
+            this.map.options.zoomSnap = 1;
+            this.map.options.zoomDelta = 1;
+            this.map.options.wheelPxPerZoomLevel = 60;
+        }
+    }
+
+    /**
+     * Configurar camadas base do mapa
      */
     configurarCamadas() {
-        // Camada de ruas (OpenStreetMap)
-        const mapaRuas = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        });
-
-        // Camada de satélite (Google)
-        const mapaSatelite = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: '© Google'
-        });
-
-        // Camada topográfica
-        const mapaTopografico = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            maxZoom: 17,
-            attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap'
-        });
-
+        // Definir camadas base disponíveis
+        const camadas = this.criarCamadasBase();
+        
         // Adicionar camada padrão
-        mapaRuas.addTo(this.map);
+        camadas.ruas.addTo(this.map);
 
-        // Controle de camadas
+        // Criar controle de camadas
+        this.criarControleCamadas(camadas);
+
+        // Armazenar referências para uso posterior
+        this.camadas = camadas;
+
+        // Inicializar grupos de categorias
+        this.inicializarGruposCategorias();
+    }
+
+    /**
+     * Criar camadas base do mapa
+     * @returns {Object} Objeto com as camadas disponíveis
+     */
+    criarCamadasBase() {
+        return {
+            ruas: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }),
+            satelite: L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: '© Google'
+            })
+        };
+    }
+
+    /**
+     * Criar controle de camadas
+     * @param {Object} camadas - Camadas disponíveis
+     */
+    criarControleCamadas(camadas) {
         const camadasBase = {
-            "🏙️ Ruas": mapaRuas,
-            "🛰️ Satélite": mapaSatelite,
-            "🏔️ Topográfico": mapaTopografico
+            "🏙️ Padrão": camadas.ruas,
+            "🛰️ Satélite": camadas.satelite
         };
 
         L.control.layers(camadasBase, null, {
             position: 'topright'
         }).addTo(this.map);
-
-        // Inicializar grupos de categorias
-        this.inicializarGruposCategorias();
     }
 
     /**
@@ -105,7 +217,7 @@ class MapManager {
 
         // Aguardar databaseManager estar disponível
         if (window.databaseManager) {
-            const categorias = window.databaseManager.obterCategorias();
+            const categorias = window.databaseManager.getCategorias();
             
             // Grupos para cada categoria
             categorias.forEach(categoria => {
@@ -148,25 +260,53 @@ class MapManager {
      * Configurar controles do mapa
      */
     configurarControles() {
-        // Controle de zoom customizado
-        L.control.zoom({
-            position: 'bottomright'
-        }).addTo(this.map);
-
-        // Controle de escala
-        L.control.scale({
-            position: 'bottomright',
-            imperial: false,
-            metric: true
-        }).addTo(this.map);
+        // Remover controles de zoom e escala para interface mais limpa
+        // Os controles podem ser adicionados de volta se necessário
 
         // Controle de coordenadas (para admins)
         if (authManager.isAdmin()) {
             this.adicionarControlesCoordenadas();
         }
 
-        // Controle de localização
-        this.adicionarControleLocalizacao();
+        // Nota: Controles de zoom, escala e localização removidos para melhorar a interface
+    }
+
+    /**
+     * Alternar tema do mapa
+     */
+    alternarTemaMapa(temaEscuro = false) {
+        try {
+            // O tema escuro será aplicado via CSS na interface
+            this.map.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    this.map.removeLayer(layer);
+                }
+            });
+
+            // Sempre usar mapa de ruas
+            this.camadas.ruas.addTo(this.map);
+            console.log('🏙️ Mapa configurado com camada de ruas');
+        } catch (error) {
+            console.error('❌ Erro ao alterar tema do mapa:', error);
+        }
+    }
+
+    /**
+     * Aplicar tema inicial baseado nas configurações salvas
+     */
+    aplicarTemaInicial() {
+        try {
+            // Verificar tema salvo no localStorage
+            const temaSalvo = localStorage.getItem('sig-df-theme') || 'dark';
+            const temaEscuro = temaSalvo === 'dark';
+            
+            // Aplicar tema ao mapa
+            this.alternarTemaMapa(temaEscuro);
+            
+            console.log(`🎨 Tema inicial aplicado ao mapa: ${temaEscuro ? 'escuro' : 'claro'}`);
+        } catch (error) {
+            console.error('❌ Erro ao aplicar tema inicial:', error);
+        }
     }
 
     /**
@@ -199,93 +339,37 @@ class MapManager {
     }
 
     /**
-     * Adicionar controle de localização
+     * Adicionar controle de localização - DESABILITADO
+     * Removido para melhorar a interface e evitar sobreposições
      */
+    /*
     adicionarControleLocalizacao() {
-        const controleLocalizacao = L.control({ position: 'topright' });
-        
-        controleLocalizacao.onAdd = function() {
-            const div = L.DomUtil.create('div', 'controle-localizacao');
-            const button = L.DomUtil.create('button', '', div);
-            button.innerHTML = '📍';
-            button.title = 'Minha localização';
-            button.style.cssText = `
-                width: 34px;
-                height: 34px;
-                background: white;
-                border: 2px solid rgba(0,0,0,0.2);
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 16px;
-            `;
-            
-            L.DomEvent.on(button, 'click', this.localizarUsuario.bind(this));
-            return div;
-        }.bind(this);
-
-        controleLocalizacao.addTo(this.map);
+        // Função desabilitada para melhorar UX
+        console.log('Controle de localização desabilitado');
     }
+    */
 
     /**
-     * Localizar usuário
+     * Localizar usuário - DESABILITADO
+     * Removido para melhorar UX e evitar sobreposições
      */
+    /*
     localizarUsuario() {
-        if (!navigator.geolocation) {
-            alert('Geolocalização não suportada pelo navegador');
-            return;
-        }
-
-        const loading = this.mostrarCarregamento('Obtendo localização...');
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                this.map.setView([latitude, longitude], 15);
-                
-                // Adicionar marcador temporário
-                const marcadorUsuario = L.marker([latitude, longitude], {
-                    icon: this.criarIconeUsuario()
-                }).addTo(this.map);
-
-                // Remover após 5 segundos
-                setTimeout(() => {
-                    this.map.removeLayer(marcadorUsuario);
-                }, 5000);
-
-                loading.remove();
-            },
-            (error) => {
-                loading.remove();
-                let mensagem = 'Erro ao obter localização';
-                
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        mensagem = 'Permissão de localização negada';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        mensagem = 'Localização indisponível';
-                        break;
-                    case error.TIMEOUT:
-                        mensagem = 'Timeout na obtenção da localização';
-                        break;
-                }
-                
-                alert(mensagem);
-            }
-        );
+        // Função desabilitada
+        console.log('Localização do usuário desabilitada');
     }
+    */
 
     /**
-     * Criar ícone do usuário
+     * Criar ícone do usuário - DESABILITADO
+     * Removido junto com a funcionalidade de localização
      */
+    /*
     criarIconeUsuario() {
-        return L.divIcon({
-            className: 'icone-usuario',
-            html: '<div style="background: #4285F4; width: 16px; height: 16px; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-        });
+        // Função desabilitada
+        return null;
     }
+    */
 
     /**
      * Mostrar indicador de carregamento
@@ -352,6 +436,27 @@ class MapManager {
     }
 
     /**
+     * Limpar todos os marcadores do mapa
+     */
+    limparMarcadores() {
+        try {
+            console.log('🧹 Limpando marcadores existentes...');
+            
+            // Remover todos os marcadores dos grupos
+            this.gruposPorCategoria.forEach((grupo, categoria) => {
+                grupo.clearLayers();
+            });
+            
+            // Limpar a lista de marcadores
+            this.marcadores.clear();
+            
+            console.log('✅ Marcadores limpos');
+        } catch (error) {
+            console.error('❌ Erro ao limpar marcadores:', error);
+        }
+    }
+
+    /**
      * Adicionar marcador ao mapa
      * @param {Object} ponto - Dados do ponto
      */
@@ -371,24 +476,52 @@ class MapManager {
             // Criar ícone personalizado
             const icone = this.criarIconePersonalizado(categoria);
 
+            // Criar coordenadas (latitude, longitude)
+            // Verificar se temos coordenadas no formato array ou propriedades separadas
+            let coordenadas;
+            if (ponto.coordenadas && Array.isArray(ponto.coordenadas)) {
+                coordenadas = ponto.coordenadas; // [latitude, longitude]
+            } else if (ponto.latitude && ponto.longitude) {
+                coordenadas = [ponto.latitude, ponto.longitude];
+            } else {
+                console.warn(`⚠️ Coordenadas inválidas para ponto: ${ponto.nome}`, ponto);
+                return;
+            }
+
             // Criar marcador
-            const marcador = L.marker(ponto.coordenadas, {
+            const marcador = L.marker(coordenadas, {
                 icon: icone,
                 title: ponto.nome
             });
 
-            // Criar popup
-            const popup = this.criarPopup(ponto);
-            marcador.bindPopup(popup);
-
-            // Eventos do marcador
-            marcador.on('popupopen', () => {
-                this.popupAberto = ponto.id;
-                this.incrementarViews(ponto.id);
+            // Configurar eventos do marcador para usar painel lateral
+            marcador.on('click', () => {
+                this.selecionarPonto(ponto);
             });
 
-            marcador.on('popupclose', () => {
-                this.popupAberto = null;
+            // Eventos de hover para feedback visual sutil (sem mover o ícone)
+            marcador.on('mouseover', () => {
+                const element = marcador.getElement();
+                if (element) {
+                    const iconDiv = element.querySelector('div');
+                    if (iconDiv) {
+                        iconDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.6)';
+                        iconDiv.style.filter = 'brightness(1.1)';
+                        // Não alterar transform para não interferir com posicionamento do Leaflet
+                    }
+                }
+            });
+
+            marcador.on('mouseout', () => {
+                const element = marcador.getElement();
+                if (element && !element.classList.contains('marcador-selecionado')) {
+                    const iconDiv = element.querySelector('div');
+                    if (iconDiv) {
+                        iconDiv.style.boxShadow = '0 3px 8px rgba(0,0,0,0.4)';
+                        iconDiv.style.filter = 'brightness(1)';
+                        // Não alterar transform para não interferir com posicionamento do Leaflet
+                    }
+                }
             });
 
             // Garantir que grupos existem
@@ -414,119 +547,132 @@ class MapManager {
     }
 
     /**
+     * Selecionar ponto e exibir no painel lateral
+     * @param {Object} ponto - Dados do ponto
+     */
+    selecionarPonto(ponto) {
+        try {
+            console.log('📍 Ponto selecionado:', ponto.nome);
+            
+            // Incrementar visualizações
+            this.incrementarViews(ponto.id);
+            
+            // Exibir no painel lateral
+            if (window.infoPanelManager) {
+                window.infoPanelManager.show(ponto);
+            } else {
+                console.warn('⚠️ InfoPanelManager não disponível');
+            }
+            
+            // Destacar marcador selecionado
+            this.destacarMarcadorSelecionado(ponto.id);
+            
+        } catch (error) {
+            console.error('❌ Erro ao selecionar ponto:', error);
+        }
+    }
+
+    /**
+     * Destacar marcador selecionado
+     * @param {number} pontoId - ID do ponto
+     */
+    destacarMarcadorSelecionado(pontoId) {
+        // Remover destaque de outros marcadores
+        this.marcadores.forEach((marcador, id) => {
+            const element = marcador.getElement();
+            if (element) {
+                element.classList.remove('marcador-selecionado');
+            }
+        });
+
+        // Destacar marcador atual
+        const marcadorAtual = this.marcadores.get(pontoId);
+        if (marcadorAtual) {
+            const element = marcadorAtual.getElement();
+            if (element) {
+                element.classList.add('marcador-selecionado');
+            }
+        }
+    }
+
+    /**
+     * Obter ícone legível para categoria
+     * @param {Object} categoria - Dados da categoria
+     * @returns {string} Emoji ou ícone legível
+     */
+    obterIconeLegivel(categoria) {
+        if (!categoria) return '📍';
+        
+        // Mapear categorias para emojis legíveis
+        const mapaIcones = {
+            'cultura': '🎭',
+            'gastronomia': '🍴',
+            'noturno': '🍺',
+            'esportes': '⚽',
+            'geral': '📍',
+            'teatro': '🎭',
+            'museu': '🏛️',
+            'parque': '🌳',
+            'restaurante': '🍽️',
+            'bar': '🍻',
+            'clube': '🎵',
+            'academia': '🏋️',
+            'shopping': '🛍️'
+        };
+        
+        // Tentar encontrar por ID da categoria
+        if (mapaIcones[categoria.id]) {
+            return mapaIcones[categoria.id];
+        }
+        
+        // Tentar encontrar por nome da categoria (convertido para minúsculo)
+        const nomeCategoria = categoria.nome?.toLowerCase() || '';
+        for (const [chave, icone] of Object.entries(mapaIcones)) {
+            if (nomeCategoria.includes(chave)) {
+                return icone;
+            }
+        }
+        
+        // Fallback para ícone padrão
+        return '📍';
+    }
+
+    /**
      * Criar ícone personalizado
      * @param {Object} categoria - Dados da categoria
      * @returns {Object} Ícone Leaflet
      */
     criarIconePersonalizado(categoria) {
+        // Tamanho aumentado para melhor usabilidade em touch
+        const tamanho = window.innerWidth <= 768 ? 32 : 28; // Maior em mobile
+        const borderWidth = window.innerWidth <= 768 ? 4 : 3;
+        
         return L.divIcon({
             className: 'marcador-personalizado',
             html: `
                 <div style="
-                    background-color: ${categoria.cor};
-                    width: 24px;
-                    height: 24px;
-                    border: 3px solid white;
+                    background-color: ${categoria?.cor || '#999'};
+                    width: ${tamanho}px;
+                    height: ${tamanho}px;
+                    border: ${borderWidth}px solid white;
                     border-radius: 50%;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 12px;
+                    font-size: ${Math.floor(tamanho * 0.5)}px;
+                    color: white;
+                    cursor: pointer;
+                    position: relative;
+                    transform: none;
                 ">
-                    ${categoria.icone}
+                    <i class="${categoria?.icon || 'fas fa-map-marker-alt'}"></i>
                 </div>
             `,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-            popupAnchor: [0, -12]
+            iconSize: [tamanho, tamanho],
+            iconAnchor: [tamanho / 2, tamanho / 2], // Centro do ícone nas coordenadas
+            popupAnchor: [0, -(tamanho / 2)] // Popup acima do ícone
         });
-    }
-
-    /**
-     * Criar popup para o ponto
-     * @param {Object} ponto - Dados do ponto
-     * @returns {string} HTML do popup
-     */
-    criarPopup(ponto) {
-        const categoria = databaseManager.obterCategoria(ponto.categoria);
-        const isAdmin = authManager.isAdmin();
-        
-        return `
-            <div class="popup-ponto" style="min-width: 280px; max-width: 400px;">
-                <div style="border-bottom: 2px solid ${categoria.cor}; padding-bottom: 10px; margin-bottom: 10px;">
-                    <h3 style="margin: 0; color: ${categoria.cor}; font-size: 18px;">
-                        ${categoria.icone} ${ponto.nome}
-                    </h3>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                    <p style="margin: 5px 0; color: #666;">
-                        <strong>📍</strong> ${ponto.endereco}
-                    </p>
-                    <p style="margin: 5px 0; font-style: italic;">
-                        ${ponto.descricao}
-                    </p>
-                </div>
-
-                ${ponto.telefone ? `
-                    <p style="margin: 5px 0;">
-                        <strong>📞</strong> ${ponto.telefone}
-                    </p>
-                ` : ''}
-
-                ${ponto.horario ? `
-                    <p style="margin: 5px 0;">
-                        <strong>🕒</strong> ${ponto.horario}
-                    </p>
-                ` : ''}
-
-                ${ponto.preco ? `
-                    <p style="margin: 5px 0;">
-                        <strong>💰</strong> ${ponto.preco}
-                    </p>
-                ` : ''}
-
-                ${ponto.avaliacao > 0 ? `
-                    <p style="margin: 5px 0;">
-                        <strong>⭐</strong> ${ponto.avaliacao}/5
-                    </p>
-                ` : ''}
-
-                ${ponto.website ? `
-                    <p style="margin: 5px 0;">
-                        <a href="${ponto.website}" target="_blank" style="color: ${categoria.cor};">
-                            🌐 Site oficial
-                        </a>
-                    </p>
-                ` : ''}
-
-                ${ponto.tags && ponto.tags.length > 0 ? `
-                    <div style="margin-top: 10px;">
-                        <small style="color: #888;">
-                            Tags: ${ponto.tags.map(tag => `<span style="background: #f0f0f0; padding: 2px 6px; border-radius: 10px; margin-right: 5px;">#${tag}</span>`).join('')}
-                        </small>
-                    </div>
-                ` : ''}
-
-                ${isAdmin ? `
-                    <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: center;">
-                        <button onclick="mapManager.editarPonto(${ponto.id})" style="background: #4CAF50; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                            ✏️ Editar
-                        </button>
-                        <button onclick="mapManager.removerPonto(${ponto.id})" style="background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-                            🗑️ Remover
-                        </button>
-                    </div>
-                ` : ''}
-
-                <div style="margin-top: 10px; text-align: center;">
-                    <small style="color: #ccc;">
-                        ID: ${ponto.id} | Views: ${ponto.metadata?.views || 0}
-                    </small>
-                </div>
-            </div>
-        `;
     }
 
     /**

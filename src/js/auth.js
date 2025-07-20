@@ -17,8 +17,10 @@ class AuthManager {
      * Inicializa o sistema de autenticação
      */
     init() {
+        console.log('🔐 Inicializando AuthManager...');
         this.loadSession();
         this.setupEventListeners();
+        console.log('✅ AuthManager inicializado com sucesso');
     }
 
     /**

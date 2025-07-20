@@ -193,11 +193,11 @@ class AdminManager {
      * Carregar estatísticas
      */
     async loadStatistics() {
-        const stats = databaseManager.obterEstatisticas();
+        const stats = databaseManager.getEstatisticas();
         
         // Atualizar cards de estatísticas
-        document.getElementById('stat-total-pontos').textContent = stats.total;
-        document.getElementById('stat-categorias').textContent = Object.keys(stats.porCategoria).length;
+        document.getElementById('stat-total-pontos').textContent = stats.totalPontos;
+        document.getElementById('stat-categorias').textContent = this.categorias.length;
         document.getElementById('stat-usuarios').textContent = authManager.getTotalUsers();
         document.getElementById('stat-hoje').textContent = this.getPointsAddedToday();
     }
@@ -273,14 +273,14 @@ class AdminManager {
      * Carregar dados de categorias
      */
     loadCategoriesData() {
-        const categorias = databaseManager.obterCategorias();
+        const categorias = databaseManager.getCategorias();
         const container = document.getElementById('categories-grid');
         
         if (!container) return;
 
         container.innerHTML = categorias.map(categoria => {
-            const stats = databaseManager.obterEstatisticas();
-            const count = stats.porCategoria[categoria.id] || 0;
+            const stats = databaseManager.getEstatisticas();
+            const count = stats.pontosPorCategoria[categoria.id] || 0;
             
             return `
                 <div class="category-card">
@@ -412,14 +412,14 @@ class AdminManager {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        const stats = databaseManager.obterEstatisticas();
-        const categorias = databaseManager.obterCategorias();
+        const stats = databaseManager.getEstatisticas();
+        const categorias = databaseManager.getCategorias();
 
         const data = {
             labels: categorias.map(c => c.nome),
             datasets: [{
                 label: 'Pontos por Categoria',
-                data: categorias.map(c => stats.porCategoria[c.id] || 0),
+                data: categorias.map(c => stats.pontosPorCategoria[c.id] || 0),
                 backgroundColor: categorias.map(c => c.cor + '80'),
                 borderColor: categorias.map(c => c.cor),
                 borderWidth: 2
@@ -637,7 +637,7 @@ class AdminManager {
         const selectCategoria = document.getElementById('filter-categoria');
         if (!selectCategoria) return;
 
-        const categorias = databaseManager.obterCategorias();
+        const categorias = databaseManager.getCategorias();
         selectCategoria.innerHTML = '<option value="todos">Todas</option>';
         
         categorias.forEach(categoria => {

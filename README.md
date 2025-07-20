@@ -1,266 +1,270 @@
-# 🎯 Pontos de Entretenimento DF
+# 🗺️ SIG Entretenimento DF
 
-> **Mapa interativo para descobrir os melhores locais de entretenimento no Distrito Federal**
+Sistema de Informações Geográficas para pontos de entretenimento do Distrito Federal.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/seu-usuario/pontos-entretenimento-df)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Leaflet](https://img.shields.io/badge/Leaflet-1.3.4-brightgreen.svg)](https://leafletjs.com/)
+## 🚀 Sobre o Projeto
 
-![Screenshot do Projeto](assets/screenshot.png)
+Aplicação web que apresenta um mapa interativo com pontos de entretenimento do Distrito Federal, desenvolvida com Clean Architecture e boas práticas de programação.
 
-## 📋 Sobre o Projeto
+## ✨ Funcionalidades
 
-O **Pontos de Entretenimento DF** é uma aplicação web interativa que permite aos usuários descobrir e explorar locais de interesse no Distrito Federal. O sistema oferece uma interface intuitiva com mapa dinâmico, sistema de categorias e funcionalidades distintas para usuários e administradores.
+- 🗺️ Mapa interativo com Leaflet
+- 📍 Marcadores categorizados por tipo de entretenimento
+- 🔍 Filtros por categoria
+- 📊 Estatísticas em tempo real
+- 🌙 Tema claro/escuro
+- 🔐 Sistema de autenticação para administradores
+- � Design responsivo
 
-### 🌟 Principais Funcionalidades
+## 🛠️ Tecnologias
 
-- **🗺️ Mapa Interativo**: Baseado no Leaflet.js com múltiplas camadas
-- **📂 Sistema de Categorias**: Organização por tipo de estabelecimento
-- **👥 Controle de Acesso**: Funcionalidades diferentes para usuários e administradores
-- **📍 Adição de Pontos**: Interface para administradores cadastrarem novos locais
-- **🔍 Busca e Filtros**: Sistema avançado de pesquisa
-- **📱 Design Responsivo**: Funciona perfeitamente em dispositivos móveis
-- **💾 Persistência de Dados**: Armazenamento local com opção de API
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Mapas**: Leaflet.js
+- **Armazenamento**: LocalStorage
+- **Arquitetura**: Clean Architecture
+- **Estilo**: CSS custom com variáveis
 
-## 🎯 Categorias Disponíveis
+## 📋 Correções Implementadas
 
-| Categoria | Ícone | Descrição |
-|-----------|-------|-----------|
-| **Restaurantes** | 🍽️ | Opções gastronômicas variadas |
-| **Shopping** | 🛍️ | Centros comerciais e lojas |
-| **Parques** | 🌳 | Áreas verdes e lazer ao ar livre |
-| **Cultura** | 🎭 | Museus, teatros e centros culturais |
-| **Vida Noturna** | 🌙 | Bares, casas noturnas e entretenimento |
+### ❌ Problemas Identificados e Corrigidos:
 
-## 🚀 Demonstração
+1. **Inicialização Assíncrona**
+   - ✅ Implementado sistema robusto de inicialização
+   - ✅ Verificação de dependências antes da inicialização
+   - ✅ Tratamento de erros em todos os managers
 
-### Interface de Usuário
-- Visualização de todos os pontos cadastrados
-- Filtros por categoria
-- Informações detalhadas em popups
-- Navegação intuitiva no mapa
+2. **Ordem de Carregamento**
+   - ✅ Aguarda DOM completamente carregado
+   - ✅ Inicialização sequencial com delays apropriados
+   - ✅ Verificação de disponibilidade de elementos
 
-### Interface de Administrador
-- Todas as funcionalidades do usuário
-- Adição de novos pontos através do mapa
-- Edição de informações existentes
-- Gerenciamento de categorias
+3. **Tratamento de Erros**
+   - ✅ Try-catch em todos os métodos críticos
+   - ✅ Logs detalhados para debug
+   - ✅ Tela de erro informativa com stack trace
+
+4. **Verificações de Segurança**
+   - ✅ Verificação de existência de managers antes do uso
+   - ✅ Verificação de elementos DOM antes da manipulação
+   - ✅ Fallbacks para funcionalidades não críticas
+
+## 🚀 Como Executar
+
+1. **Clone o repositório**
+   ```bash
+   git clone [url-do-repositorio]
+   cd sig-entretenimento-df
+   ```
+
+2. **Execute um servidor local**
+   ```bash
+   # Python 3
+   python -m http.server 8000
+   
+   # Ou Node.js
+   npx serve .
+   
+   # Ou qualquer servidor web local
+   ```
+
+3. **Acesse no navegador**
+   ```
+   http://localhost:8000
+   ```
+
+## 🧪 Testes
+
+- **Teste Simples**: Acesse `/test-simple.html` para verificar funcionalidades básicas
+- **Console**: Verifique logs detalhados no console do desenvolvedor
 
 ## 📁 Estrutura do Projeto
 
 ```
-pontos-entretenimento-df/
-├── 📄 index.html                    # Página principal
-├── 📄 admin.html                    # Interface do administrador
-├── 📁 src/                          # Código fonte
-│   ├── 📁 js/                       # Scripts JavaScript
-│   │   ├── 📄 app.js               # Aplicação principal
-│   │   ├── 📄 database.js          # Gerenciamento de dados
-│   │   ├── 📄 auth.js              # Sistema de autenticação
-│   │   ├── 📄 map.js               # Configurações do mapa
-│   │   └── 📄 utils.js             # Funções utilitárias
-│   ├── 📁 css/                     # Estilos
-│   │   ├── 📄 main.css             # Estilos principais
-│   │   ├── 📄 components.css       # Componentes
-│   │   └── 📄 responsive.css       # Design responsivo
-│   └── 📁 components/              # Componentes reutilizáveis
-│       ├── 📄 modal.js             # Componente de modal
-│       ├── 📄 form.js              # Formulários
-│       └── 📄 notification.js      # Sistema de notificações
-├── 📁 assets/                      # Recursos estáticos
-│   ├── 📁 images/                  # Imagens
-│   └── 📁 icons/                   # Ícones
-├── 📁 docs/                        # Documentação
-│   ├── 📄 CRIAR_PONTOS.md          # Como criar novos pontos
-│   ├── 📄 API.md                   # Documentação da API
-│   └── 📄 DEPLOYMENT.md            # Guia de implantação
-├── 📄 db.json                      # Banco de dados JSON
-├── 📄 package.json                 # Dependências do projeto
-└── 📄 README.md                    # Este arquivo
+├── index.html              # Página principal
+├── admin.html              # Página de administração
+├── test-simple.html        # Teste básico
+├── src/
+│   ├── js/
+│   │   ├── app.js          # Aplicação principal
+│   │   ├── database.js     # Gerenciador de dados
+│   │   ├── auth.js         # Sistema de autenticação
+│   │   ├── map.js          # Gerenciador do mapa
+│   │   └── theme.js        # Gerenciador de temas
+│   ├── css/
+│   │   ├── main.css        # Estilos principais
+│   │   ├── colors.css      # Variáveis de cores
+│   │   └── components.css  # Componentes reutilizáveis
+│   └── components/
+│       └── modal.js        # Sistema de modais
 ```
 
-## ⚡ Início Rápido
+## 🔧 Padrões de Código
 
-### Método Rápido (Recomendado)
+### Clean Code Aplicado:
+- ✅ Nomes descritivos para variáveis e funções
+- ✅ Funções pequenas com responsabilidade única
+- ✅ Comentários JSDoc para documentação
+- ✅ Tratamento consistente de erros
+- ✅ Separação de responsabilidades
 
-**Windows:**
-```bash
-start.bat
-```
+### Clean Architecture:
+- ✅ Separação em camadas (UI, Business Logic, Data)
+- ✅ Dependency Injection via window globals
+- ✅ Managers especializados por domínio
+- ✅ Event-driven communication
 
-**Linux/Mac:**
-```bash
-chmod +x start.sh
-./start.sh
-```
+## 🔐 Credenciais de Teste
 
-### Instalação Manual
+- **Usuário**: admin
+- **Senha**: admin123
 
-### 1. **Clone o Repositório**
-```bash
-git clone https://github.com/seu-usuario/pontos-entretenimento-df.git
-cd pontos-entretenimento-df
-```
+## 🐛 Troubleshooting
 
-### 2. **Instale as Dependências (Opcional)**
-```bash
-npm install
-```
+### Se a aplicação não carregar:
 
-### 3. **Inicie o Servidor**
-```bash
-# Servidor local
-npm start
-```
+1. **Verifique o console** para logs de erro
+2. **Teste básico** em `/test-simple.html`
+3. **Limpe o localStorage** se necessário:
+   ```javascript
+   localStorage.clear();
+   ```
+4. **Verifique a conexão** com CDNs externos (Leaflet, FontAwesome)
 
-### 4. **Acesse a Aplicação**
-- **Usuário**: http://localhost:8000
-- **Administrador**: http://localhost:8000/admin.html
+### Logs de Debug:
+A aplicação possui logs detalhados:
+- 🚀 Inicialização
+- ✅ Sucessos
+- ❌ Erros
+- ⚠️ Warnings
+- 🔧 Debug
 
-### Requisitos do Sistema
-- **Python 3.x** (para servidor HTTP)
-- **Navegador moderno** (Chrome, Firefox, Safari, Edge)
+## 📝 Licença
 
-## 👤 Sistema de Usuários
+Este projeto é open source e está disponível sob a licença MIT.
 
-### 🔑 Credenciais de Teste
+## 👥 Contribuição
 
-| Tipo | Usuário | Senha |
-|------|---------|-------|
-| **Administrador** | `admin` | `admin123` |
-| **Usuário** | `user` | `user123` |
-
-### 📋 Permissões
-
-#### 👥 **Usuário Comum**
-- ✅ Visualizar todos os pontos
-- ✅ Filtrar por categoria
-- ✅ Ver detalhes dos locais
-- ✅ Navegar pelo mapa
-- ❌ Adicionar novos pontos
-- ❌ Editar informações
-
-#### 👨‍💼 **Administrador**
-- ✅ Todas as permissões do usuário
-- ✅ Adicionar novos pontos
-- ✅ Editar pontos existentes
-- ✅ Remover pontos
-- ✅ Gerenciar categorias
-- ✅ Acessar painel administrativo
-
-## 🛠️ Tecnologias Utilizadas
-
-| Tecnologia | Versão | Descrição |
-|------------|--------|-----------|
-| **Leaflet.js** | 1.3.4 | Biblioteca para mapas interativos |
-| **JavaScript ES6+** | - | Linguagem principal |
-| **HTML5** | - | Estrutura das páginas |
-| **CSS3** | - | Estilização e design |
-| **JSON Server** | 0.17.3 | API REST para desenvolvimento |
-| **LocalStorage** | - | Armazenamento local do navegador |
-
-## 📊 Funcionalidades Técnicas
-
-### 🗃️ **Gerenciamento de Dados**
-- Classe `DatabaseManager` para operações CRUD
-- Sincronização entre LocalStorage e API
-- Validação de dados de entrada
-- Sistema de backup automático
-
-### 🗺️ **Sistema de Mapas**
-- Múltiplas camadas base (ruas, satélite, topográfico)
-- Marcadores customizados por categoria
-- Popups informativos com dados detalhados
-- Controles de zoom e navegação
-
-### 🔐 **Autenticação**
-- Sistema simples de login
-- Gerenciamento de sessões
-- Controle de acesso baseado em roles
-- Proteção de rotas administrativas
-
-### 📱 **Interface Responsiva**
-- Design mobile-first
-- Adaptação automática para diferentes telas
-- Menu responsivo
-- Controles touch-friendly
-
-## 🎨 Personalização
-
-### Adicionar Nova Categoria
-```javascript
-const novaCategoria = {
-    id: 'esportes',
-    nome: 'Esportes',
-    icone: '⚽',
-    cor: '#FF9F43',
-    descricao: 'Locais para prática esportiva'
-};
-
-categoriaManager.adicionarCategoria(novaCategoria);
-```
-
-### Personalizar Cores do Tema
-```css
-:root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --accent-color: #FF6B6B;
-    --success-color: #4CAF50;
-    --warning-color: #FFC107;
-    --danger-color: #F44336;
-}
-```
-
-## 📈 Estatísticas do Projeto
-
-- **🏢 Pontos Cadastrados**: 25+ locais
-- **📂 Categorias**: 5 tipos diferentes
-- **🗺️ Área de Cobertura**: Distrito Federal completo
-- **📱 Compatibilidade**: Todos os dispositivos modernos
-
-## 🤝 Como Contribuir
-
-1. **Fork** o projeto
-2. Crie uma **branch** para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. **Commit** suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um **Pull Request**
-
-### 📋 Diretrizes de Contribuição
-
-- Siga o padrão de código estabelecido
-- Adicione testes para novas funcionalidades
-- Atualize a documentação quando necessário
-- Use mensagens de commit descritivas
-
-## 📚 Documentação Adicional
-
-- 📖 [Como Criar Novos Pontos](docs/CRIAR_PONTOS.md)
-- 🔧 [Documentação da API](docs/API.md)
-- 🚀 [Guia de Implantação](docs/DEPLOYMENT.md)
-
-## 🐛 Suporte e Issues
-
-Encontrou um bug ou tem uma sugestão? Abra uma [issue](https://github.com/seu-usuario/pontos-entretenimento-df/issues) no GitHub.
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 👨‍💻 Autor
-
-**Seu Nome**
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
-- LinkedIn: [Seu Perfil](https://linkedin.com/in/seu-perfil)
-- Email: seu.email@exemplo.com
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
 
 ---
 
-<div align="center">
+**Desenvolvido com ❤️ para o Distrito Federal** 🏛️
+5. **Admin**: Clique em "LOGIN" para acessar funcionalidades administrativas.
 
-**⭐ Se este projeto foi útil para você, considere dar uma estrela no GitHub!**
+## 🎨 Personalização de Temas
 
-[🏠 Voltar ao Topo](#-pontos-de-entretenimento-df)
+### Como alterar cores:
 
-</div>
+1. **Edite** `src/css/colors.css`
+2. **Modifique** as variáveis em `:root` para cores base
+3. **Ajuste** `.theme-light` para personalizar tema claro  
+4. **Ajuste** as variáveis padrão para personalizar tema escuro
+
+### Exemplo de personalização:
+```css
+:root {
+    --primary: #your-color;        /* Cor principal */
+    --secondary: #your-color;      /* Cor secundária */
+    --accent: #your-color;         /* Cor de destaque */
+}
+```
+
+## ⚙️ Configurações
+
+### Tema padrão:
+- **Localização**: `src/js/theme.js`
+- **Variável**: `DEFAULT_THEME = 'dark'` (escuro como padrão)
+- **Para mudar**: Altere para `'light'` se desejar claro como padrão
+
+### Centro do mapa:
+- **Localização**: `src/js/map.js`
+- **Coordenadas**: `[-15.794700, -47.890000]` (Brasília)
+
+### Dados dos pontos:
+- **Localização**: `db.json`
+- **Formato**: Array de objetos com propriedades: id, nome, categoria, coordenadas, etc.
+
+## 🏗️ Arquitetura
+
+### Estrutura Clean Code:
+```
+src/
+├── css/
+│   ├── colors.css     # Sistema de cores e temas
+│   ├── main.css       # Estilos principais
+│   └── components.css # Componentes (modais, etc.)
+├── js/
+│   ├── app.js         # Aplicação principal
+│   ├── theme.js       # Gerenciador de temas
+│   ├── map.js         # Gerenciador de mapas
+│   ├── database.js    # Gerenciador de dados
+│   └── auth.js        # Autenticação
+└── components/
+    └── modal.js       # Componente de modais
+```
+
+### Princípios aplicados:
+- **Single Responsibility**: Cada classe tem uma responsabilidade específica
+- **Clean Architecture**: Separação de camadas e responsabilidades
+- **Error Handling**: Tratamento robusto de erros
+- **Logging**: Sistema de logs para debugging
+- **Modularização**: Código organizado em módulos
+
+## 🔧 Desenvolvimento
+
+### Adicionando novos pontos:
+1. **Programaticamente**: Use `app.adicionarPonto(dados)` no console
+2. **Via interface**: Faça login como admin e use os controles
+
+### Debugging:
+- **Console**: Logs detalhados em todas as operações
+- **Tema**: Eventos de mudança de tema são logados
+- **Inicialização**: Processo completo é rastreado
+
+### Estrutura de dados:
+```javascript
+{
+  "id": "unique-id",
+  "nome": "Nome do Local",
+  "categoria": "cultura|gastronomia|vida-noturna|lazer|natureza",
+  "coordenadas": [-15.794700, -47.890000],
+  "endereco": "Endereço completo",
+  "descricao": "Descrição do local"
+}
+```
+
+## 📋 Checklist de Funcionalidades
+
+- ✅ **Loading Screen**: Removido após inicialização completa
+- ✅ **Tema Escuro/Claro**: Funcionando com persistência
+- ✅ **Mapa**: Carregando e renderizando corretamente
+- ✅ **Filtros**: Categorias funcionais
+- ✅ **Responsivo**: Layout adaptável
+- ✅ **Error Handling**: Tratamento robusto de erros
+- ✅ **Clean Code**: Arquitetura limpa e documentada
+- ✅ **Console Clean**: Sem erros no console do navegador
+
+## 🚨 Solução de Problemas
+
+### Loading infinito:
+- **Verificar**: Se todos os managers são carregados
+- **Console**: Checar logs de inicialização
+- **Timeout**: Aplicação tem timeout de 15s para inicialização
+
+### Tema não funciona:
+- **localStorage**: Pode estar bloqueado
+- **Button**: Verificar se existe elemento com id="theme-toggle"
+- **CSS**: Verificar se classes .theme-light/.theme-dark existem
+
+### Mapa não carrega:
+- **Internet**: Verificar conexão (usa CDN do Leaflet)
+- **Container**: Verificar se elemento #map existe
+- **JavaScript**: Verificar se MapManager foi inicializado
+
+---
+
+**Versão**: 2.0.0 | **Tema padrão**: Escuro | **Arquitetura**: Clean Code

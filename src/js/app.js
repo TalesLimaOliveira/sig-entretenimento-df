@@ -1,773 +1,502 @@
 /**
- * Aplicação Principal - Pontos de Entretenimento DF
- * Orquestra todos os componentes da aplicação
+ * Aplicação Principal - Clean Architecture
  * 
- * @author Seu Nome
- * @version 1.0.0
+ * Responsabilidades:
+ * - Inicializar todos os gerenciadores
+ * - Coordenar a aplicação
+ * - Gerenciar o ciclo de vida da aplicação
+ * - Controlar o loading e responsividade
+ * 
+ * @author Sistema de Entretenimento DF
+ * @version 2.0.0
  */
-
 class PontosEntretenimentoApp {
     constructor() {
         this.isAdmin = false;
         this.categoriaAtiva = 'todos';
-        this.stats = {
-            total: 0,
-            porCategoria: {}
-        };
+        this.isInitialized = false;
+        
         this.init();
     }
 
     /**
-     * Inicializar a aplicação
+     * Inicialização principal da aplicação
      */
     async init() {
         try {
-            // Iniciando Pontos de Entretenimento DF...
+            console.log('🚀 Iniciando aplicação...');
             
-            // Aguardar carregamento do DOM
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => this.inicializar());
             } else {
                 await this.inicializar();
             }
-            
         } catch (error) {
-            console.error('❌ Erro ao inicializar aplicação:', error);
+            console.error('❌ Erro crítico ao inicializar aplicação:', error);
             this.mostrarErro('Erro ao carregar a aplicação. Recarregue a página.');
+            this.removerLoadingScreen(); // Remove loading mesmo com erro
         }
     }
 
     /**
-     * Processo principal de inicialização
+     * Processo completo de inicialização
      */
     async inicializar() {
-        // Aguardar managers estarem prontos
-        await this.aguardarManagers();
+        try {
+            console.log('⏳ Aguardando managers...');
+            await this.aguardarManagers();
+            console.log('✅ Managers carregados');
 
-        // Verificar autenticação
-        this.verificarAutenticacao();
-
-        // Configurar interface
-        this.configurarInterface();
-
-        // Inicializar mapa
-        await this.inicializarMapa();
-
-        // Carregar dados
-        await this.carregarDados();
-
-        // Configurar event listeners
-        this.configurarEventListeners();
-
-        // Finalizar
-        this.finalizarInicializacao();
+            // Configurar responsividade desde o início
+            this.configurarResponsividade();
+            
+            console.log('🔄 Verificando autenticação...');
+            this.verificarAutenticacao();
+            console.log('✅ Autenticação verificada');
+            
+            console.log('🔄 Configurando interface...');
+            this.configurarInterface();
+            console.log('✅ Interface configurada');
+            
+            console.log('🔄 Configurando eventos...');
+            this.configurarEventos();
+            console.log('✅ Eventos configurados');
+            
+            console.log('🔄 Carregando dados...');
+            await this.carregarDados();
+            console.log('✅ Dados carregados');
+            
+            console.log('🔄 Removendo loading screen...');
+            this.removerLoadingScreen();
+            console.log('✅ Aplicação inicializada com sucesso!');
+            
+            this.isInitialized = true;
+            
+        } catch (error) {
+            console.error('❌ Erro durante inicialização:', error);
+            this.mostrarErro('Erro durante o carregamento. Recarregue a página.');
+            this.removerLoadingScreen(); // Remove loading mesmo com erro
+        }
     }
 
     /**
-     * Aguardar managers estarem prontos
+     * Aguarda todos os gerenciadores estarem prontos
      */
     async aguardarManagers() {
-        const aguardarManager = (manager, nome) => {
-            return new Promise(resolve => {
-                if (manager && manager.pontos !== undefined) {
-                    resolve();
-                } else {
-                    const checkInterval = setInterval(() => {
-                        if (manager && manager.pontos !== undefined) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 100);
-                }
-            });
+        const TIMEOUT_MS = 10000; // 10 segundos
+        const CHECK_INTERVAL_MS = 50; // 50ms
+        const start = Date.now();
+        
+        console.log('⏳ Aguardando managers...');
+        
+        while (Date.now() - start < TIMEOUT_MS) {
+            const managersReady = this.verificarManagers();
+            
+            if (managersReady.allReady) {
+                console.log('✅ Todos os managers estão prontos:', managersReady.ready);
+                return;
+            }
+            
+            // Verificar se pelo menos os essenciais estão prontos
+            if (managersReady.hasMinimal) {
+                console.log('✅ Managers essenciais prontos:', managersReady.ready);
+                console.log('⚠️ Managers faltando:', managersReady.missing);
+                return;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL_MS));
+        }
+        
+        // Se chegou aqui, houve timeout
+        const managersStatus = this.verificarManagers();
+        console.error('❌ Timeout ao aguardar managers. Status:', managersStatus);
+        
+        // Tenta continuar se tiver pelo menos os essenciais
+        if (managersStatus.hasMinimal) {
+            console.warn('⚠️ Continuando com managers essenciais:', managersStatus.ready);
+            return;
+        }
+        
+        throw new Error('Managers essenciais não foram carregados no tempo limite');
+    }
+
+    /**
+     * Verifica quais managers estão prontos
+     */
+    verificarManagers() {
+        const managers = {
+            databaseManager: window.databaseManager,
+            authManager: window.authManager,
+            modalManager: window.modalManager,
+            mapManager: window.mapManager,
+            themeManager: window.themeManager
         };
-
-        // Aguardar DatabaseManager estar pronto
-        await aguardarManager(window.databaseManager, 'DatabaseManager');
         
-        // Pequena pausa para garantir que tudo esteja inicializado
-        await new Promise(resolve => setTimeout(resolve, 200));
+        const ready = [];
+        const missing = [];
+        
+        for (const [name, manager] of Object.entries(managers)) {
+            if (manager && typeof manager === 'object') {
+                ready.push(name);
+            } else {
+                missing.push(name);
+            }
+        }
+        
+        return {
+            ready,
+            missing,
+            allReady: missing.length === 0,
+            hasMinimal: ready.includes('databaseManager') && ready.includes('themeManager')
+        };
     }
 
-    /**
-     * Verificar estado de autenticação
-     */
     verificarAutenticacao() {
-        // Verificar se é página de admin
-        const isAdminPage = window.location.pathname.includes('admin.html');
-        
-        if (isAdminPage && window.authManager) {
-            // Proteger rota administrativa
-            window.authManager.protectAdminRoute();
-        }
-
-        // Verificar se usuário está logado
-        if (window.authManager) {
-            const usuario = window.authManager.getCurrentUser();
-            if (usuario) {
-                this.isAdmin = usuario.role === 'administrator';
-                this.atualizarInterfaceUsuario(usuario);
-            } else if (isAdminPage) {
-                // Redirecionar para login se necessário
-                this.mostrarModalLogin();
-            }
-        }
-    }
-
-    /**
-     * Configurar interface inicial
-     */
-    configurarInterface() {
-        // Configurar cabeçalho
-        this.configurarCabecalho();
-
-        // Configurar menu de categorias
-        this.configurarMenuCategorias();
-
-        // Configurar painéis de informação
-        this.configurarPaineis();
-
-        // Aplicar tema
-        this.aplicarTema();
-    }
-
-    /**
-     * Configurar cabeçalho
-     */
-    configurarCabecalho() {
-        const cabecalho = document.querySelector('.header');
-        if (!cabecalho) return;
-
-        // Adicionar informações do usuário se logado
-        const usuario = window.authManager ? window.authManager.getCurrentUser() : null;
-        if (usuario) {
-            const userInfo = document.createElement('div');
-            userInfo.className = 'user-info';
-            userInfo.innerHTML = `
-                <span class="user-name">👋 ${usuario.name}</span>
-                <button class="btn btn-logout" onclick="window.app.logout()">Sair</button>
-            `;
-            cabecalho.appendChild(userInfo);
-        }
-
-        // Botão de login para usuários não autenticados
-        if (!usuario && !this.isAdminPage()) {
-            const loginBtn = document.createElement('button');
-            loginBtn.className = 'btn btn-primary';
-            loginBtn.textContent = 'Login Admin';
-            loginBtn.onclick = () => this.mostrarModalLogin();
-            cabecalho.appendChild(loginBtn);
-        }
-    }
-
-    /**
-     * Configurar menu de categorias
-     */
-    configurarMenuCategorias() {
-        const menuContainer = document.querySelector('.menu-container');
-        if (!menuContainer) {
-            console.warn('Menu container não encontrado');
-            return;
-        }
-
-        // Limpar menu existente
-        menuContainer.innerHTML = '';
-
-        // Botão "Todos"
-        const btnTodos = this.criarBotaoCategoria('todos', '🌟', 'Todos', true);
-        menuContainer.appendChild(btnTodos);
-
-        // Aguardar databaseManager estar disponível
-        if (window.databaseManager) {
-            // Botões das categorias
-            const categorias = window.databaseManager.obterCategorias();
-            console.log('🔍 Categorias encontradas:', categorias);
-            
-            if (categorias && categorias.length > 0) {
-                categorias.forEach(categoria => {
-                    console.log('🔹 Criando botão para categoria:', categoria.nome);
-                    const btn = this.criarBotaoCategoria(
-                        categoria.id, 
-                        categoria.icone, 
-                        categoria.nome, 
-                        false
-                    );
-                    menuContainer.appendChild(btn);
-                });
+        try {
+            if (window.authManager && typeof window.authManager.isAuthenticated === 'function') {
+                this.isAdmin = window.authManager.isAuthenticated();
+                this.atualizarInterfaceAdmin();
+                console.log(`🔐 Status admin: ${this.isAdmin}`);
             } else {
-                console.warn('⚠️ Nenhuma categoria encontrada');
-            }
-        } else {
-            console.warn('⚠️ DatabaseManager não disponível ainda');
-        }
-
-        // Botão para adicionar ponto (só para admin)
-        if (this.isAdmin) {
-            const btnAdicionar = document.createElement('button');
-            btnAdicionar.className = 'category-btn adicionar';
-            btnAdicionar.innerHTML = '➕ Adicionar Ponto';
-            btnAdicionar.onclick = () => this.ativarModoAdicao();
-            menuContainer.appendChild(btnAdicionar);
-        }
-    }
-
-    /**
-     * Criar botão de categoria
-     * @param {string} id - ID da categoria
-     * @param {string} icone - Ícone da categoria
-     * @param {string} nome - Nome da categoria
-     * @param {boolean} ativo - Se o botão está ativo
-     * @returns {HTMLElement} Elemento do botão
-     */
-    criarBotaoCategoria(id, icone, nome, ativo = false) {
-        const btn = document.createElement('button');
-        btn.className = `category-btn ${id}${ativo ? ' active' : ''}`;
-        btn.innerHTML = `${icone} ${nome}`;
-        btn.onclick = () => this.filtrarCategoria(id);
-        return btn;
-    }
-
-    /**
-     * Configurar painéis de informação
-     */
-    configurarPaineis() {
-        // Painéis removidos - interface simplificada
-    }
-
-    /**
-     * Aplicar tema da aplicação
-     */
-    aplicarTema() {
-        // Adicionar classes CSS dinâmicas
-        document.body.classList.add('pontos-df-app');
-        
-        if (this.isAdmin) {
-            document.body.classList.add('admin-mode');
-        }
-
-        // Configurar modo escuro (se preferência salva)
-        const modoEscuro = localStorage.getItem('pontos-df-dark-mode');
-        if (modoEscuro === 'true') {
-            document.body.classList.add('dark-mode');
-        }
-    }
-
-    /**
-     * Inicializar mapa
-     */
-    async inicializarMapa() {
-        try {
-            // Aguardar elemento do mapa estar disponível
-            const mapContainer = document.getElementById('map');
-            if (!mapContainer) {
-                throw new Error('Container do mapa não encontrado');
-            }
-
-            // Inicializar MapManager
-            window.mapManager = new MapManager('map');
-            
-            // Mapa inicializado
-        } catch (error) {
-            console.error('❌ Erro ao inicializar mapa:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Carregar dados da aplicação
-     */
-    async carregarDados() {
-        try {
-            // Reconfigurar categorias após database estar pronto
-            this.configurarMenuCategorias();
-
-            // Aguardar inicialização do banco de dados
-            await new Promise(resolve => {
-                if (window.databaseManager && window.databaseManager.pontos) {
-                    resolve();
-                } else {
-                    // Aguardar inicialização
-                    const checkInterval = setInterval(() => {
-                        if (window.databaseManager && window.databaseManager.pontos) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 100);
-                }
-            });
-
-            // Reconfigurar grupos de categorias no mapa
-            if (window.mapManager) {
-                window.mapManager.inicializarGruposCategorias();
-                // Carregar pontos no mapa
-                window.mapManager.carregarPontos();
-            }
-
-            // Dados carregados
-        } catch (error) {
-            console.error('❌ Erro ao carregar dados:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Configurar event listeners da aplicação
-     */
-    configurarEventListeners() {
-        // Eventos de autenticação
-        document.addEventListener('authStateChanged', (e) => {
-            this.tratarMudancaAuth(e.detail);
-        });
-
-        // Eventos do banco de dados
-        document.addEventListener('database_pontoAdicionado', () => {
-            // Ponto adicionado
-        });
-
-        document.addEventListener('database_pontoRemovido', () => {
-            // Ponto removido
-        });
-
-        // Eventos de teclado
-        document.addEventListener('keydown', (e) => {
-            this.tratarTeclado(e);
-        });
-
-        // Eventos de janela
-        window.addEventListener('beforeunload', () => {
-            this.salvarEstado();
-        });
-
-        // Responsividade
-        window.addEventListener('resize', () => {
-            this.ajustarLayout();
-        });
-
-        // Event listeners configurados
-    }
-
-    /**
-     * Finalizar processo de inicialização
-     */
-    finalizarInicializacao() {
-        // Remover loading screen se existir
-        const loading = document.querySelector('.loading-screen');
-        if (loading) {
-            loading.remove();
-        }
-
-        // Mostrar aplicação
-        document.body.classList.add('app-loaded');
-
-        // Garantir que o mapa seja redimensionado corretamente
-        if (window.mapManager && window.mapManager.map) {
-            setTimeout(() => {
-                window.mapManager.map.invalidateSize();
-            }, 100);
-        }
-
-        // Verificar se há parâmetros na URL
-        this.processarParametrosURL();
-
-        // Aplicação inicializada com sucesso!
-    }
-
-    /**
-     * Filtrar pontos por categoria
-     * @param {string} categoria - Categoria a filtrar
-     */
-    filtrarCategoria(categoria) {
-        // Atualizar botões
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        const btnCategoria = document.querySelector(`.category-btn.${categoria}`);
-        if (btnCategoria) {
-            btnCategoria.classList.add('active');
-        }
-
-        // Filtrar no mapa
-        if (window.mapManager) {
-            window.mapManager.filtrarPorCategoria(categoria);
-        }
-        this.categoriaAtiva = categoria;
-
-        // Salvar preferência
-        localStorage.setItem('pontos-df-categoria-ativa', categoria);
-    }
-
-    /**
-     * Ativar modo de adição de pontos
-     */
-    ativarModoAdicao() {
-        if (!this.isAdmin) return;
-
-        const btnAdicionar = document.querySelector('.category-btn.adicionar');
-        const isAtivo = btnAdicionar.classList.contains('active');
-
-        if (isAtivo) {
-            // Desativar modo
-            btnAdicionar.classList.remove('active');
-            btnAdicionar.innerHTML = '➕ Adicionar Ponto';
-            mapManager.setModoAdicao(false);
-        } else {
-            // Ativar modo
-            btnAdicionar.classList.add('active');
-            btnAdicionar.innerHTML = '❌ Cancelar';
-            mapManager.setModoAdicao(true);
-            
-            // Mostrar instrução
-            this.mostrarNotificacao(
-                'Clique no mapa para adicionar um novo ponto',
-                'info',
-                5000
-            );
-        }
-    }
-
-    /**
-     * Atualizar estatísticas - Removido
-     */
-    atualizarEstatisticas() {
-        // Funcionalidade removida
-    }
-
-    /**
-     * Atualizar legenda - Removido
-     */
-    atualizarLegenda() {
-        // Funcionalidade removida
-    }
-
-    /**
-     * Mostrar modal de login
-     */
-    mostrarModalLogin() {
-        const conteudo = `
-            <form id="form-login">
-                <div class="form-group">
-                    <label class="form-label required" for="username">Usuário</label>
-                    <input type="text" id="username" class="form-input" placeholder="Digite seu usuário" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label required" for="password">Senha</label>
-                    <input type="password" id="password" class="form-input" placeholder="Digite sua senha" required>
-                </div>
-
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px;">
-                    <h4 style="margin: 0 0 10px 0;">Credenciais de Teste:</h4>
-                    <p style="margin: 5px 0;"><strong>Admin:</strong> admin / admin123</p>
-                    <p style="margin: 5px 0;"><strong>Usuário:</strong> user / user123</p>
-                </div>
-            </form>
-        `;
-
-        const botoes = [
-            {
-                texto: 'Cancelar',
-                classe: 'btn-secondary',
-                id: 'btn-cancelar-login'
-            },
-            {
-                texto: '🔑 Entrar',
-                classe: 'btn-primary',
-                id: 'btn-login'
-            }
-        ];
-
-        const modal = modalManager.criarModal('Login', conteudo, botoes);
-        modalManager.mostrarModal(modal);
-
-        // Configurar eventos
-        modal.querySelector('#btn-cancelar-login').addEventListener('click', () => {
-            modalManager.fecharModal();
-        });
-
-        modal.querySelector('#btn-login').addEventListener('click', () => {
-            this.processarLogin(modal.querySelector('#form-login'));
-        });
-
-        // Enter para submeter
-        modal.querySelector('#form-login').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                this.processarLogin(modal.querySelector('#form-login'));
-            }
-        });
-    }
-
-    /**
-     * Processar login
-     * @param {HTMLElement} form - Formulário de login
-     */
-    async processarLogin(form) {
-        const username = form.username.value.trim();
-        const password = form.password.value.trim();
-
-        if (!username || !password) {
-            alert('Preencha todos os campos');
-            return;
-        }
-
-        const btnLogin = form.parentElement.querySelector('#btn-login');
-        const textoOriginal = btnLogin.innerHTML;
-        btnLogin.innerHTML = '⏳ Entrando...';
-        btnLogin.disabled = true;
-
-        try {
-            const resultado = await authManager.login(username, password);
-            
-            if (resultado.success) {
-                modalManager.fecharModal();
-                this.mostrarNotificacao('Login realizado com sucesso!', 'success');
-                
-                // Atualizar interface
-                this.isAdmin = resultado.user.role === 'administrator';
-                this.atualizarInterfaceUsuario(resultado.user);
-                
-                // Reconfigurar interface
-                this.configurarInterface();
-                
-            } else {
-                alert(resultado.error || 'Erro no login');
-                btnLogin.innerHTML = textoOriginal;
-                btnLogin.disabled = false;
+                console.warn('⚠️ AuthManager não disponível');
+                this.isAdmin = false;
             }
         } catch (error) {
-            alert('Erro no login: ' + error.message);
-            btnLogin.innerHTML = textoOriginal;
-            btnLogin.disabled = false;
-        }
-    }
-
-    /**
-     * Realizar logout
-     */
-    logout() {
-        const confirmacao = confirm('Tem certeza que deseja sair?');
-        if (confirmacao) {
-            authManager.logout();
-            this.mostrarNotificacao('Logout realizado com sucesso!', 'info');
-            
-            // Recarregar página para limpar estado
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        }
-    }
-
-    /**
-     * Atualizar interface do usuário
-     * @param {Object} usuario - Dados do usuário
-     */
-    atualizarInterfaceUsuario(usuario) {
-        // Atualizar cabeçalho
-        this.configurarCabecalho();
-        
-        // Reconfigurar menu se admin
-        if (usuario.role === 'administrator') {
-            this.configurarMenuCategorias();
-        }
-    }
-
-    /**
-     * Tratar mudança de autenticação
-     * @param {Object} detail - Detalhes do evento
-     */
-    tratarMudancaAuth(detail) {
-        if (detail.type === 'login') {
-            this.isAdmin = detail.user.role === 'administrator';
-            this.atualizarInterfaceUsuario(detail.user);
-        } else if (detail.type === 'logout') {
+            console.error('❌ Erro ao verificar autenticação:', error);
             this.isAdmin = false;
         }
     }
 
-    /**
-     * Tratar eventos de teclado
-     * @param {KeyboardEvent} e - Evento de teclado
-     */
-    tratarTeclado(e) {
-        // Ctrl/Cmd + K para busca (removido - não implementado)
-        // if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        //     e.preventDefault();
-        //     this.mostrarBusca();
-        // }
-
-        // Escape para sair de modos especiais
-        if (e.key === 'Escape') {
-            this.cancelarModoEspecial();
+    configurarInterface() {
+        try {
+            console.log('🎨 Configurando interface...');
+            this.configurarMenuCategorias();
+            this.configurarEstatisticas();
+            console.log('✅ Interface configurada');
+        } catch (error) {
+            console.error('❌ Erro ao configurar interface:', error);
+            throw error;
         }
+    }
 
-        // Teclas de número para filtros rápidos
-        if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.metaKey) {
-            const categorias = ['todos', ...(window.databaseManager ? window.databaseManager.obterCategorias().map(c => c.id) : [])];
-            const index = parseInt(e.key) - 1;
-            if (categorias[index]) {
-                this.filtrarCategoria(categorias[index]);
+    configurarEstatisticas() {
+        // Método vazio por enquanto - estatísticas são atualizadas em atualizarEstatisticas()
+    }
+
+    configurarEventos() {
+        // Eventos de categoria
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-categoria]')) {
+                const categoria = e.target.dataset.categoria;
+                this.filtrarPorCategoria(categoria);
+            }
+        });
+
+        // Eventos de modal
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.admin-login')) {
+                this.mostrarModalLogin();
+            }
+        });
+    }
+
+    async carregarDados() {
+        try {
+            console.log('📊 Carregando dados...');
+            
+            // Verificar se os managers estão disponíveis
+            if (!window.databaseManager) {
+                throw new Error('DatabaseManager não está disponível');
+            }
+            
+            if (!window.mapManager) {
+                console.warn('⚠️ MapManager não disponível, pulando renderização de pontos');
+                this.atualizarEstatisticas();
+                return;
+            }
+            
+            // Não precisamos chamar carregarDados no databaseManager
+            // pois os dados já são carregados no constructor
+            this.renderizarPontos();
+            this.atualizarEstatisticas();
+            
+            console.log('✅ Dados carregados com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados:', error);
+            this.mostrarErro('Erro ao carregar dados do mapa.');
+            throw error;
+        }
+    }
+
+    configurarMenuCategorias() {
+        const menu = document.querySelector('.category-menu');
+        if (!menu) return;
+
+        const categorias = window.databaseManager.getCategorias();
+        const categoriasHtml = categorias.map(cat => 
+            `<button class="category-btn" data-categoria="${cat.id}">
+                <i class="${cat.icon}"></i> ${cat.nome}
+            </button>`
+        ).join('');
+
+        menu.innerHTML = `
+            <button class="category-btn active" data-categoria="todos">
+                <i class="fas fa-th"></i> Todos
+            </button>
+            ${categoriasHtml}
+        `;
+    }
+
+    filtrarPorCategoria(categoria) {
+        try {
+            this.categoriaAtiva = categoria;
+            
+            // Atualizar botões de navegação
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.categoria === categoria);
+            });
+
+            // Filtrar marcadores se o mapa estiver disponível
+            if (window.mapManager && typeof window.mapManager.filtrarPorCategoria === 'function') {
+                window.mapManager.filtrarPorCategoria(categoria);
+            } else {
+                console.warn('⚠️ MapManager não disponível para filtrar');
+            }
+            
+            console.log(`🔍 Filtrando por categoria: ${categoria}`);
+        } catch (error) {
+            console.error('❌ Erro ao filtrar por categoria:', error);
+        }
+    }
+
+    renderizarPontos() {
+        try {
+            if (!window.mapManager) {
+                console.warn('⚠️ MapManager não disponível para renderizar pontos');
+                return;
+            }
+            
+            if (!window.databaseManager) {
+                console.warn('⚠️ DatabaseManager não disponível');
+                return;
+            }
+            
+            const pontos = window.databaseManager.getPontos();
+            console.log(`📍 Renderizando ${pontos.length} pontos no mapa...`);
+            
+            // Limpar marcadores existentes primeiro
+            if (typeof window.mapManager.limparMarcadores === 'function') {
+                window.mapManager.limparMarcadores();
+            }
+            
+            // Adicionar cada ponto
+            pontos.forEach((ponto, index) => {
+                try {
+                    console.log(`📍 Adicionando ponto ${index + 1}: ${ponto.nome} (${ponto.categoria})`);
+                    window.mapManager.adicionarMarcador(ponto);
+                } catch (error) {
+                    console.error('❌ Erro ao adicionar marcador:', ponto.nome, error);
+                }
+            });
+            
+            console.log(`✅ ${pontos.length} pontos renderizados no mapa`);
+        } catch (error) {
+            console.error('❌ Erro ao renderizar pontos:', error);
+        }
+    }
+
+    atualizarEstatisticas() {
+        // Estatísticas removidas da interface
+        // Método mantido para compatibilidade
+    }
+
+    atualizarInterfaceAdmin() {
+        try {
+            const elementos = document.querySelectorAll('.admin-only');
+            elementos.forEach(el => {
+                el.style.display = this.isAdmin ? 'block' : 'none';
+            });
+            console.log(`🎨 Interface admin atualizada (${elementos.length} elementos)`);
+        } catch (error) {
+            console.error('❌ Erro ao atualizar interface admin:', error);
+        }
+    }
+
+    mostrarModalLogin() {
+        try {
+            if (window.modalManager && typeof window.modalManager.mostrar === 'function') {
+                window.modalManager.mostrar('login');
+            } else {
+                console.warn('⚠️ ModalManager não disponível');
+                alert('Sistema de login não está disponível no momento.');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao mostrar modal de login:', error);
+        }
+    }
+
+    mostrarErro(mensagem) {
+        console.error(mensagem);
+        // Implementar notificação de erro se necessário
+    }
+
+    removerLoadingScreen() {
+        try {
+            const loading = document.querySelector('.loading-screen');
+            if (loading) {
+                document.body.classList.add('app-loaded');
+                setTimeout(() => {
+                    if (loading.parentNode) {
+                        loading.remove();
+                    }
+                }, 500);
+                console.log('✅ Loading screen removido');
+            } else {
+                console.log('ℹ️ Loading screen não encontrado');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao remover loading screen:', error);
+        }
+    }
+
+    /**
+     * Configurar responsividade global da aplicação
+     */
+    configurarResponsividade() {
+        console.log('📱 Configurando responsividade...');
+        
+        // Configurar viewport meta tag se não existir
+        this.configurarViewport();
+        
+        // Event listeners para mudanças de orientação e redimensionamento
+        this.configurarEventListenersResponsivos();
+        
+        // Configurar comportamento touch para mobile
+        this.configurarComportamentoTouch();
+        
+        // Aplicar classes baseadas no tamanho da tela
+        this.aplicarClassesResponsivas();
+        
+        console.log('✅ Responsividade configurada');
+    }
+
+    /**
+     * Configurar viewport meta tag
+     */
+    configurarViewport() {
+        let viewportMeta = document.querySelector('meta[name="viewport"]');
+        
+        if (!viewportMeta) {
+            viewportMeta = document.createElement('meta');
+            viewportMeta.name = 'viewport';
+            document.head.appendChild(viewportMeta);
+        }
+        
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
+    }
+
+    /**
+     * Configurar event listeners responsivos
+     */
+    configurarEventListenersResponsivos() {
+        // Debounced resize handler
+        let resizeTimeout;
+        const handleResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.aplicarClassesResponsivas();
+                this.ajustarLayoutParaTamanhoTela();
+            }, 150);
+        };
+        
+        // Orientation change handler
+        const handleOrientationChange = () => {
+            setTimeout(() => {
+                this.aplicarClassesResponsivas();
+                this.ajustarLayoutParaTamanhoTela();
+                // Trigger map resize se existir
+                if (window.mapManager && window.mapManager.map) {
+                    window.mapManager.map.invalidateSize();
+                }
+            }, 300);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleOrientationChange);
+    }
+
+    /**
+     * Configurar comportamento touch para dispositivos móveis
+     */
+    configurarComportamentoTouch() {
+        // Melhorar performance touch em iOS
+        document.addEventListener('touchstart', () => {}, { passive: true });
+        
+        // Prevenir zoom indesejado em double tap em alguns elementos
+        const preventZoomElements = document.querySelectorAll('.nav-btn, .btn, .theme-toggle-label');
+        preventZoomElements.forEach(element => {
+            element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                element.click();
+            });
+        });
+    }
+
+    /**
+     * Aplicar classes CSS baseadas no tamanho da tela
+     */
+    aplicarClassesResponsivas() {
+        const width = window.innerWidth;
+        const body = document.body;
+        
+        // Remover classes existentes
+        body.classList.remove('mobile', 'tablet', 'desktop');
+        
+        // Aplicar classe baseada na largura
+        if (width <= 480) {
+            body.classList.add('mobile');
+        } else if (width <= 768) {
+            body.classList.add('tablet');
+        } else {
+            body.classList.add('desktop');
+        }
+    }
+
+    /**
+     * Ajustar layout para tamanho da tela
+     */
+    ajustarLayoutParaTamanhoTela() {
+        const isMobile = window.innerWidth <= 768;
+        
+        // Ajustar altura do mapa
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            if (isMobile) {
+                mapContainer.style.height = 'calc(100vh - 180px)';
+            } else {
+                mapContainer.style.height = 'calc(100vh - 120px)';
             }
         }
     }
 
-    /**
-     * Cancelar modo especial
-     */
-    cancelarModoEspecial() {
-        // Desativar modo de adição se ativo
-        const btnAdicionar = document.querySelector('.category-btn.adicionar');
-        if (btnAdicionar && btnAdicionar.classList.contains('active')) {
-            this.ativarModoAdicao(); // Toggle off
-        }
-    }
-
-    /**
-     * Ajustar layout para responsividade
-     */
-    ajustarLayout() {
-        // Ajustar mapa se necessário
-        if (mapManager && mapManager.map) {
-            setTimeout(() => {
-                mapManager.map.invalidateSize();
-            }, 100);
-        }
-    }
-
-    /**
-     * Salvar estado da aplicação
-     */
-    salvarEstado() {
-        const estado = {
-            categoriaAtiva: this.categoriaAtiva,
-            centroMapa: mapManager ? mapManager.map.getCenter() : null,
-            zoomMapa: mapManager ? mapManager.map.getZoom() : null,
-            timestamp: new Date().toISOString()
-        };
-
-        localStorage.setItem('pontos-df-estado', JSON.stringify(estado));
-    }
-
-    /**
-     * Processar parâmetros da URL
-     */
-    processarParametrosURL() {
-        const params = new URLSearchParams(window.location.search);
+    // API pública para admin
+    adicionarPonto(dadosPonto) {
+        if (!this.isAdmin) return false;
         
-        // Ponto específico
-        const pontoId = params.get('ponto');
-        if (pontoId && mapManager) {
-            mapManager.centralizarEm(parseInt(pontoId));
-        }
-
-        // Categoria específica
-        const categoria = params.get('categoria');
-        if (categoria) {
-            this.filtrarCategoria(categoria);
-        }
+        const ponto = window.databaseManager.adicionarPonto(dadosPonto);
+        window.mapManager.adicionarMarcador(ponto);
+        this.atualizarEstatisticas();
+        return true;
     }
 
-    /**
-     * Mostrar notificação
-     * @param {string} mensagem - Mensagem da notificação
-     * @param {string} tipo - Tipo (success, error, info, warning)
-     * @param {number} duracao - Duração em ms
-     */
-    mostrarNotificacao(mensagem, tipo = 'info', duracao = 3000) {
-        // Criar elemento de notificação
-        const notificacao = document.createElement('div');
-        notificacao.className = `notificacao notificacao-${tipo}`;
-        notificacao.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${this.getCoresNotificacao(tipo)};
-            color: white;
-            padding: 15px 20px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10001;
-            max-width: 300px;
-            animation: slideInRight 0.3s ease;
-        `;
-        notificacao.textContent = mensagem;
-
-        document.body.appendChild(notificacao);
-
-        // Remover após duração especificada
-        setTimeout(() => {
-            notificacao.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notificacao.parentNode) {
-                    notificacao.parentNode.removeChild(notificacao);
-                }
-            }, 300);
-        }, duracao);
-    }
-
-    /**
-     * Obter cores para notificações
-     * @param {string} tipo - Tipo da notificação
-     * @returns {string} Cor CSS
-     */
-    getCoresNotificacao(tipo) {
-        const cores = {
-            success: '#4CAF50',
-            error: '#f44336',
-            warning: '#FF9800',
-            info: '#2196F3'
-        };
-        return cores[tipo] || cores.info;
-    }
-
-    /**
-     * Mostrar erro crítico
-     * @param {string} mensagem - Mensagem de erro
-     */
-    mostrarErro(mensagem) {
-        const erro = document.createElement('div');
-        erro.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(244, 67, 54, 0.9);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10002;
-            text-align: center;
-            padding: 20px;
-        `;
-        erro.innerHTML = `
-            <div>
-                <h1>❌ Erro</h1>
-                <p style="font-size: 18px; margin: 20px 0;">${mensagem}</p>
-                <button onclick="window.location.reload()" style="padding: 12px 24px; font-size: 16px; background: white; color: #f44336; border: none; border-radius: 6px; cursor: pointer;">
-                    🔄 Recarregar Página
-                </button>
-            </div>
-        `;
-        document.body.appendChild(erro);
-    }
-
-    /**
-     * Verificar se é página de admin
-     * @returns {boolean}
-     */
-    isAdminPage() {
-        return window.location.pathname.includes('admin.html');
+    removerPonto(pontoId) {
+        if (!this.isAdmin) return false;
+        
+        window.databaseManager.removerPonto(pontoId);
+        window.mapManager.removerMarcador(pontoId);
+        this.atualizarEstatisticas();
+        return true;
     }
 }
 
-// Não inicializar aqui - será inicializado no HTML
-// const app = new PontosEntretenimentoApp();
-
-// Disponibilizar globalmente quando instanciado
-// window.app = app;
-
-// Exportar para uso em módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PontosEntretenimentoApp;
-}
+// Não instanciar aqui - será feito no HTML

@@ -1,0 +1,100 @@
+/**
+ * Sistema de Cores - Clean Architecture
+ * Configuração centralizada de temas claro e escuro
+ * 
+ * Para alterar cores:
+ * 1. Modifique as variáveis no :root para cores base
+ * 2. Ajuste .theme-light para personalizar tema claro
+ * 3. Ajuste .theme-dark para personalizar tema escuro
+ */
+
+:root {
+    /* ===== DIMENSÕES LAYOUT ===== */
+    --header-height: 130px;
+    
+    /* ===== CORES BASE ===== */
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary: #10b981;
+    --secondary-dark: #059669;
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    
+    /* ===== CORES DE ESTADO ===== */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+    
+    /* ===== CORES NEUTRAS ===== */
+    --white: #ffffff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --black: #000000;
+    
+    /* ===== SOMBRAS E EFEITOS ===== */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --overlay: rgba(0, 0, 0, 0.5);
+    
+    /* ===== BORDAS ===== */
+    --border-radius: 0.375rem;
+    --border-radius-lg: 0.5rem;
+    --border-radius-xl: 0.75rem;
+    
+    /* ===== TRANSIÇÕES ===== */
+    --transition: all 0.3s ease;
+    --transition-fast: all 0.15s ease;
+}
+
+/* ===== TEMA ESCURO (PADRÃO) ===== */
+:root {
+    --bg-primary: var(--gray-900);
+    --bg-secondary: var(--gray-800);
+    --bg-tertiary: var(--gray-700);
+    --text-primary: var(--white);
+    --text-secondary: var(--gray-300);
+    --text-muted: var(--gray-400);
+    --border: var(--gray-700);
+    --border-light: var(--gray-600);
+    --hover-bg: var(--gray-800);
+}
+
+/* ===== TEMA CLARO ===== */
+.theme-light {
+    --bg-primary: var(--white);
+    --bg-secondary: var(--gray-50);
+    --bg-tertiary: var(--gray-100);
+    --text-primary: var(--gray-900);
+    --text-secondary: var(--gray-600);
+    --text-muted: var(--gray-500);
+    --border: var(--gray-200);
+    --border-light: var(--gray-100);
+    --hover-bg: var(--gray-50);
+}
+
+/* ===== APLICAÇÃO GLOBAL DO TEMA ===== */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+/* ===== CLASSES UTILITÁRIAS ===== */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.bg-primary { background-color: var(--bg-primary) !important; }
+.bg-secondary { background-color: var(--bg-secondary) !important; }
+.bg-tertiary { background-color: var(--bg-tertiary) !important; }
+.border-color { border-color: var(--border) !important; }
