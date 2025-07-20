@@ -136,10 +136,11 @@ body {
     background: transparent;
     border: none;
     box-shadow: none;
-    z-index: 999;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none; /* Permitir cliques passarem através do container */
 }
 
 .nav-buttons-container {
@@ -150,6 +151,7 @@ body {
     flex-wrap: wrap;
     max-width: 1200px;
     padding: 0 1rem;
+    pointer-events: none; /* Permitir cliques passarem através */
 }
 
 /* Botões de navegação centralizados com melhor visibilidade */
@@ -171,6 +173,7 @@ body {
     backdrop-filter: blur(10px);
     white-space: nowrap;
     text-shadow: none;
+    pointer-events: auto; /* Reativar cliques apenas nos botões */
 }
 
 .nav-btn:hover {
@@ -699,14 +702,23 @@ body[data-theme="dark"] .nav-btn.active {
     font-size: 0.8rem;
 }
 
-/* Ocultar controles bottom-right do mapa */
-.leaflet-control-container .leaflet-bottom.leaflet-right {
-    display: none !important;
+/* Garantir que controles sejam clicáveis e visíveis */
+.leaflet-control-container .leaflet-bottom.leaflet-right,
+.leaflet-control-container .leaflet-top.leaflet-right {
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+    display: block !important;
 }
 
 /* Desabilitar popups padrão do Leaflet */
 .leaflet-popup-pane {
     display: none !important;
+}
+
+/* Ocultar controle de atribuição do Leaflet */
+.leaflet-control-attribution {
+    display: none !important;
+    visibility: hidden !important;
 }
 
 /* Remover seção de estatísticas */
@@ -838,25 +850,6 @@ body[data-theme="dark"] .nav-btn.active {
 .hidden { display: none; }
 .mb-1 { margin-bottom: 0.5rem; }
 .mb-2 { margin-bottom: 1rem; }
-
-/* Responsividade dos controles do mapa */
-@media (max-width: 768px) {
-    .leaflet-control-container .leaflet-top.leaflet-right {
-        top: 10px;
-        right: 10px;
-    }
-    
-    .leaflet-control-layers {
-        max-width: 200px;
-    }
-}
-
-@media (max-width: 480px) {
-    .leaflet-control-container .leaflet-top.leaflet-right {
-        top: 8px;
-        right: 8px;
-    }
-}
 
 /* ===== RESPONSIVIDADE ===== */
 

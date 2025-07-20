@@ -118,7 +118,7 @@ class MapManager {
             center: BRASILIA_CENTER,
             zoom: DEFAULT_ZOOM,
             zoomControl: false, // Controle customizado será adicionado depois
-            attributionControl: true,
+            attributionControl: false, // Remover controle de atribuição
             preferCanvas: true, // Melhor performance para muitos marcadores
             renderer: L.canvas() // Renderer de canvas para melhor performance
         });
@@ -159,53 +159,17 @@ class MapManager {
      * Configurar camadas base do mapa
      */
     configurarCamadas() {
-        // Definir camadas base disponíveis
-        const camadas = this.criarCamadasBase();
+        // Criar e adicionar apenas a camada de ruas
+        this.camadaRuas = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: ''
+        });
         
-        // Adicionar camada padrão
-        camadas.ruas.addTo(this.map);
-
-        // Criar controle de camadas
-        this.criarControleCamadas(camadas);
-
-        // Armazenar referências para uso posterior
-        this.camadas = camadas;
+        // Adicionar camada ao mapa
+        this.camadaRuas.addTo(this.map);
 
         // Inicializar grupos de categorias
         this.inicializarGruposCategorias();
-    }
-
-    /**
-     * Criar camadas base do mapa
-     * @returns {Object} Objeto com as camadas disponíveis
-     */
-    criarCamadasBase() {
-        return {
-            ruas: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }),
-            satelite: L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google'
-            })
-        };
-    }
-
-    /**
-     * Criar controle de camadas
-     * @param {Object} camadas - Camadas disponíveis
-     */
-    criarControleCamadas(camadas) {
-        const camadasBase = {
-            "🏙️ Padrão": camadas.ruas,
-            "🛰️ Satélite": camadas.satelite
-        };
-
-        L.control.layers(camadasBase, null, {
-            position: 'topright'
-        }).addTo(this.map);
     }
 
     /**
@@ -284,7 +248,7 @@ class MapManager {
             });
 
             // Sempre usar mapa de ruas
-            this.camadas.ruas.addTo(this.map);
+            this.camadaRuas.addTo(this.map);
             console.log('🏙️ Mapa configurado com camada de ruas');
         } catch (error) {
             console.error('❌ Erro ao alterar tema do mapa:', error);
