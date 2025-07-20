@@ -7,9 +7,10 @@
  * - Sistema de troca programática
  * - Cores de estado acessíveis
  * - Fácil manutenção e extensibilidade
- * 
- * @author Sistema de Entretenimento DF
- * @version 3.0.0
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
+ * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
 
 class EnhancedThemeSystem {

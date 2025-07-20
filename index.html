@@ -37,50 +37,71 @@
                     <div class="nav-buttons-container">
                         <!-- Favoritos - só aparece se usuário comum estiver logado -->
                         <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
-                            <i class="fas fa-heart"></i> Favoritos
+                            <i class="fas fa-heart"></i>
+                            <span class="nav-btn-text">Favoritos</span>
                         </button>
                         <button class="nav-btn active category-btn" data-categoria="todos">
-                            <i class="fas fa-globe"></i> Todos
+                            <i class="fas fa-globe"></i>
+                            <span class="nav-btn-text">Todos</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="geral">
-                            <i class="fas fa-map-marker-alt"></i> Geral
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="nav-btn-text">Geral</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="esportes-lazer">
-                            <i class="fas fa-futbol"></i> Esportes e Lazer
+                            <i class="fas fa-futbol"></i>
+                            <span class="nav-btn-text">Esportes e Lazer</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="gastronomia">
-                            <i class="fas fa-utensils"></i> Gastronomia
+                            <i class="fas fa-utensils"></i>
+                            <span class="nav-btn-text">Gastronomia</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="geek-nerd">
-                            <i class="fas fa-gamepad"></i> Geek e Nerd
+                            <i class="fas fa-gamepad"></i>
+                            <span class="nav-btn-text">Geek e Nerd</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="alternativo">
-                            <i class="fas fa-palette"></i> Alternativo
+                            <i class="fas fa-palette"></i>
+                            <span class="nav-btn-text">Alternativo</span>
                         </button>
                         <button class="nav-btn category-btn" data-categoria="casas-noturnas">
-                            <i class="fas fa-glass-cheers"></i> Casas Noturnas
+                            <i class="fas fa-glass-cheers"></i>
+                            <span class="nav-btn-text">Casas Noturnas</span>
                         </button>
                     </div>
                 </nav>
                 
                 <div class="header-actions">
+                    <!-- Mobile Menu Button -->
+                    <button class="mobile-menu-btn" id="mobile-menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     
-                    <!-- Theme Switch -->
-                    <div class="theme-switch">
-                        <input type="checkbox" id="theme-toggle" class="theme-toggle-checkbox">
-                        <label for="theme-toggle" class="theme-toggle-label">
-                            <span class="theme-toggle-inner">
-                                <i class="fas fa-moon"></i>
-                                <i class="fas fa-sun"></i>
-                            </span>
-                            <span class="theme-toggle-switch"></span>
-                        </label>
+                    <!-- Mobile Menu Dropdown -->
+                    <div class="mobile-menu-dropdown" id="mobile-menu-dropdown">
+                        <button class="mobile-menu-item theme-btn" id="theme-btn">
+                            <i class="fas fa-moon" id="theme-icon"></i>
+                            <span>Alternar Tema</span>
+                        </button>
+                        <button class="mobile-menu-item login-btn" id="mobile-login-btn">
+                            <i class="fas fa-user"></i>
+                            <span>Entrar</span>
+                        </button>
                     </div>
                     
-                    <!-- Login/User Button -->
-                    <button class="btn btn-primary header-login-btn" id="header-login-btn">
-                        <i class="fas fa-user"></i> ENTRAR
-                    </button>
+                    <!-- Desktop Actions -->
+                    <div class="desktop-actions">
+                        <!-- Theme Button -->
+                        <button class="theme-btn desktop-theme-btn" id="desktop-theme-btn">
+                            <i class="fas fa-moon" id="desktop-theme-icon"></i>
+                        </button>
+                        
+                        <!-- Login Button -->
+                        <button class="login-btn desktop-login-btn" id="desktop-login-btn">
+                            <i class="fas fa-user"></i>
+                            <span class="login-btn-text">Login</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

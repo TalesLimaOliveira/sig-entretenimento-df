@@ -19,9 +19,10 @@
  * - warning: Laranja para avisos (#f59e0b)
  * - error: Vermelho para erros (#ef4444)
  * - admin: Dourado para administradores (#fbbf24)
- * 
- * @author Sistema de Entretenimento DF
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
 
 /**

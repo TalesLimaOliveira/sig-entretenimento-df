@@ -1,7 +1,12 @@
 /**
  * Controlador do Seletor de Temas de Cores
  * Sistema integrado ao app principal para troca dinâmica de temas
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
+ * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
+
 class ColorThemeController {
     constructor() {
         this.colorBtn = null;

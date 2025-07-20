@@ -2,6 +2,14 @@
 
 Sistema de Informações Geográficas interativo para pontos de entretenimento do Distrito Federal, desenvolvido com Clean Architecture e foco em manutenibilidade.
 
+*Projeto acadêmico do Instituto Federal de Brasília (IFB)*
+
+<p align="center">
+    <img src="https://img.shields.io/badge/Language-JavaScript-yellow" alt="Language">
+    <img src="https://img.shields.io/badge/Plugin-Leaflet-green" alt="leaflet">
+    <img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version">
+</p>
+
 ## 📖 Resumo do Projeto
 
 O **SIG Entretenimento DF** é uma aplicação web que apresenta um mapa interativo com pontos de interesse cultural, gastronômico, esportivo e de entretenimento do Distrito Federal. O sistema permite visualização, filtragem por categorias, sistema de favoritos para usuários logados e funcionalidades administrativas para gerenciamento de conteúdo.
@@ -128,41 +136,6 @@ npm run api         # Iniciar JSON Server (se necessário)
 - **LocalStorage**: Persistência local dos dados
 - **JSON Files**: Backup e dados iniciais
 
-### Arquitetura
-- **Clean Architecture**: Separação em camadas
-- **Event-Driven**: Comunicação via eventos customizados
-- **Responsive Design**: Mobile-first approach
-
-## 🏗️ Arquitetura e Organização
-
-### Camadas da Aplicação
-
-1. **Camada de Aplicação** (`app.js`)
-   - Coordenação geral da aplicação
-   - Gerenciamento do ciclo de vida
-   - Configuração de responsividade
-
-2. **Camada de Negócio** (`database.js`, `auth.js`)
-   - Regras de negócio
-   - Validações de dados
-   - Controle de acesso
-
-3. **Camada de Apresentação** (`map.js`, `theme.js`, `info-panel.js`)
-   - Interface do usuário
-   - Interações visuais
-   - Componentes reutilizáveis
-
-4. **Camada de Infraestrutura** (`components/`, `css/`)
-   - Recursos externos
-   - Componentes base
-   - Estilos globais
-
-### Padrões Implementados
-- **Singleton**: Managers globais
-- **Observer**: Sistema de eventos
-- **Factory**: Criação de componentes
-- **Strategy**: Comportamentos baseados em papel do usuário
-
 ## 🎯 Estado Atual do Projeto
 
 ### ✅ Implementado
@@ -211,20 +184,3 @@ A documentação inclui:
 - Arquitetura bem definida e documentada
 - Padrões consistentes de nomenclatura
 - Separação clara de responsabilidades
-
-## 📄 Licença
-
-Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 🔗 Links Úteis
-
-- **Demo Online**: [Em breve]
-- **Documentação**: [docs/](docs/)
-- **Issues**: [GitHub Issues]
-- **Contribuições**: [CONTRIBUTING.md]
-
----
-
-**Desenvolvido com ❤️ para o Distrito Federal**
-
-*Projeto acadêmico do Instituto Federal de Brasília (IFB)*

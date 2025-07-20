@@ -1,9 +1,10 @@
 /**
  * Sistema de Autenticação
  * Gerencia login, logout e controle de acesso
- * 
- * @author Seu Nome
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
 
 class AuthManager {

@@ -2,8 +2,6 @@
 
 ## Visão Geral da Arquitetura
 
-O siste### Tratamento de Erros
-
 ### Estratégia de Error Handling
 1. **Try-Catch**: Em todos os métodos críticos
 2. **Logging Estruturado**: Console logs contextuais sem indicadores visuais (emojis removidos)

@@ -1,6 +1,11 @@
 /**
  * Database Manager - Sistema de Banco de Dados com Controle de Acesso
+ * 
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
+ * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
+
 class DatabaseManager {
     constructor() {
         this.confirmedPoints = [];

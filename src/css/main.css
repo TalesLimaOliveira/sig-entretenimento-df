@@ -1,3 +1,11 @@
+/* Estilos principais do site - Pontos de Entretenimento DF
+ * Este arquivo contém estilos básicos e layout principal
+ * 
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
+ * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
+ */
+
 /* Reset básico */
 * {
     margin: 0;
@@ -86,7 +94,6 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    flex-wrap: wrap;
     position: relative;
     height: 100%;
     width: 100%;
@@ -116,34 +123,190 @@ body {
     flex-shrink: 0;
 }
 
-/* Responsividade para header */
+/* ===== DESKTOP ACTIONS ===== */
+.desktop-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* ===== MOBILE MENU ===== */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px var(--shadow);
+    min-width: 200px;
+    z-index: 1001;
+    overflow: hidden;
+}
+
+.mobile-menu-dropdown.open {
+    display: block;
+}
+
+.mobile-menu-item {
+    width: 100%;
+    padding: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    font-size: 1rem;
+}
+
+.mobile-menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.mobile-menu-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* ===== THEME BUTTON ===== */
+.theme-btn {
+    background: none;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    font-size: 1.1rem;
+}
+
+.theme-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.desktop-theme-btn {
+    backdrop-filter: blur(10px);
+}
+
+/* ===== LOGIN BUTTON ===== */
+.login-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.login-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+/* Tablet e telas médias */
 @media (max-width: 1024px) {
-    .header-content {
-        flex-direction: column;
-        gap: 0.5rem;
+    .login-btn-text {
+        display: none;
     }
     
-    .header-navigation {
-        order: 2;
-        width: 100%;
-    }
-    
-    .header-actions {
-        order: 1;
-        position: relative;
-        right: auto;
-        align-self: flex-end;
+    .login-btn {
+        padding: 0.5rem;
+        min-width: 40px;
+        justify-content: center;
     }
 }
 
+/* Mobile - Menu hambúrguer */
 @media (max-width: 768px) {
+    .desktop-actions {
+        display: none;
+    }
+    
+    .mobile-menu-btn {
+        display: flex;
+    }
+    
+    .nav-btn-text {
+        display: none;
+    }
+    
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
     .nav-buttons-container {
         gap: 0.5rem;
     }
     
+    .header-content {
+        flex-wrap: nowrap;
+    }
+    
+    .header-navigation {
+        flex: 1;
+        margin: 0 1rem;
+    }
+    
+    .mobile-menu-dropdown {
+        right: 0;
+        left: auto;
+        transform: translateX(0);
+    }
+}
+
+/* Telas muito pequenas */
+@media (max-width: 480px) {
     .nav-btn {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
+        width: 35px;
+        height: 35px;
+        min-width: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .nav-buttons-container {
+        gap: 0.3rem;
+    }
+    
+    .mobile-menu-dropdown {
+        min-width: 180px;
     }
 }
 
@@ -207,76 +370,6 @@ body {
     background: var(--theme-gradient-button);
     border-color: var(--theme-primary-hover);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* ===== THEME SWITCH ===== */
-.theme-switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-.theme-toggle-checkbox {
-    display: none;
-}
-
-.theme-toggle-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    width: 70px;
-    height: 34px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 17px;
-    position: relative;
-    transition: var(--transition);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-}
-
-.theme-toggle-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0 6px;
-    color: var(--white);
-    font-size: 14px;
-    z-index: 3;
-    position: relative;
-}
-
-.theme-toggle-switch {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 26px;
-    height: 26px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 50%;
-    transition: var(--transition);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    backdrop-filter: blur(5px);
-}
-
-/* Estado marcado (tema claro) */
-.theme-toggle-checkbox:checked + .theme-toggle-label {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.theme-toggle-checkbox:checked + .theme-toggle-label .theme-toggle-switch {
-    transform: translateX(36px);
-    background: rgba(55, 65, 81, 0.7);
-}
-
-/* Transições suaves para os ícones */
-.theme-toggle-inner i {
-    transition: all 0.3s ease;
-    display: inline-block;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
 /* ===== NAVIGATION BUTTONS ===== */

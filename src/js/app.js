@@ -24,10 +24,12 @@
  * 
  * Usado por: index.html (instanciação)
  * Dependências: DatabaseManager, AuthManager, MapManager, ThemeManager
- * 
- * @author Sistema de Entretenimento DF
- * @version 2.0.0
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
+ * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
+
 class PontosEntretenimentoApp {
     /**
      * Construtor da aplicação principal
@@ -104,6 +106,9 @@ class PontosEntretenimentoApp {
             console.log('Configurando eventos...');
             this.configurarEventos();
             console.log('Eventos configurados');
+            
+            // Atualizar ícones de tema após configuração
+            this.atualizarIconesTema();
             
             console.log('Carregando dados...');
             await this.carregarDados();
@@ -437,6 +442,9 @@ class PontosEntretenimentoApp {
             }
         });
 
+        // Configurar novos botões responsivos
+        this.configurarBotoesResponsivos();
+
         // Eventos de ações que requerem login
         document.addEventListener('click', (e) => {
             // Botão de favoritar
@@ -449,6 +457,105 @@ class PontosEntretenimentoApp {
                 this.handleSuggestAction(e);
             }
         });
+    }
+
+    /**
+     * Configura os novos botões responsivos
+     */
+    configurarBotoesResponsivos() {
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenuDropdown = document.getElementById('mobile-menu-dropdown');
+        
+        if (mobileMenuBtn && mobileMenuDropdown) {
+            mobileMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                mobileMenuDropdown.classList.toggle('open');
+            });
+            
+            // Fechar menu ao clicar fora
+            document.addEventListener('click', (e) => {
+                if (!mobileMenuBtn.contains(e.target) && !mobileMenuDropdown.contains(e.target)) {
+                    mobileMenuDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Theme buttons - desktop e mobile
+        const desktopThemeBtn = document.getElementById('desktop-theme-btn');
+        const mobileThemeBtn = document.querySelector('.mobile-menu-item.theme-btn');
+        
+        if (desktopThemeBtn) {
+            desktopThemeBtn.addEventListener('click', () => this.toggleTheme());
+        }
+        
+        if (mobileThemeBtn) {
+            mobileThemeBtn.addEventListener('click', () => {
+                this.toggleTheme();
+                mobileMenuDropdown.classList.remove('open');
+            });
+        }
+
+        // Login buttons - desktop e mobile
+        const desktopLoginBtn = document.getElementById('desktop-login-btn');
+        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        
+        if (desktopLoginBtn) {
+            desktopLoginBtn.addEventListener('click', () => this.handleLoginClick());
+        }
+        
+        if (mobileLoginBtn) {
+            mobileLoginBtn.addEventListener('click', () => {
+                this.handleLoginClick();
+                mobileMenuDropdown.classList.remove('open');
+            });
+        }
+    }
+
+    /**
+     * Toggle do tema entre claro e escuro
+     */
+    toggleTheme() {
+        if (window.themeManager) {
+            window.themeManager.toggleTheme();
+            this.atualizarIconesTema();
+        }
+    }
+
+    /**
+     * Atualiza os ícones dos botões de tema
+     */
+    atualizarIconesTema() {
+        const desktopThemeIcon = document.getElementById('desktop-theme-icon');
+        const mobileThemeIcon = document.getElementById('theme-icon');
+        
+        const isDark = document.body.classList.contains('theme-dark');
+        const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        
+        if (desktopThemeIcon) {
+            desktopThemeIcon.className = iconClass;
+        }
+        
+        if (mobileThemeIcon) {
+            mobileThemeIcon.className = iconClass;
+        }
+    }
+
+    /**
+     * Handle do clique no botão de login
+     */
+    handleLoginClick() {
+        if (window.authManager && window.authManager.isAuthenticated()) {
+            // Se já está logado, mostrar menu do usuário
+            if (window.userMenu) {
+                window.userMenu.toggle();
+            }
+        } else {
+            // Se não está logado, abrir modal de login
+            if (window.loginModal) {
+                window.loginModal.open();
+            }
+        }
     }
 
     /**

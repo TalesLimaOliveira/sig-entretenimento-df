@@ -6,9 +6,10 @@
  * - Controlar abertura/fechamento do painel
  * - Renderizar conteúdo de forma estruturada
  * - Gerenciar eventos de interação
- * 
- * @author Sistema de Entretenimento DF
+ *
+ * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
+ * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
 
 class InfoPanelManager {
