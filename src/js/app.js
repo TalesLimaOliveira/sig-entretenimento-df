@@ -23,7 +23,7 @@
  * 8. Remover tela de loading
  * 
  * Usado por: index.html (instanciação)
- * Dependências: DatabaseManager, AuthManager, MapManager, ThemeManager
+ * Dependências: DatabaseManager, AuthManager, MapManager
  *
  * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
@@ -100,14 +100,12 @@ class PontosEntretenimentoApp {
             console.log('Authentication verified');
             
             console.log('Configuring interface...');
-            this.configureInterface();
+            await this.configureInterface();
             console.log('Interface configured');
             
             console.log('Configuring events...');
             this.configureEvents();
             console.log('Events configured');
-            
-            this.updateThemeIcons();
             
             console.log('Loading data...');
             this.carregarDados();
@@ -194,8 +192,7 @@ class PontosEntretenimentoApp {
             databaseManager: window.databaseManager,
             authManager: window.authManager,
             modalManager: window.modalManager,
-            mapManager: window.mapManager,
-            themeManager: window.themeManager
+            mapManager: window.mapManager
         };
         
         const ready = [];
@@ -213,7 +210,7 @@ class PontosEntretenimentoApp {
             ready,
             missing,
             allReady: missing.length === 0,
-            hasMinimal: ready.includes('databaseManager') && ready.includes('themeManager')
+            hasMinimal: ready.includes('databaseManager')
         };
     }
 
@@ -379,9 +376,17 @@ class PontosEntretenimentoApp {
         }
     }
 
-    configureInterface() {
+    async configureInterface() {
         try {
             console.log('Configuring interface...');
+            
+            // Aguardar o DatabaseManager estar totalmente carregado
+            if (window.databaseManager && window.databaseManager.init) {
+                await window.databaseManager.init();
+            }
+            
+            // Configurar menu de categorias após dados estarem carregados
+            // Será chamado novamente em carregarDados() para garantir que está atualizado
             this.configurarMenuCategorias();
             this.atualizarEstatisticas();
             console.log('Interface configurada');
@@ -396,13 +401,7 @@ class PontosEntretenimentoApp {
     }
 
     configureEvents() {
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('[data-categoria]')) {
-                const categoria = e.target.dataset.categoria;
-                this.filtrarPorCategoria(categoria);
-            }
-        });
-
+        // Event listener para mudanças de autenticação
         document.addEventListener('authStateChanged', (e) => {
             const { type, user } = e.detail;
             if (type === 'login') {
@@ -414,8 +413,10 @@ class PontosEntretenimentoApp {
             }
         });
 
+        // Configurar botões responsivos
         this.configureResponsiveButtons();
 
+        // Event listeners para ações de favorito e sugestão
         document.addEventListener('click', (e) => {
             if (e.target.matches('#btn-favorite') || e.target.closest('#btn-favorite')) {
                 this.handleFavoriteAction(e);
@@ -428,17 +429,6 @@ class PontosEntretenimentoApp {
     }
 
     configureResponsiveButtons() {
-        const desktopThemeBtn = document.getElementById('desktop-theme-btn');
-        const mobileThemeBtn = document.getElementById('mobile-theme-btn');
-        
-        if (desktopThemeBtn) {
-            desktopThemeBtn.addEventListener('click', () => this.toggleTheme());
-        }
-        
-        if (mobileThemeBtn) {
-            mobileThemeBtn.addEventListener('click', () => this.toggleTheme());
-        }
-
         const desktopLoginBtn = document.getElementById('desktop-login-btn');
         const mobileLoginBtn = document.getElementById('mobile-login-btn');
         
@@ -448,35 +438,6 @@ class PontosEntretenimentoApp {
         
         if (mobileLoginBtn) {
             mobileLoginBtn.addEventListener('click', () => this.handleLoginClick());
-        }
-    }
-
-    /**
-     * Toggle do tema entre claro e escuro
-     */
-    toggleTheme() {
-        if (window.themeManager) {
-            window.themeManager.toggleTheme();
-            this.updateThemeIcons();
-        }
-    }
-
-    /**
-     * Atualiza os ícones dos botões de tema
-     */
-    updateThemeIcons() {
-        const desktopThemeIcon = document.getElementById('desktop-theme-icon');
-        const mobileThemeIcon = document.getElementById('mobile-theme-icon');
-        
-        const isDark = document.body.classList.contains('theme-dark');
-        const iconClass = isDark ? 'fas fa-sun' : 'fas fa-moon';
-        
-        if (desktopThemeIcon) {
-            desktopThemeIcon.className = iconClass;
-        }
-        
-        if (mobileThemeIcon) {
-            mobileThemeIcon.className = iconClass;
         }
     }
 
@@ -634,6 +595,10 @@ class PontosEntretenimentoApp {
             this.renderizarPontos();
             this.atualizarEstatisticas();
             
+            // Reconfigurar menu de categorias após dados estarem carregados
+            console.log('Reconfigurando menu de categorias...');
+            this.configurarMenuCategorias();
+            
             console.log('Dados carregados com sucesso');
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
@@ -643,36 +608,98 @@ class PontosEntretenimentoApp {
     }
 
     configurarMenuCategorias() {
-        const menu = document.querySelector('.category-menu');
-        if (!menu) return;
+        const container = document.getElementById('nav-buttons-container');
+        if (!container) {
+            console.warn('Container de navegação não encontrado');
+            return;
+        }
 
         const categorias = window.databaseManager.getCategorias();
-        const categoriasHtml = categorias.map(cat => 
-            `<button class="category-btn" data-categoria="${cat.id}">
-                <i class="${cat.icon}"></i> ${cat.nome}
-            </button>`
-        ).join('');
+        if (!categorias || categorias.length === 0) {
+            console.warn('Nenhuma categoria encontrada');
+            return;
+        }
 
-        menu.innerHTML = `
-            <button class="category-btn active" data-categoria="todos">
-                <i class="fas fa-th"></i> Todos
+        // Criar botão "Todos" primeiro
+        let buttonsHtml = `
+            <button class="nav-btn active category-btn" data-categoria="todos">
+                <i class="fas fa-globe"></i>
+                <span class="nav-btn-text">Todos</span>
             </button>
-            ${categoriasHtml}
         `;
+
+        // Adicionar botão de favoritos (inicialmente oculto)
+        buttonsHtml += `
+            <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
+                <i class="fas fa-heart"></i>
+                <span class="nav-btn-text">Favoritos</span>
+            </button>
+        `;
+
+        // Gerar botões para cada categoria do JSON
+        categorias
+            .filter(cat => cat.id !== 'favoritos') // Favoritos já foi adicionado manualmente
+            .forEach(categoria => {
+                const iconClass = this.getIconClassForCategory(categoria);
+                buttonsHtml += `
+                    <button class="nav-btn category-btn" data-categoria="${categoria.id}">
+                        <i class="${iconClass}"></i>
+                        <span class="nav-btn-text">${categoria.nome}</span>
+                    </button>
+                `;
+            });
+
+        // Inserir HTML no container
+        container.innerHTML = buttonsHtml;
+
+        // Configurar event listeners
+        container.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-categoria]');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const categoria = button.dataset.categoria;
+                this.filtrarPorCategoria(categoria);
+            }
+        });
+
+        console.log(`Menu de navegação configurado com ${categorias.length} categorias`);
+    }
+
+    /**
+     * Mapear ícones para categorias baseado no campo icone/icon do JSON
+     */
+    getIconClassForCategory(categoria) {
+        // Primeiro tentar usar o ícone do JSON (se for classe CSS)
+        if (categoria.icon && categoria.icon.startsWith('fas ')) {
+            return categoria.icon;
+        }
+        
+        // Mapear emojis para classes FontAwesome baseado no ID da categoria
+        const iconMap = {
+            'geral': 'fas fa-map-marker-alt',
+            'esportes-lazer': 'fas fa-futbol',
+            'gastronomia': 'fas fa-utensils',
+            'geek-nerd': 'fas fa-gamepad',
+            'alternativo': 'fas fa-palette',
+            'casas-noturnas': 'fas fa-glass-cheers'
+        };
+
+        return iconMap[categoria.id] || 'fas fa-map-marker-alt';
     }
 
     filtrarPorCategoria(categoria) {
         try {
+            console.log(`🔍 [APP] Iniciando filtro por categoria: ${categoria}`);
             this.activeCategory = categoria;
             
-            // Atualizar botões de navegação
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.categoria === categoria);
-            });
+            // Atualizar botões de navegação com debounce para evitar múltiplos cliques
+            this.atualizarBotoesCategoria(categoria);
 
             // Verificar se é filtro de favoritos e usuário está logado
             if (categoria === 'favoritos') {
                 if (!window.authManager || !window.authManager.isAuthenticated()) {
+                    console.log('🔒 [APP] Usuário não logado, abrindo modal de login');
                     // Usuário não logado tentando ver favoritos - abrir modal de login
                     window.loginModal.open({
                         pendingAction: () => this.filtrarPorCategoria('favoritos')
@@ -681,19 +708,42 @@ class PontosEntretenimentoApp {
                 }
             }
 
-            // Filtrar marcadores se o mapa estiver disponível
-            if (window.mapManager && typeof window.mapManager.filtrarPorCategoria === 'function') {
-                const user = window.authManager && window.authManager.getCurrentUser ? 
-                    window.authManager.getCurrentUser() : null;
-                window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
-            } else {
-                console.warn('MapManager nao disponivel para filtrar');
+            // Verificar se MapManager está disponível
+            if (!window.mapManager) {
+                console.error('❌ [APP] MapManager não disponível');
+                return;
             }
+
+            if (typeof window.mapManager.filtrarPorCategoria !== 'function') {
+                console.error('❌ [APP] Método filtrarPorCategoria não encontrado no MapManager');
+                return;
+            }
+
+            // Filtrar marcadores
+            console.log('🗺️ [APP] Chamando MapManager.filtrarPorCategoria');
+            const user = window.authManager && window.authManager.getCurrentUser ? 
+                window.authManager.getCurrentUser() : null;
+            window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
             
-            console.log(`Filtrando por categoria: ${categoria}`);
+            console.log(`✅ [APP] Filtro aplicado com sucesso: ${categoria}`);
+            
         } catch (error) {
-            console.error('Erro ao filtrar por categoria:', error);
+            console.error('❌ [APP] Erro ao filtrar por categoria:', error);
         }
+    }
+
+    /**
+     * Atualizar estado visual dos botões de categoria
+     */
+    atualizarBotoesCategoria(categoriaAtiva) {
+        const botoes = document.querySelectorAll('.nav-btn[data-categoria]');
+        botoes.forEach(btn => {
+            const isActive = btn.dataset.categoria === categoriaAtiva;
+            btn.classList.toggle('active', isActive);
+            
+            // Adicionar atributo para acessibilidade
+            btn.setAttribute('aria-pressed', isActive);
+        });
     }
 
     renderizarPontos() {

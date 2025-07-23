@@ -1,0 +1,44 @@
+[
+    {
+      "id": "geral",
+      "nome": "Geral",
+      "icone": "📍",
+      "cor": "#6c757d",
+      "descricao": "Pontos de interesse geral e diversos"
+    },
+    {
+      "id": "esportes-lazer",
+      "nome": "Esportes e Lazer",
+      "icone": "⚽",
+      "cor": "#28a745",
+      "descricao": "Atividades esportivas e de lazer"
+    },
+    {
+      "id": "gastronomia",
+      "nome": "Gastronomia",
+      "icone": "🍽️",
+      "cor": "#dc3545",
+      "descricao": "Restaurantes, bares e experiências culinárias"
+    },
+    {
+      "id": "geek-nerd",
+      "nome": "Geek e Nerd",
+      "icone": "🎮",
+      "cor": "#6f42c1",
+      "descricao": "Cultura geek, games e tecnologia"
+    },
+    {
+      "id": "alternativo",
+      "nome": "Alternativo",
+      "icone": "🎨",
+      "cor": "#fd7e14",
+      "descricao": "Arte, cultura alternativa e eventos especiais"
+    },
+    {
+      "id": "casas-noturnas",
+      "nome": "Casas Noturnas",
+      "icone": "🌙",
+      "cor": "#6610f2",
+      "descricao": "Vida noturna, bares e casas de show"
+    }
+]

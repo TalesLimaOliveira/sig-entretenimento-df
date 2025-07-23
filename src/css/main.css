@@ -137,31 +137,6 @@ body {
     gap: 1rem;
 }
 
-/* ===== THEME BUTTON ===== */
-.theme-btn {
-    background: none;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: var(--white);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    font-size: 1.1rem;
-}
-
-.theme-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-.theme-btn.desktop {
-    backdrop-filter: blur(10px);
-}
-
 /* ===== LOGIN BUTTON ===== */
 .login-btn {
     background: rgba(255, 255, 255, 0.2);
@@ -241,12 +216,7 @@ body {
         display: inline;
     }
     
-    /* Ajustar tamanho dos botões mobile */
-    .mobile-actions .theme-btn {
-        width: 40px;
-        height: 40px;
-    }
-    
+    /* Ajustar tamanho dos componentes mobile */
     .mobile-actions .login-btn {
         padding: 0.5rem 0.75rem;
         font-size: 0.9rem;

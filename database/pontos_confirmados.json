@@ -3,14 +3,21 @@
         "id": 1,
         "nome": "Teatro Nacional Claudio Santoro",
         "categoria": "geral",
-        "coordenadas": [-15.796, -47.878],
+        "coordenadas": [
+            -15.796,
+            -47.878
+        ],
         "descricao": "Principal teatro de Brasília, com programação diversificada",
         "endereco": "Via N2 - Asa Norte",
         "telefone": "(61) 3325-6268",
         "horario": "Conforme programação",
         "preco": "R$ 20-80",
         "avaliacao": 4.6,
-        "tags": ["teatro", "cultura", "espetaculos"],
+        "tags": [
+            "teatro",
+            "cultura",
+            "espetaculos"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -18,14 +25,21 @@
         "id": 2,
         "nome": "Cine Brasília",
         "categoria": "geral",
-        "coordenadas": [-15.795, -47.882],
+        "coordenadas": [
+            -15.795,
+            -47.882
+        ],
         "descricao": "Cinema de arte e cultura, com filmes alternativos",
         "endereco": "EQS 106/107 - Asa Sul",
         "telefone": "(61) 3244-1660",
         "horario": "14h às 22h",
         "preco": "R$ 10-15",
         "avaliacao": 4.4,
-        "tags": ["cinema", "arte", "cultura"],
+        "tags": [
+            "cinema",
+            "arte",
+            "cultura"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -33,14 +47,21 @@
         "id": 3,
         "nome": "Estádio Nacional de Brasília",
         "categoria": "esportes-lazer",
-        "coordenadas": [-15.783, -47.899],
+        "coordenadas": [
+            -15.783,
+            -47.899
+        ],
         "descricao": "Arena multiuso para grandes eventos esportivos",
         "endereco": "SRPN - Asa Norte",
         "telefone": "(61) 3424-4000",
         "horario": "Conforme eventos",
         "preco": "Variável",
         "avaliacao": 4.5,
-        "tags": ["futebol", "eventos", "esportes"],
+        "tags": [
+            "futebol",
+            "eventos",
+            "esportes"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -48,13 +69,21 @@
         "id": 4,
         "nome": "Parque da Cidade Sarah Kubitschek",
         "categoria": "esportes-lazer",
-        "coordenadas": [-15.788, -47.907],
+        "coordenadas": [
+            -15.788,
+            -47.907
+        ],
         "descricao": "Maior parque urbano do mundo, ideal para esportes e lazer",
         "endereco": "Asa Sul",
         "horario": "24 horas",
         "preco": "Gratuito",
         "avaliacao": 4.7,
-        "tags": ["parque", "esportes", "lazer", "familia"],
+        "tags": [
+            "parque",
+            "esportes",
+            "lazer",
+            "familia"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -62,14 +91,21 @@
         "id": 5,
         "nome": "Restaurante Olivae",
         "categoria": "gastronomia",
-        "coordenadas": [-15.795, -48.105],
+        "coordenadas": [
+            -15.795,
+            -48.105
+        ],
         "descricao": "Restaurante italiano sofisticado com ambiente acolhedor",
         "endereco": "CLN 201 - Asa Norte",
         "telefone": "(61) 3340-8120",
         "horario": "12h às 15h, 19h às 23h",
         "preco": "R$ 80-120",
         "avaliacao": 4.5,
-        "tags": ["italiano", "sofisticado", "jantar"],
+        "tags": [
+            "italiano",
+            "sofisticado",
+            "jantar"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -77,13 +113,20 @@
         "id": 6,
         "nome": "Feira da Torre de TV",
         "categoria": "gastronomia",
-        "coordenadas": [-15.790, -47.896],
+        "coordenadas": [
+            -15.79,
+            -47.896
+        ],
         "descricao": "Feira gastronômica tradicional aos fins de semana",
         "endereco": "Torre de TV, Asa Norte",
         "horario": "Sábados e domingos, 9h às 18h",
         "preco": "R$ 15-40",
         "avaliacao": 4.2,
-        "tags": ["feira", "gastronomia", "artesanato"],
+        "tags": [
+            "feira",
+            "gastronomia",
+            "artesanato"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -91,14 +134,22 @@
         "id": 7,
         "nome": "Dragonstore",
         "categoria": "geek-nerd",
-        "coordenadas": [-15.794, -47.889],
+        "coordenadas": [
+            -15.794,
+            -47.889
+        ],
         "descricao": "Loja especializada em jogos, cards e cultura geek",
         "endereco": "CLN 208 - Asa Norte",
         "telefone": "(61) 3328-1234",
         "horario": "10h às 22h",
         "preco": "R$ 20-200",
         "avaliacao": 4.6,
-        "tags": ["jogos", "cards", "geek", "board-games"],
+        "tags": [
+            "jogos",
+            "cards",
+            "geek",
+            "board-games"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -106,14 +157,21 @@
         "id": 8,
         "nome": "Arena E-Sports BSB",
         "categoria": "geek-nerd",
-        "coordenadas": [-15.835, -48.044],
+        "coordenadas": [
+            -15.835,
+            -48.044
+        ],
         "descricao": "Centro de e-sports com torneios e competições",
         "endereco": "Taguatinga Centro",
         "telefone": "(61) 3562-9876",
         "horario": "14h às 23h",
         "preco": "R$ 10-30/hora",
         "avaliacao": 4.3,
-        "tags": ["e-sports", "games", "competicoes"],
+        "tags": [
+            "e-sports",
+            "games",
+            "competicoes"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -121,13 +179,20 @@
         "id": 9,
         "nome": "Centro Cultural da República",
         "categoria": "alternativo",
-        "coordenadas": [-15.797, -47.879],
+        "coordenadas": [
+            -15.797,
+            -47.879
+        ],
         "descricao": "Espaço cultural independente com exposições alternativas",
         "endereco": "Eixo Monumental",
         "horario": "9h às 18h",
         "preco": "Gratuito",
         "avaliacao": 4.4,
-        "tags": ["arte", "exposicoes", "independente"],
+        "tags": [
+            "arte",
+            "exposicoes",
+            "independente"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -135,13 +200,21 @@
         "id": 10,
         "nome": "Sarau do Beco",
         "categoria": "alternativo",
-        "coordenadas": [-15.840, -48.045],
+        "coordenadas": [
+            -15.84,
+            -48.045
+        ],
         "descricao": "Sarau independente com poesia e música",
         "endereco": "Taguatinga Norte",
         "horario": "Quintas, 19h às 23h",
         "preco": "R$ 5-15",
         "avaliacao": 4.1,
-        "tags": ["sarau", "poesia", "musica", "independente"],
+        "tags": [
+            "sarau",
+            "poesia",
+            "musica",
+            "independente"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -149,14 +222,21 @@
         "id": 11,
         "nome": "Villa Mix Brasília",
         "categoria": "casas-noturnas",
-        "coordenadas": [-15.796, -47.885],
+        "coordenadas": [
+            -15.796,
+            -47.885
+        ],
         "descricao": "Casa noturna com música sertaneja e eletrônica",
         "endereco": "SCLS 109 - Asa Sul",
         "telefone": "(61) 3244-1010",
         "horario": "22h às 4h",
         "preco": "R$ 40-80",
         "avaliacao": 4.2,
-        "tags": ["balada", "sertanejo", "eletronica"],
+        "tags": [
+            "balada",
+            "sertanejo",
+            "eletronica"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     },
@@ -164,14 +244,21 @@
         "id": 12,
         "nome": "Lounge 442",
         "categoria": "casas-noturnas",
-        "coordenadas": [-15.794, -47.886],
+        "coordenadas": [
+            -15.794,
+            -47.886
+        ],
         "descricao": "Lounge sofisticado com drinks autorais",
         "endereco": "CLN 442 - Asa Norte",
         "telefone": "(61) 3328-4422",
         "horario": "19h às 2h",
         "preco": "R$ 30-60",
         "avaliacao": 4.0,
-        "tags": ["lounge", "drinks", "sofisticado"],
+        "tags": [
+            "lounge",
+            "drinks",
+            "sofisticado"
+        ],
         "ativo": true,
         "dataCriacao": "2025-01-20T10:00:00.000Z"
     }

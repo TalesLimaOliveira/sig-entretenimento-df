@@ -93,11 +93,21 @@ class InfoPanelManager {
 
         // Fechar ao clicar fora do painel (no mapa)
         document.addEventListener('click', (e) => {
-            if (this.isVisible && !this.panel.contains(e.target) && 
+            if (this.isVisible && 
+                !this.panel.contains(e.target) && 
                 !e.target.closest('.marcador-personalizado') &&
                 !e.target.closest('.modal-backdrop') &&
-                !e.target.closest('.login-modal')) {
-                this.hide();
+                !e.target.closest('.login-modal') &&
+                !e.target.closest('.leaflet-popup') &&
+                !e.target.closest('.leaflet-marker-icon') &&
+                !e.target.closest('.custom-marker')) {
+                
+                // Adicionar delay para evitar fechamento imediato durante cliques em marcadores
+                setTimeout(() => {
+                    if (this.isVisible) {
+                        this.hide();
+                    }
+                }, 100);
             }
         });
     }
@@ -131,6 +141,15 @@ class InfoPanelManager {
     show(ponto) {
         if (!this.panel || !ponto) return;
 
+        // Evitar que eventos de clique interfiram durante a abertura
+        const preventClick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+        };
+        
+        // Adicionar listener temporário para prevenir interferência
+        document.addEventListener('click', preventClick, { once: true, capture: true });
+        
         this.currentPoint = ponto;
         this.renderContent(ponto);
         this.setupImage(ponto);
@@ -141,14 +160,21 @@ class InfoPanelManager {
         // Adicionar classe ao body para ajustar layout
         document.body.classList.add('body-with-info-panel');
         
-        // Mostrar painel
+        // Mostrar painel com transição suave
         this.panel.classList.remove('hidden');
-        setTimeout(() => {
+        
+        // Usar requestAnimationFrame para garantir que a transição ocorra
+        requestAnimationFrame(() => {
             this.panel.classList.add('visible');
-        }, 10);
+        });
         
         this.isVisible = true;
         console.log('📋 Painel aberto para:', ponto.nome);
+        
+        // Remover o listener preventivo após um breve delay
+        setTimeout(() => {
+            document.removeEventListener('click', preventClick, { capture: true });
+        }, 200);
     }
 
     /**

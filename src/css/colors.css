@@ -1,15 +1,12 @@
 /**
- * Sistema de Cores - Clean Architecture + Sistema de Temas
+ * Sistema de Cores - Tema Escuro Padrão
  * 
  * Este arquivo combina:
- * 1. Configuração de temas claro/escuro (layout e contraste)
+ * 1. Configuração de tema escuro fixo
  * 2. Sistema de paletas de cores temáticas (identidade visual)
  * 
  * Para alterar TEMA DE CORES (identidade visual):
  * - Modifique theme-colors.js e altere currentColorTheme
- * 
- * Para alterar MODO CLARO/ESCURO:
- * - Use as classes .theme-light e .theme-dark
  *
  * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
@@ -106,19 +103,6 @@
     --border: var(--gray-700);
     --border-light: var(--gray-600);
     --hover-bg: var(--gray-800);
-}
-
-/* ===== TEMA CLARO ===== */
-.theme-light {
-    --bg-primary: var(--white);
-    --bg-secondary: var(--gray-50);
-    --bg-tertiary: var(--gray-100);
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-600);
-    --text-muted: var(--gray-500);
-    --border: var(--gray-200);
-    --border-light: var(--gray-100);
-    --hover-bg: var(--gray-50);
 }
 
 /* ===== APLICAÇÃO GLOBAL DO TEMA ===== */

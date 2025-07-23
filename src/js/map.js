@@ -451,11 +451,8 @@ class MapManager {
      */
     _aplicarTemaInicial() {
         try {
-            // O tema será aplicado via CSS, aqui apenas configuramos o mapa
-            if (window.themeManager) {
-                const temaAtual = window.themeManager.getTemaAtual();
-                this._aplicarTemaNoMapa(temaAtual === 'dark');
-            }
+            // Sempre aplicar tema escuro
+            this._aplicarTemaNoMapa(true);
         } catch (error) {
             console.error('❌ Erro ao aplicar tema inicial:', error);
         }
@@ -628,7 +625,7 @@ class MapManager {
      * Alterna tema do mapa (método público)
      * 
      * @param {boolean} temaEscuro - Se deve aplicar tema escuro
-     * Usado por: ThemeManager, interface
+     * Usado por: interface
      */
     alternarTemaMapa(temaEscuro = false) {
         try {
@@ -644,7 +641,7 @@ class MapManager {
      * 
      * Método público mantido para compatibilidade com código legado
      * @deprecated Use _aplicarTemaInicial() internamente
-     * Usado por: ThemeManager (legado)
+     * Usado por: interface
      */
     aplicarTemaInicial() {
         this._aplicarTemaInicial();
@@ -826,8 +823,17 @@ class MapManager {
             });
 
             // Configurar eventos do marcador para usar painel lateral
-            marcador.on('click', () => {
-                this.selecionarPonto(ponto);
+            marcador.on('click', (e) => {
+                // Prevenir propagação para evitar conflitos com listeners do document
+                if (e.originalEvent) {
+                    e.originalEvent.stopPropagation();
+                    e.originalEvent.preventDefault();
+                }
+                
+                // Adicionar um delay mínimo para garantir que o clique seja processado corretamente
+                setTimeout(() => {
+                    this.selecionarPonto(ponto);
+                }, 10);
             });
 
             // Eventos de hover para feedback visual sutil (sem mover o ícone)
@@ -889,15 +895,18 @@ class MapManager {
             // Incrementar visualizações
             this.incrementarViews(ponto.id);
             
-            // Exibir no painel lateral
+            // Destacar marcador selecionado primeiro
+            this.destacarMarcadorSelecionado(ponto.id);
+            
+            // Exibir no painel lateral com delay para evitar conflitos
             if (window.infoPanelManager) {
-                window.infoPanelManager.show(ponto);
+                // Usar requestAnimationFrame para garantir que o evento seja processado
+                requestAnimationFrame(() => {
+                    window.infoPanelManager.show(ponto);
+                });
             } else {
                 console.warn('⚠️ InfoPanelManager não disponível');
             }
-            
-            // Destacar marcador selecionado
-            this.destacarMarcadorSelecionado(ponto.id);
             
         } catch (error) {
             console.error('❌ Erro ao selecionar ponto:', error);

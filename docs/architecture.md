@@ -38,12 +38,6 @@
 - **Gerenciador de Mapas**: `src/js/map.js` (`MapManager`)
   - **Propriedades principais**:
     - `activeCategory`: Categoria atualmente filtrada no mapa
-- **Sistema de Temas**: `src/js/theme.js` (`ThemeManager`)
-  - **Características principais**:
-    - `currentTheme`: Tema ativo ('light' ou 'dark')
-    - Sistema de troca programática
-    - Persistência de preferências do usuário
-    - Detecção automática de preferência do sistema
 - **Painel de Informações**: `src/js/info-panel.js` (`InfoPanelManager`)
 - **Responsabilidade**: Interface do usuário, interações visuais, controle de aparência
 

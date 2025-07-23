@@ -23,7 +23,7 @@
     <meta name="description" content="Mapa interativo responsivo com pontos de entretenimento do Distrito Federal">
     <meta name="keywords" content="DF, entretenimento, mapa, pontos turísticos, responsivo">
 </head>
-<body>
+<body class="theme-dark">
     <!-- Loading -->
     <div class="loading-screen">
         <div class="loading-content">
@@ -38,51 +38,14 @@
             <div class="header-content">
                 <!-- Navigation Buttons -->
                 <nav class="header-navigation">
-                    <div class="nav-buttons-container">
-                        <button class="nav-btn active category-btn" data-categoria="todos">
-                            <i class="fas fa-globe"></i>
-                            <span class="nav-btn-text">Todos</span>
-                        </button>
-                        <!-- Favoritos - só aparece se usuário comum estiver logado -->
-                        <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
-                            <i class="fas fa-heart"></i>
-                            <span class="nav-btn-text">Favoritos</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="geral">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span class="nav-btn-text">Geral</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="esportes-lazer">
-                            <i class="fas fa-futbol"></i>
-                            <span class="nav-btn-text">Esportes e Lazer</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="gastronomia">
-                            <i class="fas fa-utensils"></i>
-                            <span class="nav-btn-text">Gastronomia</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="geek-nerd">
-                            <i class="fas fa-gamepad"></i>
-                            <span class="nav-btn-text">Geek e Nerd</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="alternativo">
-                            <i class="fas fa-palette"></i>
-                            <span class="nav-btn-text">Alternativo</span>
-                        </button>
-                        <button class="nav-btn category-btn" data-categoria="casas-noturnas">
-                            <i class="fas fa-glass-cheers"></i>
-                            <span class="nav-btn-text">Casas Noturnas</span>
-                        </button>
+                    <div class="nav-buttons-container" id="nav-buttons-container">
+                        <!-- Categorias serão geradas dinamicamente pelo JavaScript -->
                     </div>
                 </nav>
                 
                 <div class="header-actions">
                     <!-- Desktop Actions -->
                     <div class="desktop-actions">
-                        <!-- Theme Button -->
-                        <button class="theme-btn desktop" id="desktop-theme-btn" title="Alternar tema">
-                            <i class="fas fa-moon" id="desktop-theme-icon"></i>
-                        </button>
-                        
                         <!-- Login Button -->
                         <button class="login-btn desktop" id="desktop-login-btn">
                             <i class="fas fa-user"></i>
@@ -92,11 +55,6 @@
                     
                     <!-- Mobile Actions - sempre visíveis em mobile/tablet -->
                     <div class="mobile-actions">
-                        <!-- Theme Button Mobile -->
-                        <button class="theme-btn mobile" id="mobile-theme-btn" title="Alternar tema">
-                            <i class="fas fa-moon" id="mobile-theme-icon"></i>
-                        </button>
-                        
                         <!-- Login Button Mobile -->
                         <button class="login-btn mobile" id="mobile-login-btn">
                             <i class="fas fa-user"></i>
@@ -178,7 +136,6 @@
     <script src="src/js/auth.js"></script>
     <script src="src/js/info-panel.js"></script>
     <script src="src/js/map.js"></script>
-    <script src="src/js/theme.js"></script>
     <script src="src/js/theme-colors.js"></script>
     <script src="src/components/modal.js"></script>
     <script src="src/components/login-modal.js"></script>

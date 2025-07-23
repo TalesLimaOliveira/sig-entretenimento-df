@@ -19,10 +19,10 @@ class DatabaseManager {
         this.init();
     }
 
-    init() {
+    async init() {
         try {
             console.log('Inicializando DatabaseManager com nova estrutura...');
-            this.carregarCategorias();
+            await this.carregarCategorias();
             this.carregarTodosDados();
             this.migrarDadosAntigos();
             console.log('DatabaseManager inicializado com sucesso');
@@ -140,11 +140,27 @@ class DatabaseManager {
         }
     }
 
-    carregarCategorias() {
+    async carregarCategorias() {
+        try {
+            // Primeiro tentar carregar do arquivo JSON
+            const response = await fetch('./database/categorias.json');
+            if (response.ok) {
+                const categorias = await response.json();
+                this.categorias = categorias;
+                console.log('Categorias carregadas do arquivo JSON:', categorias.length);
+                return;
+            }
+        } catch (error) {
+            console.warn('Erro ao carregar categorias do JSON:', error);
+        }
+
+        // Fallback: tentar carregar do localStorage
         const saved = localStorage.getItem(this.baseStorageKey + '_categorias');
         if (saved) {
             this.categorias = JSON.parse(saved);
+            console.log('Categorias carregadas do localStorage');
         } else {
+            // Fallback final: categorias padrão
             this.categorias = [
                 { 
                     id: 'geral', 
@@ -197,6 +213,7 @@ class DatabaseManager {
                 }
             ];
             this.salvarCategorias();
+            console.log('Categorias padrão carregadas');
         }
     }
 
