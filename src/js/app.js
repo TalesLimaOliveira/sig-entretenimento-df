@@ -753,7 +753,8 @@ class PontosEntretenimentoApp {
             .forEach(categoria => {
                 const iconClass = this.getIconClassForCategory(categoria);
                 buttonsHtml += `
-                    <button class="nav-btn category-btn" data-categoria="${categoria.id}">
+                    <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
+                            style="--category-color: ${categoria.cor}">
                         <i class="${iconClass}"></i>
                         <span class="nav-btn-text">${categoria.nome}</span>
                     </button>

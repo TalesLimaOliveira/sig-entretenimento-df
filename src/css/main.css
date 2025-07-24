@@ -304,7 +304,7 @@ body {
 /* ===== NAVIGATION BUTTONS ===== */
 .nav-btn {
     padding: 0.5rem 1rem;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.1);
     color: var(--white);
@@ -321,9 +321,25 @@ body {
     position: relative;
 }
 
+/* Aplicar cor da categoria quando disponível - SEMPRE colorido */
+.nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]) {
+    border-color: var(--category-color, rgba(255, 255, 255, 0.2));
+    background: var(--category-color, rgba(255, 255, 255, 0.1));
+    color: white;
+}
+
 .nav-btn:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Hover com cor da categoria - mais intensa */
+.nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]):hover {
+    background: var(--category-color, rgba(255, 255, 255, 0.2));
+    color: white;
+    border-color: var(--category-color, rgba(255, 255, 255, 0.4));
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -335,6 +351,48 @@ body {
     font-weight: 600;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
     transform: translateY(-1px);
+}
+
+/* Estado ativo com cor da categoria - FUNDO BRANCO, TEXTO PRETO */
+.nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]).active {
+    background: white;
+    color: black;
+    border-color: var(--category-color, var(--theme-primary));
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    font-weight: 600;
+    transform: translateY(-1px);
+}
+
+/* Ícones também ficam pretos quando ativo */
+.nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]).active i {
+    color: black;
+}
+
+/* Estilos específicos para o botão "TODOS" - Desktop */
+.nav-btn[data-categoria="todos"] {
+    border-color: #87ceeb;
+    background: white;
+    color: black;
+}
+
+.nav-btn[data-categoria="todos"]:hover {
+    background: #f0f8ff;
+    border-color: #5dade2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn[data-categoria="todos"].active {
+    background: #87ceeb;
+    color: white;
+    border-color: #87ceeb;
+    font-weight: 600;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.nav-btn[data-categoria="todos"].active i {
+    color: white;
 }
 
 /* Tema escuro para botões de navegação */
@@ -406,7 +464,7 @@ body {
     background: var(--bg-secondary);
 }
 
-/* Estilo para marcadores personalizados */
+/* Estilo para marcadores personalizados (otimizado) */
 .marcador-personalizado {
     transition: none !important; /* Remove transições que podem causar problemas */
 }
@@ -421,6 +479,26 @@ body {
     position: relative;
     margin: 0;
     padding: 0;
+    /* Otimização para ícones maiores */
+    min-width: 36px;
+    min-height: 36px;
+}
+
+/* Aumentar tamanho específico dos ícones FontAwesome */
+.marcador-personalizado div i {
+    font-size: 20px !important; /* Tamanho base para desktop */
+}
+
+/* Responsividade para ícones FontAwesome em marcadores personalizados */
+@media (max-width: 768px) {
+    .marcador-personalizado div {
+        min-width: 42px;
+        min-height: 42px;
+    }
+    
+    .marcador-personalizado div i {
+        font-size: 26px !important; /* Maior em dispositivos móveis */
+    }
 }
 
 .marcador-personalizado div:hover {
@@ -434,6 +512,38 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.5), 0 4px 12px rgba(0,0,0,0.6) !important;
     filter: brightness(1.1);
     z-index: 1000 !important;
+}
+
+/* Estilo otimizado para marcadores */
+.marcador-otimizado {
+    transition: none !important;
+}
+
+.marcador-otimizado .marker-icon {
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    color: white;
+    font-size: 20px; /* Aumentado de 16px para 20px */
+}
+
+/* Responsividade para ícones otimizados */
+@media (max-width: 768px) {
+    .marcador-otimizado .marker-icon {
+        min-width: 38px;
+        min-height: 38px;
+        font-size: 24px; /* Maior em dispositivos móveis */
+    }
+}
+
+.marcador-otimizado:hover .marker-icon {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    transform: scale(1.1);
 }
 
 /* Garantir que classes Leaflet mantêm transforms de posicionamento mas removem hover effects problemáticos */
@@ -1082,13 +1192,55 @@ body {
     }
     
     .nav-btn {
-        padding: 0.3rem 0.6rem;
+        padding: 0.4rem 0.8rem;
         font-size: 0.75rem;
         min-width: auto;
+        border-radius: 25px;
+        gap: 0.3rem;
     }
     
+    /* Manter ícones visíveis no mobile com tamanho adequado */
     .nav-btn i {
-        display: none;
+        font-size: 14px;
+        margin-right: 0.2rem;
+    }
+    
+    /* Aplicar cor de categoria no mobile também - SEMPRE colorido */
+    .nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]) {
+        background: var(--category-color, rgba(255, 255, 255, 0.1));
+        border-color: var(--category-color, rgba(255, 255, 255, 0.2));
+        color: white;
+    }
+    
+    /* Estado ativo no mobile - FUNDO BRANCO, TEXTO PRETO */
+    .nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]).active {
+        background: white;
+        color: black;
+        border-color: var(--category-color, var(--theme-primary));
+        font-weight: 600;
+    }
+    
+    /* Ícones pretos quando ativo no mobile */
+    .nav-btn[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]).active i {
+        color: black;
+    }
+    
+    /* Estilos para botão "TODOS" no mobile */
+    .nav-btn[data-categoria="todos"] {
+        border-color: #87ceeb;
+        background: #87ceeb;
+        color: white;
+    }
+    
+    .nav-btn[data-categoria="todos"].active {
+        background: white;
+        color: black;
+        border-color: #87ceeb;
+        font-weight: 600;
+    }
+    
+    .nav-btn[data-categoria="todos"].active i {
+        color: black;
     }
     
     .header-actions {

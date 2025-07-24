@@ -1,0 +1,56 @@
+/* Otimizações de Performance para o Mapa */
+
+/* Cache de renderização para melhor performance */
+.leaflet-container {
+    contain: layout style paint;
+    will-change: transform;
+}
+
+/* Otimização para marcadores */
+.marcador-personalizado,
+.marcador-otimizado {
+    contain: layout style paint;
+    will-change: transform;
+}
+
+/* Garantir tamanho adequado dos ícones FontAwesome em todos os marcadores */
+.leaflet-marker-icon i,
+.marcador-personalizado i,
+.marcador-otimizado i {
+    font-size: 22px !important; /* Tamanho padrão aumentado */
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Suavização de animações */
+.leaflet-zoom-animated {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Aceleração por hardware para melhor performance */
+.leaflet-map-pane,
+.leaflet-tile,
+.leaflet-marker-icon {
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+}
+
+/* Otimização para dispositivos touch */
+@media (pointer: coarse) {
+    .marcador-personalizado div,
+    .marcador-otimizado .marker-icon {
+        /* Área de toque maior para dispositivos móveis */
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Ícones ainda maiores em dispositivos touch */
+    .leaflet-marker-icon i,
+    .marcador-personalizado i,
+    .marcador-otimizado i {
+        font-size: 28px !important; /* Ainda maior para touch */
+    }
+}

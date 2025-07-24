@@ -28,6 +28,7 @@ class MapManager {
         // Gerenciamento de marcadores
         this.marcadores = new Map();              // Mapa de marcadores por ID
         this.gruposPorCategoria = new Map();      // Grupos de marcadores por categoria
+        this.iconCache = new Map();               // Cache de ícones para melhor performance
         
         // Estado da aplicação
         this.activeCategory = 'todos';           // Categoria atualmente filtrada
@@ -140,12 +141,12 @@ class MapManager {
         
         const resizeObserver = new ResizeObserver(this._debounce(() => {
             if (this.map) {
-                // Aguardar um pouco para garantir que o container está dimensionado
+                // Aguardar minimamente para garantir que o container está dimensionado
                 setTimeout(() => {
                     this.map.invalidateSize();
-                }, 100);
+                }, 50); // Reduzido de 100ms para 50ms
             }
-        }, 100));
+        }, 50)); // Reduzido de 100ms para 50ms
         
         const mapContainer = document.getElementById(this.containerId);
         if (mapContainer) {
@@ -236,13 +237,13 @@ class MapManager {
             maxZoom: this.MAX_ZOOM
         });
         
-        // Forçar uma invalidação inicial após um breve delay
+        // Forçar uma invalidação inicial otimizada (reduzido delay)
         setTimeout(() => {
             if (this.map) {
                 this.map.invalidateSize(true);
                 console.log('✅ Mapa inicializado e redimensionado');
             }
-        }, 100);
+        }, 50); // Reduzido de 100ms para 50ms
         
         // Aplicar configurações responsivas iniciais
         this._aplicarConfiguracoesMobile();
@@ -288,12 +289,16 @@ class MapManager {
      * @private
      */
     _configurarCamadas() {
-        // Criar e adicionar camada de ruas otimizada
+        // Criar e adicionar camada de ruas otimizada para carregamento rápido
         this.camadaRuas = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '', // Removido para interface limpa
             loading: 'lazy', // Carregamento otimizado
-            crossOrigin: true
+            crossOrigin: true,
+            keepBuffer: 2, // Manter buffer menor para economizar memória
+            updateWhenIdle: true, // Atualizar apenas quando parado
+            updateWhenZooming: false, // Não atualizar durante zoom para melhor performance
+            updateInterval: 150 // Reduzir frequência de atualizações
         });
         
         this.camadaRuas.addTo(this.map);
@@ -970,12 +975,21 @@ class MapManager {
      * @returns {Object} Ícone Leaflet
      */
     criarIconePersonalizado(categoria, ponto = null) {
-        // Tamanho aumentado para melhor usabilidade em touch
-        const tamanho = window.innerWidth <= 768 ? 32 : 28; // Maior em mobile
-        const borderWidth = window.innerWidth <= 768 ? 4 : 3;
-        
         // Verificar se é ponto pendente
         const isPendente = ponto && ponto.status === 'pendente';
+        
+        // Criar chave de cache baseada na categoria e estado
+        const cacheKey = `${categoria?.id || 'default'}_${isPendente}_${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`;
+        
+        // Verificar cache primeiro para melhor performance
+        if (this.iconCache.has(cacheKey)) {
+            return this.iconCache.get(cacheKey);
+        }
+        
+        // Tamanho aumentado para melhor visibilidade e usabilidade
+        const tamanho = window.innerWidth <= 768 ? 42 : 36; // Maior em mobile (aumentado de 32/28)
+        const borderWidth = window.innerWidth <= 768 ? 4 : 3;
+        
         const corBorda = isPendente ? '#f59e0b' : 'white'; // Borda dourada para pendentes
         const indicadorPendente = isPendente ? `
             <div style="
@@ -991,7 +1005,7 @@ class MapManager {
             "></div>
         ` : '';
         
-        return L.divIcon({
+        const icone = L.divIcon({
             className: 'marcador-personalizado',
             html: `
                 <div style="
@@ -1005,7 +1019,7 @@ class MapManager {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: ${Math.floor(tamanho * 0.5)}px;
+                    font-size: ${Math.floor(tamanho * 0.7)}px;
                     color: white;
                     cursor: pointer;
                     position: relative;
@@ -1019,6 +1033,10 @@ class MapManager {
             iconAnchor: [tamanho / 2, tamanho / 2], // Centro do ícone nas coordenadas
             popupAnchor: [0, -(tamanho / 2)] // Popup acima do ícone
         });
+        
+        // Armazenar no cache para uso futuro
+        this.iconCache.set(cacheKey, icone);
+        return icone;
     }
 
     /**
@@ -1417,7 +1435,7 @@ class MapManager {
     }
 
     /**
-     * Mostrar/Ocultar indicador de carregamento do mapa
+     * Mostrar/Ocultar indicador de carregamento do mapa (otimizado)
      * @private
      */
     _mostrarCarregamento(mostrar) {
@@ -1435,31 +1453,16 @@ class MapManager {
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    background: rgba(255,255,255,0.9);
-                    padding: 15px 25px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
                     z-index: 1000;
+                    font-size: 14px;
                     font-family: Arial, sans-serif;
                 ">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="
-                            width: 20px;
-                            height: 20px;
-                            border: 2px solid #3498db;
-                            border-top: 2px solid transparent;
-                            border-radius: 50%;
-                            animation: spin 1s linear infinite;
-                        "></div>
-                        <span>Carregando pontos...</span>
-                    </div>
+                    ⚡ Carregando...
                 </div>
-                <style>
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                </style>
             `;
             mapContainer.appendChild(loadingIndicator);
         } else if (!mostrar && loadingIndicator) {
@@ -1472,8 +1475,8 @@ class MapManager {
      * @private
      */
     _carregarPontosEmLotes(pontos) {
-        const BATCH_SIZE = 50; // Processar 50 pontos por vez
-        const BATCH_DELAY = 10; // 10ms entre cada lote
+        const BATCH_SIZE = 100; // Aumentado de 50 para 100 pontos por vez para carregamento mais rápido
+        const BATCH_DELAY = 5; // Reduzido de 10ms para 5ms entre cada lote
         
         let indice = 0;
         const totalPontos = pontos.length;
@@ -1528,10 +1531,10 @@ class MapManager {
     _finalizarCarregamento(totalPontos) {
         console.log(`✅ ${totalPontos} pontos carregados com sucesso`);
         
-        // Remover indicador de carregamento após um delay
+        // Remover indicador de carregamento rapidamente (otimização)
         setTimeout(() => {
             this._mostrarCarregamento(false);
-        }, 500);
+        }, 100); // Reduzido de 500ms para 100ms
         
         // Dispatch evento de carregamento completo
         window.dispatchEvent(new CustomEvent('mapaPontosCarregados', { 
@@ -1563,7 +1566,7 @@ class MapManager {
      * @private
      */
     _criarIconeOtimizado(categoria, isPendente = false) {
-        const tamanho = window.innerWidth <= 768 ? 28 : 24;
+        const tamanho = window.innerWidth <= 768 ? 38 : 32; // Aumentado de 28/24 para 38/32
         const cor = categoria?.cor || '#999';
         const icon = categoria?.icon || 'fas fa-map-marker-alt';
         const corBorda = isPendente ? '#f59e0b' : 'white';
