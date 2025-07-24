@@ -79,9 +79,9 @@ class MapManager {
             this._configurarControles();
             this._configurarResponsividade();
             
-            console.log('✅ MapManager inicializado com sucesso');
+            console.log('MapManager successfully initialized');
         } catch (error) {
-            console.error('❌ Erro ao inicializar MapManager:', error);
+            console.error('Error initializing MapManager:', error);
             throw error;
         }
     }
@@ -214,11 +214,11 @@ class MapManager {
         const container = document.getElementById(this.containerId);
         if (container) {
             const rect = container.getBoundingClientRect();
-            console.log(`🗺️ Container dimensions: ${rect.width}x${rect.height}`);
+            console.log(`Container dimensions: ${rect.width}x${rect.height}`);
             
             // Se o container não tem altura, aguardar um pouco
             if (rect.height === 0) {
-                console.log('⚠️ Container sem altura, aguardando...');
+                console.log('Container without height, waiting...');
                 setTimeout(() => this._criarMapa(), 100);
                 return;
             }
@@ -241,7 +241,7 @@ class MapManager {
         setTimeout(() => {
             if (this.map) {
                 this.map.invalidateSize(true);
-                console.log('✅ Mapa inicializado e redimensionado');
+                console.log('Map initialized and resized');
             }
         }, 50); // Reduzido de 100ms para 50ms
         
@@ -347,12 +347,12 @@ class MapManager {
                     this._carregarPontos(pontos);
                 }
                 
-                console.log(`📍 Grupos de categorias inicializados: ${this.gruposPorCategoria.size} grupos`);
+                console.log(`Category groups initialized: ${this.gruposPorCategoria.size} groups`);
             } catch (error) {
-                console.error('❌ Erro ao inicializar grupos de categorias:', error);
+                console.error('Error initializing category groups:', error);
             }
         } else {
-            console.warn('⚠️ DatabaseManager não disponível para inicializar categorias');
+            console.warn('DatabaseManager not available to initialize categories');
         }
     }
 
@@ -369,7 +369,7 @@ class MapManager {
      */
     _obterPontosParaCarregar() {
         if (!window.databaseManager) {
-            console.warn('⚠️ DatabaseManager não disponível');
+            console.warn('DatabaseManager not available');
             return [];
         }
 
@@ -386,7 +386,7 @@ class MapManager {
                 return window.databaseManager.getPontos();
             }
         } catch (error) {
-            console.error('❌ Erro ao obter pontos:', error);
+            console.error('Error getting points:', error);
             return [];
         }
     }
@@ -400,7 +400,7 @@ class MapManager {
      */
     _carregarPontos(pontos) {
         try {
-            console.log(`📍 Carregando ${pontos.length} pontos no mapa...`);
+            console.log(`Loading ${pontos.length} points on map...`);
             
             // Limpar marcadores existentes
             this.limparMarcadores();
@@ -798,11 +798,16 @@ class MapManager {
                 return;
             }
             
+            console.log(`🔍 Adicionando marcador para ponto: ${ponto.nome}, categoria original: ${ponto.categoria}`);
+            
             const categoria = window.databaseManager.obterCategoria(ponto.categoria);
+            console.log(`📋 Categoria encontrada:`, categoria);
+            
             if (!categoria) {
                 console.warn(`⚠️ Categoria não encontrada: ${ponto.categoria}`);
                 // Usar categoria padrão se não encontrada
                 ponto.categoria = 'geral';
+                console.log(`🔄 Categoria alterada para: ${ponto.categoria}`);
             }
 
             // Criar ícone personalizado (com cache para performance)

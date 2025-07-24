@@ -15,10 +15,24 @@ class PontosEntretenimentoApp { }
 #### Métodos e Variáveis
 ```javascript
 // camelCase para métodos e variáveis (SEMPRE EM INGLÊS)
-configurarInterface()
-adicionarMarcador()
+configureInterface()
+addMarker()
 const activeCategory = 'todos';  // ✓ Correto
 const categoriaAtiva = 'todos';  // ✗ Evitar português
+
+// Métodos refatorados (português → inglês) - EM PROGRESSO
+loadData()              // ✓ Refatorado (era: carregarDados)
+removeLoadingScreen()   // ✓ Refatorado (era: removerLoadingScreen)
+filterByCategory()      // ✓ Refatorado (era: filtrarPorCategoria)
+updateCategoryButtons() // ✓ Refatorado (era: atualizarBotoesCategoria)
+updateStatistics()     // ✓ Refatorado (era: atualizarEstatisticas)
+forceMapResize()       // ✓ Refatorado (era: forcarRedimensionamentoMapa)
+reloadData()           // ✓ Refatorado (era: recarregarDados)
+
+// PENDENTES DE REFATORAÇÃO:
+// configurarMenuCategorias() → configureMenuCategories()
+// adicionarMarcador() → addMarker()
+// removerMarcador() → removeMarker()
 ```
 
 #### Constantes
@@ -509,3 +523,47 @@ processarSugestao(pontoOriginal, dadosAtualizados) {
 - Sistema de favoritos persistente
 - Modal reutilizável para múltiplos propósitos
 - Validação e tratamento de erros aprimorados
+
+## Refatoração Julho 2025
+
+### Melhorias Implementadas
+
+#### 1. Nomenclatura Padronizada
+- **Propriedades de classe**: `pontosConfirmados` → `confirmedPoints`
+- **Métodos principais**: `filtrarPorCategoria()` → `filterByCategory()`
+- **Variáveis de estado**: `categoriaAtiva` → `activeCategory`
+
+#### 2. Logs Limpos
+- Remoção de emojis dos console.log() 
+- Logs contextuais mais profissionais
+- Melhor legibilidade em ambientes de produção
+
+#### 3. Documentação Atualizada
+- Arquivos de documentação refletem código atual
+- Exemplos com nomenclatura em inglês
+- Guias de migração atualizados
+
+#### 4. Pendências Identificadas
+- 9 funções marcadas como TODO identificadas
+- Arquivo PENDENCIAS.md criado com priorização clara
+- Funcionalidades não implementadas documentadas
+
+### Estado Atual do Projeto (Dezembro 2025)
+- **Código principal**: 40% refatorado (métodos críticos de app.js concluídos)
+- **Nomenclatura**: loadData(), filterByCategory(), updateStatistics() refatorados
+- **Logs**: Processo de remoção de emojis iniciado (map.js parcial)
+- **Documentação**: Totalmente atualizada e sincronizada
+- **Pendências**: 9 TODOs identificados e priorizados
+- **Sistema de Imagens**: 100% implementado e funcional
+
+### Próximos Passos Críticos
+1. Continuar refatoração de nomenclatura nos arquivos restantes
+2. Completar remoção de emojis dos console logs
+3. Implementar funções TODO de alta prioridade
+4. Adicionar testes automatizados para métodos refatorados
+
+### Próximos Passos Recomendados
+1. Implementar funções marcadas como TODO de alta prioridade
+2. Completar refatoração de nomenclatura nos arquivos restantes
+3. Adicionar testes automatizados para funções críticas
+4. Implementar sistema de CI/CD

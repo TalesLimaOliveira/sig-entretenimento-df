@@ -38,25 +38,55 @@ class DatabaseManager {
     constructor() {
         this.confirmedPoints = [];      // ✓ Inglês
         this.pendingPoints = [];        // ✓ Inglês
-        this.hiddenPoints = [];         // ✓ Inglês
-    }
+#### Métodos Refatorados (Português → Inglês)
+```javascript
+// ANTES
+class PontosEntretenimentoApp {
+    filtrarPorCategoria(categoria) { }
+    configurarInterface() { }
+    carregarDados() { }
+    atualizarIconesTema() { }
 }
 
-class ModalManager {
-    constructor() {
-        this.activeModal = null;        // ✓ Inglês
-    }
+class MapManager {
+    adicionarMarcador(ponto) { }
+    removerMarcador(id) { }
+    alternarTemaMapa() { }
+}
+
+// DEPOIS
+class PontosEntretenimentoApp {
+    filterByCategory(categoria) { }      // ✓ Inglês
+    configureInterface() { }            // ✓ Inglês  
+    loadData() { }                      // ✓ Inglês REFATORADO
+    updateStatistics() { }              // ✓ Inglês REFATORADO
+    filterByCategory() { }              // ✓ Inglês REFATORADO
+    removeLoadingScreen() { }           // ✓ Inglês REFATORADO
+    forceMapResize() { }               // ✓ Inglês REFATORADO
+    reloadData() { }                   // ✓ Inglês REFATORADO
+}
+
+class MapManager {
+    addMarker(ponto) { }                // ✓ Inglês
+    removeMarker(id) { }                // ✓ Inglês
+    toggleMapTheme() { }                // ✓ Inglês
+    reloadPoints() { }                  // ✓ Inglês PENDENTE
 }
 ```
 
 ### Logs Simplificados
 
-#### Remoção de Emojis
+#### Remoção de Emojis (EM PROGRESSO)
 ```javascript
 // ANTES
 console.log('🚀 Iniciando aplicação...');
 console.log('✅ Operação concluída');
 console.error('❌ Erro crítico:', error);
+
+// DEPOIS (PARCIALMENTE IMPLEMENTADO)
+console.log('Starting application...');
+console.log('Operation completed');
+console.error('Critical error:', error);
 
 // DEPOIS
 console.log('Iniciando aplicacao...');      // ✓ Limpo

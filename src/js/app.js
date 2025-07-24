@@ -49,8 +49,7 @@ class PontosEntretenimentoApp {
             desktop: 1200
         };
         
-        // Iniciar aplicação
-        this.init();
+        // Note: init() will be called by AppInitializer in index.html
     }
 
     /**
@@ -62,6 +61,12 @@ class PontosEntretenimentoApp {
      * Usado por: constructor
      */
     async init() {
+        // Prevent double initialization
+        if (this.isInitialized) {
+            console.log('Application already initialized, skipping...');
+            return;
+        }
+        
         try {
             console.log('Initializing SIG Entretenimento DF application...');
             
@@ -108,11 +113,11 @@ class PontosEntretenimentoApp {
             console.log('Events configured');
             
             console.log('Loading data...');
-            this.carregarDados();
+            this.loadData();
             console.log('Data loaded');
             
             console.log('Finalizing initialization...');
-            this.removerLoadingScreen();
+            this.removeLoadingScreen();
             this._markAsInitialized();
             console.log('Application initialized successfully');
             
@@ -136,8 +141,8 @@ class PontosEntretenimentoApp {
      * @private
      */
     _showInitializationError(error) {
-        this.mostrarErro('Error during loading. Please reload the page.');
-        this.removerLoadingScreen();
+        // Only log the error, don't show pop-up since AppInitializer handles this
+        this.removeLoadingScreen();
         console.error('Critical error during application initialization:', error);
     }
 
@@ -334,7 +339,7 @@ class PontosEntretenimentoApp {
                     const allBtn = document.querySelector('[data-categoria="todos"]');
                     if (allBtn) {
                         allBtn.classList.add('active');
-                        this.filtrarPorCategoria('todos');
+                        this.filterByCategory('todos');
                     }
                 }
             }
@@ -360,13 +365,8 @@ class PontosEntretenimentoApp {
      */
     showUserMenu(user) {
         if (user.role === 'administrator') {
-            const option = confirm(`Hello ${user.name}!\n\nDo you want to access the administrative panel?\n\nOK = Admin Panel\nCancel = Logout`);
-            if (option) {
-                window.location.href = 'admin.html';
-            } else {
-                if (window.authManager) window.authManager.logout();
-                location.reload();
-            }
+            // Admin permanece na página principal e acessa painel pelo menu
+            console.log(`Administrator ${user.name} logged in - access admin panel via menu`);
         } else {
             const logout = confirm(`Hello ${user.name}!\n\nDo you want to logout?`);
             if (logout) {
@@ -380,15 +380,16 @@ class PontosEntretenimentoApp {
         try {
             console.log('Configuring interface...');
             
-            // Aguardar o DatabaseManager estar totalmente carregado
-            if (window.databaseManager && window.databaseManager.init) {
-                await window.databaseManager.init();
+            // DatabaseManager já foi inicializado pelo AppInitializer
+            // Verificar se está realmente disponível
+            if (!window.databaseManager) {
+                throw new Error('DatabaseManager não disponível após inicialização');
             }
             
             // Configurar menu de categorias após dados estarem carregados
             // Será chamado novamente em carregarDados() para garantir que está atualizado
             this.configurarMenuCategorias();
-            this.atualizarEstatisticas();
+            this.updateStatistics();
             console.log('Interface configurada');
         } catch (error) {
             console.error('Erro ao configurar interface:', error);
@@ -403,13 +404,25 @@ class PontosEntretenimentoApp {
     configureEvents() {
         // Event listener para mudanças de autenticação
         document.addEventListener('authStateChanged', (e) => {
-            const { type, user } = e.detail;
-            if (type === 'login') {
-                this.configureLoggedUser(user);
-                this.recarregarDados();
-            } else if (type === 'logout') {
-                this.configureVisitorUser();
-                this.recarregarDados();
+            try {
+                const { type, user } = e.detail;
+                console.log(`🔔 Evento de autenticação recebido: ${type}`);
+                
+                if (type === 'login') {
+                    this.configureLoggedUser(user);
+                    this.reloadData();
+                } else if (type === 'logout') {
+                    this.configureVisitorUser();
+                    this.reloadData();
+                }
+            } catch (error) {
+                console.error('❌ Erro ao processar evento de autenticação:', error);
+                // Tentar reconfigurar como visitante em caso de erro
+                try {
+                    this.configureVisitorUser();
+                } catch (fallbackError) {
+                    console.error('❌ Erro no fallback de configuração:', fallbackError);
+                }
             }
         });
 
@@ -504,13 +517,13 @@ class PontosEntretenimentoApp {
     /**
      * Recarregar dados após mudança de autenticação
      */
-    recarregarDados() {
+    reloadData() {
         if (window.mapManager) {
             const user = window.authManager && window.authManager.getCurrentUser ? 
                 window.authManager.getCurrentUser() : null;
-            window.mapManager.recarregarPontos(user ? user.role : 'visitor', user ? user.username : null);
+            window.mapManager.reloadPoints(user ? user.role : 'visitor', user ? user.username : null);
         }
-        this.atualizarEstatisticas();
+        this.updateStatistics();
     }
 
     /**
@@ -681,18 +694,18 @@ class PontosEntretenimentoApp {
         }
     }
 
-    carregarDados() {
+    loadData() {
         try {
-            console.log('Carregando dados...');
+            console.log('Loading data...');
             
             // Verificar se os managers estão disponíveis
             if (!window.databaseManager) {
-                throw new Error('DatabaseManager não está disponível');
+                throw new Error('DatabaseManager not available');
             }
             
             if (!window.mapManager) {
                 console.warn('MapManager nao disponivel, pulando renderizacao de pontos');
-                this.atualizarEstatisticas();
+                this.updateStatistics();
                 return;
             }
             
@@ -704,7 +717,7 @@ class PontosEntretenimentoApp {
             
             // Renderizar pontos e atualizar estatísticas
             this.renderizarPontos();
-            this.atualizarEstatisticas();
+            this.updateStatistics();
             
             // Reconfigurar menu de categorias após dados estarem carregados
             console.log('Reconfigurando menu de categorias...');
@@ -713,7 +726,10 @@ class PontosEntretenimentoApp {
             console.log('Dados carregados com sucesso');
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            this.mostrarErro('Erro ao carregar dados do mapa.');
+            // Only show error pop-up if not during initialization
+            if (this.isInitialized) {
+                this.mostrarErro('Erro ao carregar dados do mapa.');
+            }
             throw error;
         }
     }
@@ -730,6 +746,8 @@ class PontosEntretenimentoApp {
             console.warn('Nenhuma categoria encontrada');
             return;
         }
+
+        console.log('📋 Categorias carregadas:', categorias);
 
         // Criar botão "Todos" primeiro
         let buttonsHtml = `
@@ -752,6 +770,7 @@ class PontosEntretenimentoApp {
             .filter(cat => cat.id !== 'favoritos') // Favoritos já foi adicionado manualmente
             .forEach(categoria => {
                 const iconClass = this.getIconClassForCategory(categoria);
+                console.log(`🏷️ Categoria: ${categoria.id}, Ícone: ${iconClass}, Nome: ${categoria.nome}`);
                 buttonsHtml += `
                     <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
                             style="--category-color: ${categoria.cor}">
@@ -771,7 +790,8 @@ class PontosEntretenimentoApp {
                 e.preventDefault();
                 e.stopPropagation();
                 const categoria = button.dataset.categoria;
-                this.filtrarPorCategoria(categoria);
+                console.log(`🖱️ Clique na categoria: ${categoria}`);
+                this.filterByCategory(categoria);
             }
         });
 
@@ -787,7 +807,7 @@ class PontosEntretenimentoApp {
             return categoria.icon;
         }
         
-        // Mapear emojis para classes FontAwesome baseado no ID da categoria
+        // Se tem emoji no campo icone, usar o mapeamento FontAwesome baseado no ID
         const iconMap = {
             'geral': 'fas fa-map-marker-alt',
             'esportes-lazer': 'fas fa-futbol',
@@ -800,21 +820,22 @@ class PontosEntretenimentoApp {
         return iconMap[categoria.id] || 'fas fa-map-marker-alt';
     }
 
-    filtrarPorCategoria(categoria) {
+    filterByCategory(categoria) {
         try {
-            console.log(`🔍 [APP] Iniciando filtro por categoria: ${categoria}`);
+            console.log(`🔍 Filtering by category: ${categoria}`);
             this.activeCategory = categoria;
             
             // Atualizar botões de navegação com debounce para evitar múltiplos cliques
-            this.atualizarBotoesCategoria(categoria);
+            this.updateCategoryButtons(categoria);
+            console.log(`🎨 Botões atualizados para categoria: ${categoria}`);
 
             // Verificar se é filtro de favoritos e usuário está logado
             if (categoria === 'favoritos') {
                 if (!window.authManager || !window.authManager.isAuthenticated()) {
-                    console.log('🔒 [APP] Usuário não logado, abrindo modal de login');
+                    console.log('User not logged in, opening login modal');
                     // Usuário não logado tentando ver favoritos - abrir modal de login
                     window.loginModal.open({
-                        pendingAction: () => this.filtrarPorCategoria('favoritos')
+                        pendingAction: () => this.filterByCategory('favoritos')
                     });
                     return;
                 }
@@ -822,32 +843,33 @@ class PontosEntretenimentoApp {
 
             // Verificar se MapManager está disponível
             if (!window.mapManager) {
-                console.error('❌ [APP] MapManager não disponível');
+                console.error('MapManager not available');
                 return;
             }
 
             if (typeof window.mapManager.filtrarPorCategoria !== 'function') {
-                console.error('❌ [APP] Método filtrarPorCategoria não encontrado no MapManager');
+                console.error('Method filtrarPorCategoria not found in MapManager');
                 return;
             }
 
             // Filtrar marcadores
-            console.log('🗺️ [APP] Chamando MapManager.filtrarPorCategoria');
+            console.log(`🗺️ Calling MapManager.filtrarPorCategoria with: ${categoria}`);
             const user = window.authManager && window.authManager.getCurrentUser ? 
                 window.authManager.getCurrentUser() : null;
+            console.log(`👤 User context:`, user ? user.username : 'anonymous');
             window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
             
-            console.log(`✅ [APP] Filtro aplicado com sucesso: ${categoria}`);
+            console.log(`✅ Filter applied successfully: ${categoria}`);
             
         } catch (error) {
-            console.error('❌ [APP] Erro ao filtrar por categoria:', error);
+            console.error('Error filtering by category:', error);
         }
     }
 
     /**
      * Atualizar estado visual dos botões de categoria
      */
-    atualizarBotoesCategoria(categoriaAtiva) {
+    updateCategoryButtons(categoriaAtiva) {
         const botoes = document.querySelectorAll('.nav-btn[data-categoria]');
         botoes.forEach(btn => {
             const isActive = btn.dataset.categoria === categoriaAtiva;
@@ -881,7 +903,7 @@ class PontosEntretenimentoApp {
             window.mapManager.recarregarPontos(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
-            this.filtrarPorCategoria('todos');
+            this.filterByCategory('todos');
             
             console.log('Renderização delegada para MapManager');
         } catch (error) {
@@ -889,12 +911,12 @@ class PontosEntretenimentoApp {
         }
     }
 
-    atualizarEstatisticas() {
+    updateStatistics() {
         // Estatísticas removidas da interface
         // Método mantido para compatibilidade
     }
 
-    atualizarInterfaceAdmin() {
+    updateAdminInterface() {
         try {
             const elementos = document.querySelectorAll('.admin-only');
             elementos.forEach(el => {
@@ -927,7 +949,7 @@ class PontosEntretenimentoApp {
         }
     }
 
-    removerLoadingScreen() {
+    removeLoadingScreen() {
         try {
             const loading = document.querySelector('.loading-screen');
             if (loading) {
@@ -937,7 +959,7 @@ class PontosEntretenimentoApp {
                         loading.remove();
                     }
                     // Forçar redimensionamento do mapa após a remoção do loading
-                    this.forcarRedimensionamentoMapa();
+                    this.forceMapResize();
                 }, 500);
                 console.log('Loading screen removido');
             } else {
@@ -953,11 +975,11 @@ class PontosEntretenimentoApp {
     /**
      * Força o redimensionamento do mapa para corrigir problemas de renderização inicial
      */
-    forcarRedimensionamentoMapa() {
-        if (window.mapManager && typeof window.mapManager.forcarRedimensionamento === 'function') {
+    forceMapResize() {
+        if (window.mapManager && typeof window.mapManager.forceResize === 'function') {
             // Aguardar um pouco para garantir que as dimensões estão estabilizadas
             setTimeout(() => {
-                window.mapManager.forcarRedimensionamento();
+                window.mapManager.forceResize();
             }, 100);
         } else if (window.mapManager && window.mapManager.map) {
             // Fallback para método direto
@@ -1106,7 +1128,7 @@ class PontosEntretenimentoApp {
         
         const ponto = window.databaseManager.adicionarPonto(dadosPonto, userRole, username);
         window.mapManager.adicionarMarcador(ponto);
-        this.atualizarEstatisticas();
+        this.updateStatistics();
         return true;
     }
 
@@ -1119,7 +1141,7 @@ class PontosEntretenimentoApp {
         
         window.databaseManager.removerPonto(pontoId, userRole);
         window.mapManager.removerMarcador(pontoId);
-        this.atualizarEstatisticas();
+        this.updateStatistics();
         return true;
     }
 }

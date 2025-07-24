@@ -8,7 +8,7 @@
     },
     {
       "id": "esportes-lazer",
-      "nome": "Esportes e Lazer",
+      "nome": "Esportes",
       "icone": "⚽",
       "cor": "#28a745",
       "descricao": "Atividades esportivas e de lazer"
@@ -22,7 +22,7 @@
     },
     {
       "id": "geek-nerd",
-      "nome": "Geek e Nerd",
+      "nome": "Geek",
       "icone": "🎮",
       "cor": "#6f42c1",
       "descricao": "Cultura geek, games e tecnologia"

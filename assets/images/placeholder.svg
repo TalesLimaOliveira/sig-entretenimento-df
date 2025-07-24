@@ -1,0 +1,14 @@
+<!-- Placeholder SVG para teste do sistema de imagens -->
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+  <text x="200" y="130" text-anchor="middle" font-family="Arial" font-size="18" fill="#666">
+    Placeholder Image
+  </text>
+  <text x="200" y="155" text-anchor="middle" font-family="Arial" font-size="14" fill="#999">
+    400 x 300
+  </text>
+  <circle cx="200" cy="200" r="20" fill="#ddd"/>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial" font-size="12" fill="#aaa">
+    Imagem de Teste
+  </text>
+</svg>

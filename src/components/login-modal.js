@@ -327,12 +327,9 @@ class LoginModal {
         // Atualizar interface
         this.updateUIAfterLogin(user);
         
-        // Redirecionar admin se necessário
-        if (user.role === 'administrator' && window.location.pathname.includes('index.html')) {
-            const shouldRedirect = confirm('Deseja acessar o painel administrativo?');
-            if (shouldRedirect) {
-                window.location.href = 'admin.html';
-            }
+        // Admin permanece na página principal - acesso ao painel pelo menu
+        if (user.role === 'administrator') {
+            console.log('Administrator logged in - admin panel available via menu');
         }
     }
 
@@ -365,19 +362,18 @@ class LoginModal {
     }
 
     showUserMenu(user) {
-        // Criar menu dropdown simples
-        const menu = `
-            <div class="user-dropdown" style="position: absolute; top: 100%; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; min-width: 150px; z-index: 1000;">
-                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); font-weight: bold;">${user.nome || user.name}</div>
-                <button onclick="if(window.authManager) window.authManager.logout()" style="width: 100%; padding: 0.5rem; border: none; background: none; color: var(--text-primary); cursor: pointer; text-align: left;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </div>
-        `;
-        // Implementação simples - em produção seria mais sofisticada
-        alert('Menu do usuário - Clique OK para fazer logout');
-        if (window.authManager) {
-            window.authManager.logout();
+        // Implementação simples para teste
+        console.log('🔍 Mostrando menu do usuário para:', user.nome || user.name);
+        
+        const confirmLogout = confirm(`Hello ${user.nome || user.name}!\n\nDo you want to logout?`);
+        if (confirmLogout && window.authManager) {
+            try {
+                window.authManager.logout();
+            } catch (error) {
+                console.error('❌ Erro ao fazer logout:', error);
+                // Fallback: tentar recarregar a página
+                window.location.reload();
+            }
         }
     }
 

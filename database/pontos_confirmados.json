@@ -19,7 +19,12 @@
             "espetaculos"
         ],
         "ativo": true,
-        "dataCriacao": "2025-01-20T10:00:00.000Z"
+        "dataCriacao": "2025-01-20T10:00:00.000Z",
+        "imagem": {
+            "url": "https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=400",
+            "source": "web",
+            "description": "Teatro Nacional de Brasília"
+        }
     },
     {
         "id": 2,
@@ -41,7 +46,12 @@
             "cultura"
         ],
         "ativo": true,
-        "dataCriacao": "2025-01-20T10:00:00.000Z"
+        "dataCriacao": "2025-01-20T10:00:00.000Z",
+        "imagem": {
+            "url": "https://images.unsplash.com/photo-1489599433510-0fcf9d9c4e2d?w=400",
+            "source": "web",
+            "description": "Cinema Brasília"
+        }
     },
     {
         "id": 3,
@@ -63,7 +73,12 @@
             "esportes"
         ],
         "ativo": true,
-        "dataCriacao": "2025-01-20T10:00:00.000Z"
+        "dataCriacao": "2025-01-20T10:00:00.000Z",
+        "imagem": {
+            "url": "/assets/images/estadio-nacional.jpg",
+            "source": "local",
+            "description": "Estádio Nacional de Brasília - Mané Garrincha"
+        }
     },
     {
         "id": 4,

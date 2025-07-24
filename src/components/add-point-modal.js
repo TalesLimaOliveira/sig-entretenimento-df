@@ -117,14 +117,35 @@ class AddPointModal {
                             <!-- Imagem -->
                             <div class="form-section">
                                 <h3><i class="fas fa-image"></i> Imagem do Local</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="point-image-source">Fonte da Imagem</label>
+                                        <select id="point-image-source" class="form-select">
+                                            <option value="">Selecione a fonte</option>
+                                            <option value="web">🌐 URL da Web</option>
+                                            <option value="local">📁 Arquivo Local</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="point-image-url">URL/Caminho da Imagem</label>
+                                        <input type="text" id="point-image-url" class="form-input"
+                                               placeholder="Selecione a fonte primeiro">
+                                        <small class="form-help" id="image-help">Selecione a fonte da imagem</small>
+                                    </div>
+                                </div>
                                 <div class="form-group">
-                                    <label for="point-image">URL da Imagem</label>
-                                    <input type="url" id="point-image" class="form-input"
-                                           placeholder="https://exemplo.com/imagem.jpg">
-                                    <small class="form-help">Cole aqui o link de uma imagem do local</small>
+                                    <label for="point-image-description">Descrição da Imagem</label>
+                                    <input type="text" id="point-image-description" class="form-input"
+                                           placeholder="Breve descrição da imagem (opcional)">
                                 </div>
                                 <div class="image-preview" id="image-preview" style="display: none;">
                                     <img id="preview-img" src="" alt="Preview">
+                                    <div class="image-info">
+                                        <span class="image-source" id="preview-source"></span>
+                                        <button type="button" class="btn btn-sm btn-secondary" id="remove-image">
+                                            <i class="fas fa-times"></i> Remover
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -194,11 +215,32 @@ class AddPointModal {
             }
         });
 
-        // Image preview
-        const imageInput = document.getElementById('point-image');
-        if (imageInput) {
-            imageInput.addEventListener('input', (e) => this.previewImage(e.target.value));
-            console.log('✅ Event listener para preview de imagem configurado');
+        // Image system event listeners
+        const imageSource = document.getElementById('point-image-source');
+        const imageUrl = document.getElementById('point-image-url');
+        const imageHelp = document.getElementById('image-help');
+        const removeImageBtn = document.getElementById('remove-image');
+
+        if (imageSource) {
+            imageSource.addEventListener('change', (e) => this.handleImageSourceChange(e.target.value));
+            console.log('✅ Event listener para fonte de imagem configurado');
+        }
+
+        if (imageUrl) {
+            imageUrl.addEventListener('input', (e) => this.handleImageUrlInput(e.target.value));
+            console.log('✅ Event listener para URL de imagem configurado');
+        }
+
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', () => this.removeImagePreview());
+            console.log('✅ Event listener para remover imagem configurado');
+        }
+
+        // Legacy image preview support
+        const legacyImageInput = document.getElementById('point-image');
+        if (legacyImageInput) {
+            legacyImageInput.addEventListener('input', (e) => this.previewImage(e.target.value));
+            console.log('✅ Event listener para preview de imagem (legado) configurado');
         }
 
         // Change location button
@@ -465,6 +507,124 @@ class AddPointModal {
         }
     }
 
+    /**
+     * Manipula mudança na fonte da imagem
+     */
+    handleImageSourceChange(source) {
+        const imageUrl = document.getElementById('point-image-url');
+        const imageHelp = document.getElementById('image-help');
+        
+        if (!imageUrl || !imageHelp) return;
+
+        switch (source) {
+            case 'web':
+                imageUrl.placeholder = 'https://exemplo.com/imagem.jpg';
+                imageUrl.type = 'url';
+                imageHelp.textContent = 'Cole aqui o link de uma imagem da web (http/https)';
+                imageUrl.disabled = false;
+                break;
+            case 'local':
+                imageUrl.placeholder = '/assets/images/minha-imagem.jpg';
+                imageUrl.type = 'text';
+                imageHelp.textContent = 'Digite o caminho para o arquivo no servidor (ex: /assets/images/...)';
+                imageUrl.disabled = false;
+                break;
+            default:
+                imageUrl.placeholder = 'Selecione a fonte primeiro';
+                imageUrl.type = 'text';
+                imageHelp.textContent = 'Selecione a fonte da imagem';
+                imageUrl.disabled = true;
+                imageUrl.value = '';
+                this.clearImagePreview();
+                break;
+        }
+    }
+
+    /**
+     * Manipula entrada da URL/caminho da imagem
+     */
+    handleImageUrlInput(url) {
+        const source = document.getElementById('point-image-source').value;
+        
+        if (!source || !url.trim()) {
+            this.clearImagePreview();
+            return;
+        }
+
+        // Validar URL baseada na fonte
+        let isValid = false;
+        if (source === 'web') {
+            isValid = this.isValidWebImageUrl(url);
+        } else if (source === 'local') {
+            isValid = this.isValidLocalImagePath(url);
+        }
+
+        if (isValid) {
+            this.previewImageWithSource(url, source);
+        } else {
+            this.clearImagePreview();
+        }
+    }
+
+    /**
+     * Valida URL de imagem da web
+     */
+    isValidWebImageUrl(url) {
+        try {
+            const parsedUrl = new URL(url);
+            return (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') &&
+                   /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Valida caminho de imagem local
+     */
+    isValidLocalImagePath(path) {
+        // Verificar se é um caminho válido e tem extensão de imagem
+        return path.startsWith('/') || path.startsWith('./') || path.startsWith('../') || path.startsWith('assets/') &&
+               /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(path);
+    }
+
+    /**
+     * Preview de imagem com informação da fonte
+     */
+    previewImageWithSource(url, source) {
+        const preview = document.getElementById('image-preview');
+        const img = document.getElementById('preview-img');
+        const sourceSpan = document.getElementById('preview-source');
+
+        if (img && preview && sourceSpan) {
+            img.src = url;
+            img.alt = `Preview da imagem`;
+            
+            const sourceIcon = source === 'web' ? '🌐' : '📁';
+            const sourceText = source === 'web' ? 'Web' : 'Local';
+            sourceSpan.innerHTML = `${sourceIcon} ${sourceText}`;
+            
+            preview.style.display = 'block';
+            
+            // Tratamento de erro de carregamento
+            img.onerror = () => {
+                console.warn(`⚠️ Erro ao carregar imagem: ${url}`);
+                this.clearImagePreview();
+            };
+        }
+    }
+
+    /**
+     * Remove preview da imagem
+     */
+    removeImagePreview() {
+        document.getElementById('point-image-source').value = '';
+        document.getElementById('point-image-url').value = '';
+        document.getElementById('point-image-description').value = '';
+        this.handleImageSourceChange(''); // Reset dos campos
+        this.clearImagePreview();
+    }
+
     async handleSubmit(e) {
         e.preventDefault();
         console.log('🚀 Iniciando submissão do formulário...');
@@ -573,6 +733,33 @@ class AddPointModal {
     collectFormData() {
         const user = window.authManager?.getCurrentUser();
         
+        // Coletar dados da imagem
+        const imageSource = document.getElementById('point-image-source')?.value;
+        const imageUrl = document.getElementById('point-image-url')?.value?.trim();
+        const imageDescription = document.getElementById('point-image-description')?.value?.trim();
+        
+        // Criar objeto de imagem se há dados suficientes
+        let imageData = null;
+        if (imageSource && imageUrl) {
+            imageData = {
+                url: imageUrl,
+                source: imageSource,
+                description: imageDescription || null,
+                addedAt: new Date().toISOString()
+            };
+        }
+        
+        // Suporte legado para campo point-image (se existir)
+        const legacyImage = document.getElementById('point-image')?.value?.trim();
+        if (!imageData && legacyImage) {
+            imageData = {
+                url: legacyImage,
+                source: 'web', // Assumir web para compatibilidade
+                description: null,
+                addedAt: new Date().toISOString()
+            };
+        }
+        
         return {
             nome: document.getElementById('point-name').value.trim(),
             categoria: document.getElementById('point-category').value,
@@ -582,7 +769,7 @@ class AddPointModal {
             website: document.getElementById('point-website').value.trim(),
             instagram: document.getElementById('point-instagram').value.trim(),
             horario: document.getElementById('point-hours').value.trim(),
-            imagem: document.getElementById('point-image').value.trim(),
+            imagem: imageData, // Nova estrutura de imagem
             tags: document.getElementById('point-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
             coordenadas: [this.selectedPosition.lat, this.selectedPosition.lng],
             latitude: this.selectedPosition.lat,

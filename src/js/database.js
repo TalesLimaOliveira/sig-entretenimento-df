@@ -16,18 +16,26 @@ class DatabaseManager {
         this.proximoId = 1;
         this.baseStorageKey = 'pontosEntretenimento';
         this.databasePath = 'database/';
-        this.init();
+        // init() será chamado explicitamente pelo app.js
     }
 
     async init() {
         try {
-            console.log('Inicializando DatabaseManager com nova estrutura...');
+            console.log('🔧 Inicializando DatabaseManager com nova estrutura...');
+            console.log(`🌐 Protocolo atual: ${window.location.protocol}`);
+            
             await this.carregarCategorias();
-            this.carregarTodosDados();
+            console.log('✅ Categorias carregadas');
+            
+            await this.carregarTodosDados();
+            console.log('✅ Dados principais carregados');
+            
             this.migrarDadosAntigos();
-            console.log('DatabaseManager inicializado com sucesso');
+            console.log('✅ Migração de dados concluída');
+            
+            console.log('✅ DatabaseManager inicializado com sucesso');
         } catch (error) {
-            console.error('Erro ao inicializar DatabaseManager:', error);
+            console.error('❌ Erro ao inicializar DatabaseManager:', error);
             this.inicializarDadosDefault();
         }
     }
@@ -35,7 +43,7 @@ class DatabaseManager {
     /**
      * Carrega todos os dados dos arquivos JSON
      */
-    carregarTodosDados() {
+    async carregarTodosDados() {
         try {
             // Carregar dados do localStorage primeiro
             const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
@@ -48,13 +56,48 @@ class DatabaseManager {
             this.hiddenPoints = hiddenPoints ? JSON.parse(hiddenPoints) : [];
             this.usuarios = usuarios ? JSON.parse(usuarios) : {};
 
-            // Se não há pontos confirmados, tentar carregar do db.json de forma assíncrona
+            // Se não há pontos confirmados, tentar carregar dos arquivos JSON
             if (this.confirmedPoints.length === 0) {
-                console.log('Nenhum ponto confirmado encontrado, tentando carregar do db.json...');
-                this.carregarDoPrincipalDbAsync().catch(error => {
-                    console.error('Erro capturado ao carregar db.json:', error);
-                    // Não fazer nada, deixar usar dados padrão
-                });
+                console.log('Nenhum ponto confirmado encontrado, tentando carregar dos arquivos JSON...');
+                
+                try {
+                    // Carregar pontos confirmados
+                    const pontosConfirmados = await this.loadJsonFile('./database/pontos_confirmados.json');
+                    if (pontosConfirmados && Array.isArray(pontosConfirmados)) {
+                        this.confirmedPoints = pontosConfirmados;
+                        this.salvarPontosConfirmados();
+                    }
+
+                    // Carregar pontos pendentes
+                    const pontosPendentes = await this.loadJsonFile('./database/pontos_pendentes.json');
+                    if (pontosPendentes && Array.isArray(pontosPendentes)) {
+                        this.pendingPoints = pontosPendentes;
+                        this.salvarPontosPendentes();
+                    }
+
+                    // Carregar pontos ocultos
+                    const pontosOcultos = await this.loadJsonFile('./database/pontos_ocultos.json');
+                    if (pontosOcultos && Array.isArray(pontosOcultos)) {
+                        this.hiddenPoints = pontosOcultos;
+                        this.salvarPontosOcultos();
+                    }
+
+                    // Carregar usuários
+                    const usuarios = await this.loadJsonFile('./database/usuarios.json');
+                    if (usuarios && Array.isArray(usuarios)) {
+                        this.usuarios = usuarios.reduce((acc, user) => {
+                            acc[user.username] = user;
+                            return acc;
+                        }, {});
+                        this.salvarUsuarios();
+                    }
+
+                    console.log(`✅ Dados carregados: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes`);
+                } catch (error) {
+                    console.error('Erro ao carregar dos arquivos JSON:', error);
+                    // Fallback para dados padrão se os arquivos não puderem ser carregados
+                    this.inicializarPontosDefault();
+                }
             }
 
             // Se ainda não há pontos no localStorage, carregar dados padrão
@@ -74,16 +117,51 @@ class DatabaseManager {
     }
 
     /**
+     * Função auxiliar para carregar arquivos JSON compatível com file:// e http://
+     * @param {string} url - URL do arquivo JSON
+     * @returns {Promise<Object>} - Dados JSON carregados
+     */
+    async loadJsonFile(url) {
+        // Detectar se estamos usando protocolo file://
+        const isFileProtocol = window.location.protocol === 'file:';
+        
+        console.log(`🌐 Protocolo detectado: ${window.location.protocol}, URL: ${url}`);
+        
+        if (isFileProtocol) {
+            // Para protocolo file://, tentar usar dados incorporados ou fallback
+            console.log(`📁 Protocolo file:// detectado, usando fallback para: ${url}`);
+            
+            // Retornar dados padrão baseado na URL
+            if (url.includes('categorias.json')) {
+                return this.getCategoriesDefault();
+            } else if (url.includes('pontos_confirmados.json')) {
+                return this.getConfirmedPointsDefault();
+            } else if (url.includes('pontos_pendentes.json')) {
+                return [];
+            } else if (url.includes('pontos_ocultos.json')) {
+                return [];
+            } else if (url.includes('usuarios.json')) {
+                return this.getUsersDefault();
+            }
+            
+            return {};
+        } else {
+            // Para protocolo HTTP/HTTPS, usar fetch normal
+            console.log(`🌍 Protocolo HTTP detectado, carregando via fetch: ${url}`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        }
+    }
+
+    /**
      * Carrega dados do arquivo db.json principal (versão assíncrona)
      */
     async carregarDoPrincipalDbAsync() {
         try {
-            const response = await fetch('./db.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = await this.loadJsonFile('./db.json');
             
             if (data.pontos && Array.isArray(data.pontos)) {
                 // Converter pontos do db.json para formato esperado
@@ -142,16 +220,13 @@ class DatabaseManager {
 
     async carregarCategorias() {
         try {
-            // Primeiro tentar carregar do arquivo JSON
-            const response = await fetch('./database/categorias.json');
-            if (response.ok) {
-                const categorias = await response.json();
-                this.categorias = categorias;
-                console.log('Categorias carregadas do arquivo JSON:', categorias.length);
-                return;
-            }
+            // Tentar carregar usando a função compatível
+            const categorias = await this.loadJsonFile('./database/categorias.json');
+            this.categorias = categorias;
+            console.log('Categorias carregadas:', categorias.length);
+            return;
         } catch (error) {
-            console.warn('Erro ao carregar categorias do JSON:', error);
+            console.warn('Erro ao carregar categorias:', error);
         }
 
         // Fallback: tentar carregar do localStorage
@@ -273,7 +348,12 @@ class DatabaseManager {
                 nota: 4.6,
                 verificado: true,
                 status: 'confirmado',
-                dataAdicao: new Date().toISOString()
+                dataAdicao: new Date().toISOString(),
+                imagem: {
+                    url: 'https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=400',
+                    source: 'web',
+                    description: 'Teatro Nacional de Brasília'
+                }
             },
             {
                 id: 2,
@@ -288,7 +368,12 @@ class DatabaseManager {
                 nota: 4.4,
                 verificado: true,
                 status: 'confirmado',
-                dataAdicao: new Date().toISOString()
+                dataAdicao: new Date().toISOString(),
+                imagem: {
+                    url: 'https://images.unsplash.com/photo-1489599433510-0fcf9d9c4e2d?w=400',
+                    source: 'web',
+                    description: 'Cinema Brasília'
+                }
             },
             {
                 id: 3,
@@ -303,7 +388,12 @@ class DatabaseManager {
                 nota: 4.5,
                 verificado: true,
                 status: 'confirmado',
-                dataAdicao: new Date().toISOString()
+                dataAdicao: new Date().toISOString(),
+                imagem: {
+                    url: '/assets/images/estadio-nacional.jpg',
+                    source: 'local',
+                    description: 'Estádio Nacional de Brasília - Mané Garrincha'
+                }
             },
             {
                 id: 4,
@@ -532,6 +622,23 @@ class DatabaseManager {
      * Adicionar ponto (comportamento baseado no perfil)
      */
     adicionarPonto(dadosPonto, userRole = 'visitor', username = null) {
+        // Validar e processar imagem se fornecida
+        if (dadosPonto.imagem) {
+            const isValidImage = this.validateImageUrl(dadosPonto.imagem.url, dadosPonto.imagem.source);
+            if (!isValidImage) {
+                console.warn('Invalid image URL provided, removing image data');
+                delete dadosPonto.imagem;
+            } else {
+                // Estruturar dados da imagem corretamente
+                dadosPonto.imagem = {
+                    url: dadosPonto.imagem.url,
+                    source: dadosPonto.imagem.source,
+                    description: dadosPonto.imagem.description || '',
+                    addedAt: new Date().toISOString()
+                };
+            }
+        }
+
         const ponto = {
             id: this.proximoId++,
             ...dadosPonto,
@@ -784,6 +891,117 @@ class DatabaseManager {
         );
     }
 
+    /**
+     * Adicionar ou atualizar imagem de um ponto
+     * @param {number} pontoId - ID do ponto
+     * @param {Object} imageData - Dados da imagem
+     * @param {string} imageData.url - URL ou caminho da imagem
+     * @param {string} imageData.source - 'web' ou 'local'
+     * @param {string} imageData.description - Descrição da imagem
+     * @returns {boolean} - true se atualizado com sucesso
+     */
+    updatePointImage(pontoId, imageData) {
+        try {
+            // Validar dados da imagem
+            if (!imageData.url || !imageData.source) {
+                throw new Error('URL e source são obrigatórios');
+            }
+
+            if (!['web', 'local'].includes(imageData.source)) {
+                throw new Error('Source deve ser "web" ou "local"');
+            }
+
+            // Encontrar o ponto
+            const ponto = this.getPontoById(pontoId);
+            if (!ponto) {
+                throw new Error('Ponto não encontrado');
+            }
+
+            // Estrutura da imagem
+            const imagemStructure = {
+                url: imageData.url,
+                source: imageData.source,
+                description: imageData.description || '',
+                updatedAt: new Date().toISOString()
+            };
+
+            // Atualizar a imagem
+            ponto.imagem = imagemStructure;
+            ponto.dataUltimaEdicao = new Date().toISOString();
+
+            this.salvarTodosDados();
+            console.log(`Image updated for point ${pontoId}: ${imageData.source} - ${imageData.url}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error updating point image:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Remover imagem de um ponto
+     * @param {number} pontoId - ID do ponto
+     * @returns {boolean} - true se removido com sucesso
+     */
+    removePointImage(pontoId) {
+        try {
+            const ponto = this.getPontoById(pontoId);
+            if (!ponto) {
+                throw new Error('Ponto não encontrado');
+            }
+
+            delete ponto.imagem;
+            ponto.dataUltimaEdicao = new Date().toISOString();
+
+            this.salvarTodosDados();
+            console.log(`Image removed from point ${pontoId}`);
+            return true;
+
+        } catch (error) {
+            console.error('Error removing point image:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Obter informações de imagem de um ponto
+     * @param {number} pontoId - ID do ponto
+     * @returns {Object|null} - Dados da imagem ou null se não houver
+     */
+    getPointImage(pontoId) {
+        const ponto = this.getPontoById(pontoId);
+        return ponto?.imagem || null;
+    }
+
+    /**
+     * Validar URL de imagem
+     * @param {string} url - URL para validar
+     * @param {string} source - Tipo da fonte ('web' ou 'local')
+     * @returns {boolean} - true se válida
+     */
+    validateImageUrl(url, source) {
+        if (!url || typeof url !== 'string') {
+            return false;
+        }
+
+        if (source === 'web') {
+            // Validar URL web
+            try {
+                const urlObj = new URL(url);
+                return ['http:', 'https:'].includes(urlObj.protocol);
+            } catch {
+                return false;
+            }
+        } else if (source === 'local') {
+            // Validar caminho local (relativo ou absoluto)
+            return url.startsWith('/') || url.startsWith('./') || url.startsWith('../') || 
+                   url.match(/^[a-zA-Z]:/) || url.startsWith('assets/');
+        }
+
+        return false;
+    }
+
     filtrarPorCategoria(categoria, username = null) {
         if (categoria === 'todos') {
             return this.confirmedPoints;
@@ -988,6 +1206,142 @@ class DatabaseManager {
      */
     degreesToRadians(degrees) {
         return degrees * (Math.PI / 180);
+    }
+
+    /**
+     * Dados padrão de categorias para fallback quando file:// não pode carregar JSON
+     */
+    getCategoriesDefault() {
+        return [
+            {
+                "id": "geral",
+                "nome": "Geral",
+                "icone": "📍",
+                "cor": "#6c757d",
+                "descricao": "Pontos de interesse geral e diversos"
+            },
+            {
+                "id": "esportes-lazer",
+                "nome": "Esportes e Lazer",
+                "icone": "⚽",
+                "cor": "#28a745",
+                "descricao": "Atividades esportivas e de lazer"
+            },
+            {
+                "id": "gastronomia",
+                "nome": "Gastronomia",
+                "icone": "🍽️",
+                "cor": "#dc3545",
+                "descricao": "Restaurantes, bares e experiências culinárias"
+            },
+            {
+                "id": "geek-nerd",
+                "nome": "Geek e Nerd",
+                "icone": "🎮",
+                "cor": "#6f42c1",
+                "descricao": "Cultura geek, games e tecnologia"
+            },
+            {
+                "id": "alternativo",
+                "nome": "Alternativo",
+                "icone": "🎨",
+                "cor": "#fd7e14",
+                "descricao": "Arte, cultura alternativa e eventos especiais"
+            },
+            {
+                "id": "casas-noturnas",
+                "nome": "Casas Noturnas",
+                "icone": "🌙",
+                "cor": "#6610f2",
+                "descricao": "Vida noturna, bares e casas de show"
+            }
+        ];
+    }
+
+    /**
+     * Dados padrão de pontos confirmados para fallback
+     */
+    getConfirmedPointsDefault() {
+        return [
+            {
+                "id": 1,
+                "nome": "Teatro Nacional Claudio Santoro",
+                "categoria": "geral",
+                "coordenadas": [-15.796, -47.878],
+                "descricao": "Principal teatro de Brasília, com programação diversificada",
+                "endereco": "Via N2 - Asa Norte",
+                "telefone": "(61) 3325-6268",
+                "horario": "Conforme programação",
+                "preco": "R$ 20-80",
+                "avaliacao": 4.6,
+                "tags": ["teatro", "cultura", "espetaculos"],
+                "ativo": true,
+                "dataCriacao": "2025-01-20T10:00:00.000Z",
+                "imagem": {
+                    "url": "https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=400",
+                    "source": "web",
+                    "description": "Teatro Nacional de Brasília"
+                }
+            },
+            {
+                "id": 2,
+                "nome": "Museu Nacional da República",
+                "categoria": "geral",
+                "coordenadas": [-15.798, -47.875],
+                "descricao": "Espaço cultural com exposições de arte e história",
+                "endereco": "Via N1 - Asa Norte",
+                "telefone": "(61) 3325-5220",
+                "horario": "Ter-Dom: 9h-18h",
+                "preco": "R$ 5-15",
+                "avaliacao": 4.3,
+                "tags": ["museu", "arte", "cultura"],
+                "ativo": true,
+                "dataCriacao": "2025-01-20T10:15:00.000Z",
+                "imagem": {
+                    "url": "https://images.unsplash.com/photo-1554072675-66db59dba46f?w=400",
+                    "source": "web",
+                    "description": "Museu Nacional da República"
+                }
+            },
+            {
+                "id": 3,
+                "nome": "Parque da Cidade Sarah Kubitschek",
+                "categoria": "esportes-lazer",
+                "coordenadas": [-15.798, -47.896],
+                "descricao": "Maior parque urbano da América Latina, ideal para atividades físicas",
+                "endereco": "Asa Sul",
+                "telefone": "(61) 3224-5717",
+                "horario": "24h",
+                "preco": "Gratuito",
+                "avaliacao": 4.8,
+                "tags": ["parque", "exercicios", "natureza"],
+                "ativo": true,
+                "dataCriacao": "2025-01-20T10:30:00.000Z",
+                "imagem": {
+                    "url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
+                    "source": "web",
+                    "description": "Parque da Cidade"
+                }
+            }
+        ];
+    }
+
+    /**
+     * Dados padrão de usuários para fallback
+     */
+    getUsersDefault() {
+        return [
+            {
+                "id": 1,
+                "username": "admin",
+                "password": "admin123",
+                "role": "administrator",
+                "email": "admin@sigdf.gov.br",
+                "nome": "Administrador do Sistema",
+                "dataCriacao": "2025-01-20T08:00:00.000Z",
+                "ativo": true
+            }
+        ];
     }
 }
 

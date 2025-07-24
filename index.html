@@ -227,11 +227,45 @@
                     }
                     
                     if (window[manager.name]) {
-                        console.log(`${manager.name} carregado`);
+                        console.log(`✅ ${manager.name} carregado`);
+                        
+                        // Inicializar o databaseManager se necessário
+                        if (manager.name === 'databaseManager' && window.databaseManager.init) {
+                            console.log('🔄 Inicializando databaseManager...');
+                            try {
+                                await window.databaseManager.init();
+                                console.log('✅ DatabaseManager inicializado com sucesso');
+                            } catch (error) {
+                                console.error('❌ Erro ao inicializar DatabaseManager:', error);
+                                
+                                // Para protocolo file://, tentar inicialização com dados padrão
+                                if (window.location.protocol === 'file:') {
+                                    console.log('🔄 Tentando inicialização com dados padrão para file://...');
+                                    try {
+                                        // Garantir que categorias padrão estejam disponíveis
+                                        window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
+                                        window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
+                                        window.databaseManager.usuarios = window.databaseManager.getUsersDefault().reduce((acc, user) => {
+                                            acc[user.username] = user;
+                                            return acc;
+                                        }, {});
+                                        console.log('✅ Dados padrão carregados para file://');
+                                    } catch (fallbackError) {
+                                        console.error('❌ Falha no fallback:', fallbackError);
+                                        if (manager.critical) {
+                                            throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
+                                        }
+                                    }
+                                } else if (manager.critical) {
+                                    throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
+                                }
+                            }
+                        }
+                        
                         this.managers[manager.name] = window[manager.name];
                     } else {
                         const error = `${manager.name} não foi carregado`;
-                        console.error(error);
+                        console.error(`❌ ${error}`);
                         
                         if (manager.critical) {
                             throw new Error(`Manager crítico falhou: ${error}`);

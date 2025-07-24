@@ -301,15 +301,28 @@ canView(resource) → Boolean
 - Eventos para sincronização de estado
 - Immutable data patterns onde possível
 
-## Refatorações Aplicadas (Julho 2025)
+## Refatorações Aplicadas (Dezembro 2025)
 
-### Nomenclatura Padronizada
+### Nomenclatura Padronizada (EM PROGRESSO)
 **Propriedades de Classes (Português → Inglês):**
-- `categoriaAtiva` → `activeCategory`
-- `modalAtivo` → `activeModal`
-- `pontosConfirmados` → `confirmedPoints`
-- `pontosPendentes` → `pendingPoints`
-- `pontosOcultos` → `hiddenPoints`
+- `categoriaAtiva` → `activeCategory` ✓
+- `modalAtivo` → `activeModal` ✓  
+- `pontosConfirmados` → `confirmedPoints` ✓
+- `pontosPendentes` → `pendingPoints` ✓
+- `pontosOcultos` → `hiddenPoints` ✓
+
+**Métodos Principais Refatorados:**
+- `filtrarPorCategoria()` → `filterByCategory()` ✓ CONCLUÍDO
+- `carregarDados()` → `loadData()` ✓ CONCLUÍDO
+- `atualizarEstatisticas()` → `updateStatistics()` ✓ CONCLUÍDO
+- `removerLoadingScreen()` → `removeLoadingScreen()` ✓ CONCLUÍDO
+- `forcarRedimensionamentoMapa()` → `forceMapResize()` ✓ CONCLUÍDO
+- `recarregarDados()` → `reloadData()` ✓ CONCLUÍDO
+
+**Métodos Pendentes de Refatoração:**
+- `adicionarMarcador()` → `addMarker()` (MapManager)
+- `removerMarcador()` → `removeMarker()` (MapManager)
+- `configurarInterface()` → `configureInterface()` (App)
 
 ### Logs Simplificados
 **Remoção de Emojis dos Logs:**

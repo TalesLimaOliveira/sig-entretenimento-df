@@ -206,15 +206,32 @@ class InfoPanelManager {
         // Definir título da imagem
         this.panelTitle.textContent = ponto.nome || 'Local selecionado';
 
-        // Verificar se há imagem disponível
-        if (ponto.imagem && ponto.imagem !== 'https://via.placeholder.com/300x200') {
-            this.panelImage.src = ponto.imagem;
-            this.panelImage.alt = `Imagem de ${ponto.nome}`;
+        // Verificar se há imagem disponível (nova estrutura ou legada)
+        let imageUrl = null;
+        let imageDescription = '';
+        
+        if (ponto.imagem) {
+            if (typeof ponto.imagem === 'object' && ponto.imagem.url) {
+                // Nova estrutura com objeto de imagem
+                imageUrl = ponto.imagem.url;
+                imageDescription = ponto.imagem.description || `Imagem de ${ponto.nome}`;
+            } else if (typeof ponto.imagem === 'string' && ponto.imagem !== 'https://via.placeholder.com/300x200') {
+                // Estrutura legada com string
+                imageUrl = ponto.imagem;
+                imageDescription = `Imagem de ${ponto.nome}`;
+            }
+        }
+
+        if (imageUrl) {
+            this.panelImage.src = imageUrl;
+            this.panelImage.alt = imageDescription;
+            this.panelImage.title = imageDescription;
             this.panelImage.style.display = 'block';
             this.imagePlaceholder.style.display = 'none';
             
             // Tratamento de erro de carregamento da imagem
             this.panelImage.onerror = () => {
+                console.warn(`⚠️ Erro ao carregar imagem: ${imageUrl}`);
                 this.panelImage.style.display = 'none';
                 this.imagePlaceholder.style.display = 'flex';
             };

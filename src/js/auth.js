@@ -171,27 +171,45 @@ class AuthManager {
      * Realizar logout
      */
     logout() {
-        const user = this.currentUser;
-        
-        console.log('🔓 Efetuando logout...');
-        
-        // Limpar dados da sessão
-        localStorage.removeItem('pontosDF_session');
-        this.currentUser = null;
+        try {
+            const user = this.currentUser;
+            
+            console.log('🔓 Efetuando logout...');
+            
+            // Limpar dados da sessão
+            localStorage.removeItem('pontosDF_session');
+            this.currentUser = null;
 
-        // Disparar evento de logout
-        this.dispatchAuthEvent('logout', user);
+            // Disparar evento de logout
+            this.dispatchAuthEvent('logout', user);
 
-        console.log('Logout completed successfully');
+            console.log('✅ Logout completed successfully');
 
-        // Redirecionar para página principal se estiver no admin
-        if (this.isAdminPage()) {
-            window.location.href = 'index.html';
-        } else {
-            // Se já estiver na página principal, apenas recarregar
+            // Redirecionar para página principal se estiver no admin
+            if (this.isAdminPage()) {
+                window.location.href = 'index.html';
+            } else {
+                // Se já estiver na página principal, apenas recarregar após um delay
+                setTimeout(() => {
+                    try {
+                        window.location.reload();
+                    } catch (reloadError) {
+                        console.error('❌ Erro ao recarregar página:', reloadError);
+                        // Fallback: recarregar forçado
+                        window.location.href = window.location.href;
+                    }
+                }, 500);
+            }
+        } catch (error) {
+            console.error('❌ Erro durante logout:', error);
+            // Ainda assim tentar limpar a sessão
+            localStorage.removeItem('pontosDF_session');
+            this.currentUser = null;
+            
+            // Tentar recarregar mesmo com erro
             setTimeout(() => {
                 window.location.reload();
-            }, 500);
+            }, 100);
         }
     }
 
@@ -460,10 +478,16 @@ class AuthManager {
      * @param {Object} user - Dados do usuário
      */
     dispatchAuthEvent(type, user) {
-        const event = new CustomEvent('authStateChanged', {
-            detail: { type, user }
-        });
-        document.dispatchEvent(event);
+        try {
+            const event = new CustomEvent('authStateChanged', {
+                detail: { type, user }
+            });
+            document.dispatchEvent(event);
+            console.log(`✅ Evento de autenticação disparado: ${type}`);
+        } catch (error) {
+            console.error('❌ Erro ao disparar evento de autenticação:', error);
+            // Continuar mesmo com erro no evento
+        }
     }
 
     /**

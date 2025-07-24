@@ -11,7 +11,9 @@
 ### Tipos de Erro
 - **Críticos**: Falha na inicialização → mostrar erro e parar
 - **Não-críticos**: Funcionalidade específica → log e continuar
-- **Rede**: Fallback para dados locaisvolvido seguindo os princípios de **Clean Architecture**, separando responsabilidades em camadas bem definidas e mantendo baixo acoplamento entre componentes.
+- **Rede**: Fallback para dados locais
+
+O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, separando responsabilidades em camadas bem definidas e mantendo baixo acoplamento entre componentes.
 
 ## Estrutura de Módulos
 
@@ -19,10 +21,15 @@
 - **Arquivo Principal**: `src/js/app.js`
 - **Responsabilidade**: Coordenação geral da aplicação, gerenciamento do ciclo de vida
 - **Classe Principal**: `PontosEntretenimentoApp`
-  - **Propriedades principais**:
+  - **Propriedades principais** (nomenclatura em inglês):
     - `isAdmin`: Estado de administrador do usuário atual
-    - `activeCategory`: Categoria atualmente filtrada (inglês)
+    - `activeCategory`: Categoria atualmente filtrada
     - `isInitialized`: Status de inicialização da aplicação
+  - **Métodos refatorados**:
+    - `loadData()`: Carregamento inicial de dados
+    - `filterByCategory()`: Filtro por categoria
+    - `updateStatistics()`: Atualização de estatísticas
+    - `removeLoadingScreen()`: Remoção da tela de carregamento
 
 ### 2. Camada de Negócio (Domain Layer)
 - **Gerenciador de Dados**: `src/js/database.js` (`DatabaseManager`)

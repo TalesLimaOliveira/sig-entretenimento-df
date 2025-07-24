@@ -1,117 +1,95 @@
-# PENDÊNCIAS DO PROJETO
+# PENDÊNCIAS - Sistema de Entretenimento DF
 
-Este arquivo lista todas as funções e implementações que ainda precisam ser concluídas ou estão marcadas como TODO no código.
+Este arquivo lista as funções identificadas como TODO/pendentes no projeto.
 
-## ✅ IMPLEMENTAÇÕES RECENTES CONCLUÍDAS
+## ✅ Correções Realizadas (Sessão Atual)
 
-### UI/UX Melhorias - Data: 2024
-- **Sistema de Pop-ups de Erro Interativo**: Implementado error-handler com modal responsivo, categorização de erros, sugestões contextuais e detalhes técnicos expansíveis
-- **Correção de Navegação de Categorias**: Corrigido eventos de clique para filtros de categoria, botão "Favoritos" já posicionado corretamente após "Todos"
-- **Layout Responsivo de Botões**: Removido menu hambúrguer, botões de login e tema sempre visíveis em mobile com posicionamento adequado no desktop
-- **Remoção de Emojis**: Limpos todos os logs e estilos conforme diretrizes do projeto
-- **Padronização de Nomenclatura**: Funções renomeadas de português para inglês seguindo padrões do projeto
+### Nomenclatura de Métodos
+- **Corrigido**: `this.filtrarPorCategoria()` → `this.filterByCategory()`
+- **Corrigido**: `this.atualizarEstatisticas()` → `this.updateStatistics()`
+- **Arquivos afetados**: `src/js/app.js` (múltiplas linhas)
+- **Descrição**: Padronização da nomenclatura para inglês conforme refatoração
 
-## Pendências por Arquivo
+## Pendências Identificadas (por prioridade)
 
-### src/js/app.js
+### 🔴 Alta Prioridade
 
-**1. configurarEstatisticas()**
-- **Linha:** 393-395
-- **Descrição:** Método vazio que deveria implementar configuração de estatísticas
-- **Status:** !TODO: Implementar lógica de configuração das estatísticas da aplicação
+1. **Funcionalidade de cadastro de usuários**
+   - **Arquivo**: `src/components/login-modal.js:455`
+   - **Função**: `showRegisterForm()`
+   - **Descrição**: Implementar sistema completo de cadastro de novos usuários
 
-**2. handleFavoriteAction(e)**
-- **Linha:** 547-550 
-- **Descrição:** Lógica de favoritar pontos não implementada
-- **Status:** !TODO: Implementar sistema de favoritos para usuários logados
+2. **Lógica de rejeição de pontos com feedback**
+   - **Arquivo**: `src/js/admin.js:1049`
+   - **Função**: `rejeitarPonto(pontoId)`
+   - **Descrição**: Implementar lógica completa de rejeição de pontos com feedback ao usuário
 
-**3. handleSuggestAction(e)**
-- **Linha:** 567-570
-- **Descrição:** Lógica de sugerir mudanças nos pontos não implementada  
-- **Status:** !TODO: Implementar sistema de sugestões de mudanças
+### 🟡 Média Prioridade
 
-**4. getCurrentPontoId()**
-- **Linha:** 628-631
-- **Descrição:** Método para obter ID do ponto atualmente selecionado
-- **Status:** !TODO: Implementar lógica para obter o ID do ponto atualmente selecionado
+3. **Configuração de estatísticas da aplicação**
+   - **Arquivo**: `src/js/app.js:400`
+   - **Função**: `configureStatistics()`
+   - **Descrição**: Implementar lógica de configuração de estatísticas da aplicação
 
-**5. mostrarErro(mensagem)**
-- **Linha:** 793-796
-- **Descrição:** Sistema de notificação de erros não implementado
-- **Status:** ✅ CONCLUÍDO: Implementado sistema de pop-ups de erro interativo com error-handler
+4. **Formulário de adição de pontos para usuários**
+   - **Arquivo**: `src/components/user-menu.js:165`
+   - **Função**: `openAddPointForm()`
+   - **Descrição**: Implementar abertura do formulário de adição de pontos para usuários comuns
 
-### src/js/admin.js
+5. **Tooltips informativos na interface admin**
+   - **Arquivo**: `src/js/admin.js:705`
+   - **Função**: `setupTooltips()`
+   - **Descrição**: Implementar tooltips informativos na interface administrativa
 
-**6. implementarTooltips()**
-- **Linha:** 705
-- **Descrição:** Sistema de tooltips para interface administrativa
-- **Status:** !TODO: Implementar tooltips informativos na interface de administração
+### 🟢 Baixa Prioridade
 
-**7. rejeitarPonto(pontoId)**
-- **Linha:** 1049
-- **Descrição:** Lógica de rejeição de pontos pendentes
-- **Status:** !TODO: Implementar lógica de rejeição de pontos com feedback ao usuário
+6. **Controles específicos do mapa**
+   - **Arquivo**: `src/js/map.js:592`
+   - **Função**: `enableMapControls()`
+   - **Descrição**: Implementar controles específicos do mapa se necessário
 
-### src/js/map.js
+7. **Remoção de controles específicos do mapa**
+   - **Arquivo**: `src/js/map.js:620`
+   - **Função**: `disableMapControls()`
+   - **Descrição**: Implementar remoção de controles específicos se adicionados
 
-**8. configurarControlsEspecificos()**
-- **Linha:** 585-587
-- **Descrição:** Configuração de controles específicos do mapa
-- **Status:** !TODO: Implementar controles específicos do mapa se necessário
+### 🔵 Funcionalidades Futuras
 
-**9. removerControlsEspecificos()**
-- **Linha:** 613-615
-- **Descrição:** Remoção de controles específicos do mapa
-- **Status:** !TODO: Implementar remoção de controles específicos se adicionados
+8. **Gerenciamento de conta de usuário**
+   - **Arquivo**: `src/components/dynamic-user-button.js:424`
+   - **Função**: `openAccountManagement()`
+   - **Descrição**: Implementar funcionalidade completa de gerenciamento de conta
 
-### src/components/user-menu.js
+9. **Sistema de rotas**
+   - **Arquivo**: `src/js/info-panel.js:328`
+   - **Função**: Sistema de direções/rotas
+   - **Descrição**: Implementar funcionalidade de rotas para pontos selecionados
 
-**10. abrirFormularioAdicionarPonto()**
-- **Linha:** 165
-- **Descrição:** Abertura do formulário para adicionar novos pontos
-- **Status:** !TODO: Implementar abertura do formulário de adicionar ponto para usuários
+## Funcionalidades Ainda Não Implementadas (com alertas temporários)
 
-## Refatoração de Nomenclatura
+### AdminManager
+- `showNewCategoryModal()` - Modal de nova categoria
+- `showNewUserModal()` - Modal de novo usuário
+- `exportReport()` - Exportação de relatórios
+- `generateReport()` - Geração de relatórios
+- `showHelp()` - Sistema de ajuda
+- `showLogs()` - Visualização de logs
 
-### Métodos e Variáveis em Português (Para Refatorar)
+## Status das Implementações
 
-**src/js/app.js:**
-- `filtrarPorCategoria()` → `filterByCategory()`
-- `configurarInterface()` → `configureInterface()`
-- `configurarEventos()` → `configureEvents()`
-- `atualizarIconesTema()` → `updateThemeIcons()`
-- `carregarDados()` → `loadData()`
-- `recarregarDados()` → `reloadData()`
-- `mostrarErro()` → `showError()`
-- `configurarMenuCategorias()` → `configureMenuCategories()`
+### ✅ Concluído
+- Sistema de imagens completo
+- Sistema de favoritos
+- Sistema de autenticação básico
+- Interface responsiva
+- Documentação atualizada
 
-**src/js/database.js:**
-- `carregarTodosDados()` → `loadAllData()`
-- `obterTodos()` → `getAll()`
-- `pontosConfirmados` → `confirmedPoints`
-- `pontosPendentes` → `pendingPoints`
-- `pontosOcultos` → `hiddenPoints`
+### 🔄 Em Progresso
+- Refatoração de nomenclatura
+- Remoção de emojis dos logs
+- Padronização do código
 
-**src/js/map.js:**
-- `alternarTemaMapa()` → `toggleMapTheme()`
-- `forcarRedimensionamento()` → `forceResize()`
-- `adicionarMarcador()` → `addMarker()`
-- `removerMarcador()` → `removeMarker()`
-
-## Prioridade de Implementação
-
-**Alta Prioridade:**
-1. Sistema de favoritos (handleFavoriteAction)
-2. Sistema de sugestões (handleSuggestAction)
-3. Notificações de erro (mostrarErro)
-4. Obter ponto atual (getCurrentPontoId)
-
-**Média Prioridade:**
-5. Configuração de estatísticas (configurarEstatisticas)
-6. Rejeição de pontos (rejeitarPonto)
-7. Formulário adicionar ponto (abrirFormularioAdicionarPonto)
-
-**Baixa Prioridade:**
-8. Tooltips administrativos (implementarTooltips)
-9. Aumentar o tamanho dos pontos no mapa
-10. Alinhar botao "ENTRAR" a Direita da pagina, Nao ficando "colado" com o nav-buttons
+### ⏳ Planejado
+- Implementação das funções TODO listadas acima
+- Testes automatizados
+- Sistema de CI/CD

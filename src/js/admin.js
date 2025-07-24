@@ -747,42 +747,48 @@ class AdminManager {
      * Mostrar modal de nova categoria
      */
     mostrarModalNovaCategoria() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement new category modal functionality
+        this.showNotification('Funcionalidade de nova categoria em desenvolvimento', 'info');
     }
 
     /**
      * Mostrar modal de novo usuário
      */
     mostrarModalNovoUsuario() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement new user modal functionality
+        this.showNotification('Funcionalidade de novo usuário em desenvolvimento', 'info');
     }
 
     /**
      * Exportar relatório
      */
     exportarRelatorio() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement report export functionality
+        this.showNotification('Funcionalidade de exportação de relatório em desenvolvimento', 'info');
     }
 
     /**
      * Gerar relatório
      */
     gerarRelatorio() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement report generation functionality
+        this.showNotification('Funcionalidade de geração de relatório em desenvolvimento', 'info');
     }
 
     /**
      * Mostrar ajuda
      */
     mostrarAjuda() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement help system functionality
+        this.showNotification('Sistema de ajuda em desenvolvimento', 'info');
     }
 
     /**
      * Mostrar logs
      */
     mostrarLogs() {
-        alert('Funcionalidade em desenvolvimento');
+        // !TODO: Implement logs visualization functionality
+        this.showNotification('Visualização de logs em desenvolvimento', 'info');
     }
 
     /**

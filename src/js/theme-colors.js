@@ -203,7 +203,7 @@ class ColorThemeManager {
      */
     init() {
         this.applyTheme(this.currentTheme);
-        console.log(`🎨 Sistema de temas inicializado: ${this.currentTheme.name}`);
+        console.log(`Theme system initialized: ${this.currentTheme.name}`);
     }
 
     /**
@@ -212,7 +212,7 @@ class ColorThemeManager {
      */
     applyTheme(theme) {
         if (!theme || !theme.id) {
-            console.error('❌ Tema inválido');
+            console.error('Invalid theme');
             return;
         }
 
@@ -220,7 +220,7 @@ class ColorThemeManager {
         this.updateCSSVariables();
         this.notifyThemeChange();
         
-        console.log(`✅ Tema aplicado: ${theme.name}`);
+        console.log(`Theme applied: ${theme.name}`);
     }
 
     /**
