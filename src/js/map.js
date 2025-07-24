@@ -344,7 +344,7 @@ class MapManager {
                 // Carregar pontos se disponíveis
                 const pontos = pontosCustomizados || this._obterPontosParaCarregar();
                 if (pontos && pontos.length > 0) {
-                    this._carregarPontos(pontos);
+                    this._loadPoints(pontos);
                 }
                 
                 console.log(`Category groups initialized: ${this.gruposPorCategoria.size} groups`);
@@ -398,12 +398,12 @@ class MapManager {
      * Usado por: _inicializarGruposCategorias(), recarregarPontos()
      * @private
      */
-    _carregarPontos(pontos) {
+    _loadPoints(pontos) {
         try {
             console.log(`Loading ${pontos.length} points on map...`);
             
             // Limpar marcadores existentes
-            this.limparMarcadores();
+            this.clearMarkers();
             
             // Inicializar grupos primeiro se necessário
             if (this.gruposPorCategoria.size === 0) {
@@ -413,9 +413,9 @@ class MapManager {
             // Adicionar cada ponto
             pontos.forEach((ponto, index) => {
                 try {
-                    this.adicionarMarcador(ponto);
+                    this.addMarker(ponto);
                 } catch (error) {
-                    console.error(`❌ Erro ao adicionar ponto ${ponto.id || index}:`, error);
+                    console.error(`Erro ao adicionar ponto ${ponto.id || index}:`, error);
                 }
             });
 
@@ -512,7 +512,7 @@ class MapManager {
     _configurarEventosDatabase() {
         // Ponto adicionado
         document.addEventListener('database_pontoAdicionado', (e) => {
-            this.adicionarMarcador(e.detail);
+            this.addMarker(e.detail);
         });
 
         // Ponto atualizado
@@ -522,7 +522,7 @@ class MapManager {
 
         // Ponto removido
         document.addEventListener('database_pontoRemovido', (e) => {
-            this.removerMarcador(e.detail.id);
+            this.removeMarker(e.detail.id);
         });
     }
 
@@ -537,7 +537,7 @@ class MapManager {
             this._atualizarControlesAdmin(isAdmin);
             
             // Recarregar pontos baseado no novo contexto de usuário
-            this.recarregarPontos();
+            this.reloadPoints();
         });
     }
 
@@ -740,7 +740,7 @@ class MapManager {
     /**
      * Carregar todos os pontos no mapa
      */
-    carregarPontos() {
+    loadPoints() {
         if (!window.databaseManager) {
             console.warn('DatabaseManager não disponível');
             return;
@@ -763,15 +763,15 @@ class MapManager {
         this.marcadores.clear();
 
         // Carregar em lotes para melhor performance
-        this._carregarPontosEmLotes(pontos);
+        this._loadPointsInBatches(pontos);
     }
 
     /**
      * Limpar todos os marcadores do mapa
      */
-    limparMarcadores() {
+    clearMarkers() {
         try {
-            console.log('🧹 Limpando marcadores existentes...');
+            console.log('Limpando marcadores existentes...');
             
             // Remover todos os marcadores dos grupos
             this.gruposPorCategoria.forEach((grupo, categoria) => {
@@ -781,7 +781,7 @@ class MapManager {
             // Limpar a lista de marcadores
             this.marcadores.clear();
             
-            console.log('✅ Marcadores limpos');
+            console.log('Marcadores limpos');
         } catch (error) {
             console.error('❌ Erro ao limpar marcadores:', error);
         }
@@ -791,7 +791,7 @@ class MapManager {
      * Adicionar marcador ao mapa
      * @param {Object} ponto - Dados do ponto
      */
-    adicionarMarcador(ponto) {
+    addMarker(ponto) {
         try {
             if (!window.databaseManager) {
                 console.warn('DatabaseManager não disponível');
@@ -1048,9 +1048,9 @@ class MapManager {
      * Filtrar pontos por categoria
      * @param {string} categoria - Categoria a filtrar
      */
-    filtrarPorCategoria(categoria, username = null) {
-        console.log(`🔍 Iniciando filtro por categoria: ${categoria}`);
-        console.log(`📋 Grupos disponíveis:`, Array.from(this.gruposPorCategoria.keys()));
+    filterByCategory(categoria, username = null) {
+        console.log(`Iniciando filtro por categoria: ${categoria}`);
+        console.log(`Grupos disponíveis:`, Array.from(this.gruposPorCategoria.keys()));
         
         // Garantir que os grupos existam
         if (!this.gruposPorCategoria.size) {
@@ -1162,9 +1162,9 @@ class MapManager {
      * Recarregar pontos baseado no papel do usuário
      * Otimizado com carregamento em lotes
      */
-    recarregarPontos(userRole = 'visitor', username = null) {
+    reloadPoints(userRole = 'visitor', username = null) {
         try {
-            console.log(`🔄 Recarregando pontos para ${userRole}...`);
+            console.log(`Recarregando pontos para ${userRole}...`);
             
             // Mostrar indicador de carregamento
             this._mostrarCarregamento(true);
@@ -1193,12 +1193,12 @@ class MapManager {
             this._criarGruposBasicos();
             
             // Carregar pontos em lotes para melhor performance
-            this._carregarPontosEmLotes(pontos);
+            this._loadPointsInBatches(pontos);
 
             // Aplicar filtro atual ou "todos" se não há categoria ativa
             const categoriaParaFiltrar = this.activeCategory || 'todos';
             console.log(`🎯 Aplicando filtro: ${categoriaParaFiltrar}`);
-            this.filtrarPorCategoria(categoriaParaFiltrar, username);
+            this.filterByCategory(categoriaParaFiltrar, username);
 
             console.log(`✅ Recarregamento concluído: ${pontos.length} pontos processados`);
         } catch (error) {
@@ -1213,10 +1213,10 @@ class MapManager {
     atualizarMarcador(ponto) {
         if (this.marcadores.has(ponto.id)) {
             // Remover marcador antigo
-            this.removerMarcador(ponto.id);
+            this.removeMarker(ponto.id);
             
             // Adicionar marcador atualizado
-            this.adicionarMarcador(ponto);
+            this.addMarker(ponto);
         }
     }
 
@@ -1224,7 +1224,7 @@ class MapManager {
      * Remover marcador
      * @param {number} id - ID do ponto
      */
-    removerMarcador(id) {
+    removeMarker(id) {
         if (this.marcadores.has(id)) {
             const marcador = this.marcadores.get(id);
             
@@ -1479,7 +1479,7 @@ class MapManager {
      * Carregar pontos em lotes para melhor performance
      * @private
      */
-    _carregarPontosEmLotes(pontos) {
+    _loadPointsInBatches(pontos) {
         const BATCH_SIZE = 100; // Aumentado de 50 para 100 pontos por vez para carregamento mais rápido
         const BATCH_DELAY = 5; // Reduzido de 10ms para 5ms entre cada lote
         
@@ -1492,9 +1492,9 @@ class MapManager {
             // Processar lote atual
             loteAtual.forEach(ponto => {
                 try {
-                    this.adicionarMarcador(ponto);
+                    this.addMarker(ponto);
                 } catch (error) {
-                    console.error(`❌ Erro ao adicionar ponto ${ponto.id}:`, error);
+                    console.error(`Erro ao adicionar ponto ${ponto.id}:`, error);
                 }
             });
             

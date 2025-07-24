@@ -1002,7 +1002,7 @@ class DatabaseManager {
         return false;
     }
 
-    filtrarPorCategoria(categoria, username = null) {
+    filterByCategory(categoria, username = null) {
         if (categoria === 'todos') {
             return this.confirmedPoints;
         }

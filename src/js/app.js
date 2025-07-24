@@ -475,7 +475,7 @@ class PontosEntretenimentoApp {
             this.toggleFavorito(pontoId);
         } else {
             console.warn('Nenhum ponto selecionado para favoritar');
-            this.mostrarNotificacao('Selecione um ponto para favoritar', 'warning');
+            this.showNotification('Selecione um ponto para favoritar', 'warning');
         }
     }
 
@@ -493,7 +493,7 @@ class PontosEntretenimentoApp {
             // Verificar se loginModal existe
             if (!window.loginModal) {
                 console.error('Modal de login não disponível');
-                this.mostrarNotificacao('Sistema de login não disponível. Recarregue a página.', 'error');
+                this.showNotification('Sistema de login não disponível. Recarregue a página.', 'error');
                 return;
             }
             
@@ -507,10 +507,10 @@ class PontosEntretenimentoApp {
         // Implementar sistema de sugestões para mudanças nos pontos
         const pontoId = this.getCurrentPontoId();
         if (pontoId) {
-            this.abrirModalSugestao(pontoId);
+            this.openSuggestionModal(pontoId);
         } else {
             console.warn('Nenhum ponto selecionado para sugerir mudança');
-            this.mostrarNotificacao('Selecione um ponto para sugerir mudanças', 'warning');
+            this.showNotification('Selecione um ponto para sugerir mudanças', 'warning');
         }
     }
 
@@ -538,22 +538,22 @@ class PontosEntretenimentoApp {
             const foiAdicionado = window.databaseManager.toggleFavorito(pontoId, user.username);
             
             // Atualizar interface
-            this.atualizarBotaoFavorito(pontoId, foiAdicionado);
+            this.updateFavoriteButton(pontoId, foiAdicionado);
             
             // Mostrar feedback
             const mensagem = foiAdicionado ? 'Adicionado aos favoritos!' : 'Removido dos favoritos!';
-            this.mostrarNotificacao(mensagem, foiAdicionado ? 'success' : 'info');
+            this.showNotification(mensagem, foiAdicionado ? 'success' : 'info');
             
         } catch (error) {
             console.error('Erro ao favoritar:', error);
-            this.mostrarNotificacao('Erro ao atualizar favoritos', 'error');
+            this.showNotification('Erro ao atualizar favoritos', 'error');
         }
     }
 
     /**
      * Atualizar botão de favorito
      */
-    atualizarBotaoFavorito(pontoId, isFavorito) {
+    updateFavoriteButton(pontoId, isFavorito) {
         const btn = document.getElementById('btn-favorite');
         if (btn) {
             if (isFavorito) {
@@ -602,16 +602,16 @@ class PontosEntretenimentoApp {
     /**
      * Abrir modal de sugestão (placeholder)
      */
-    abrirModalSugestao(pontoId) {
+    openSuggestionModal(pontoId) {
         console.log(`Abrindo modal de sugestão para ponto ID: ${pontoId}`);
-        this.mostrarNotificacao('Sistema de sugestões em desenvolvimento', 'info');
+        this.showNotification('Sistema de sugestões em desenvolvimento', 'info');
         // TODO: Implementar modal de sugestões
     }
 
     /**
      * Mostrar notificação
      */
-    mostrarNotificacao(mensagem, tipo = 'info') {
+    showNotification(mensagem, tipo = 'info') {
         // Usar errorHandler se disponível
         if (window.errorHandler) {
             switch (tipo) {
@@ -847,17 +847,17 @@ class PontosEntretenimentoApp {
                 return;
             }
 
-            if (typeof window.mapManager.filtrarPorCategoria !== 'function') {
-                console.error('Method filtrarPorCategoria not found in MapManager');
+            if (typeof window.mapManager.filterByCategory !== 'function') {
+                console.error('Method filterByCategory not found in MapManager');
                 return;
             }
 
             // Filtrar marcadores
-            console.log(`🗺️ Calling MapManager.filtrarPorCategoria with: ${categoria}`);
+            console.log(`Calling MapManager.filterByCategory with: ${categoria}`);
             const user = window.authManager && window.authManager.getCurrentUser ? 
                 window.authManager.getCurrentUser() : null;
-            console.log(`👤 User context:`, user ? user.username : 'anonymous');
-            window.mapManager.filtrarPorCategoria(categoria, user ? user.username : null);
+            console.log(`User context:`, user ? user.username : 'anonymous');
+            window.mapManager.filterByCategory(categoria, user ? user.username : null);
             
             console.log(`✅ Filter applied successfully: ${categoria}`);
             
@@ -894,13 +894,13 @@ class PontosEntretenimentoApp {
             
             console.log('Iniciando renderização de pontos via app...');
             
-            // Usar o método recarregarPontos do MapManager em vez de renderizar manualmente
+            // Usar o método reloadPoints do MapManager em vez de renderizar manualmente
             const user = window.authManager?.getCurrentUser();
             const userRole = user?.role || 'visitor';
             const username = user?.username || null;
             
             // Delegar para o MapManager que agora tem lógica aprimorada
-            window.mapManager.recarregarPontos(userRole, username);
+            window.mapManager.reloadPoints(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
             this.filterByCategory('todos');
