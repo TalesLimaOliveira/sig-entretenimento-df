@@ -416,45 +416,18 @@ class PontosEntretenimentoApp {
         // Configurar botões responsivos
         this.configureResponsiveButtons();
 
-        // Event listeners para ações de favorito e sugestão
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('#btn-favorite') || e.target.closest('#btn-favorite')) {
-                this.handleFavoriteAction(e);
-            }
-            
-            if (e.target.matches('#btn-suggest') || e.target.closest('#btn-suggest')) {
-                this.handleSuggestAction(e);
-            }
-        });
+        // Nota: Event listeners para favorito e sugestão são gerenciados pelo InfoPanelManager
+        // para evitar duplicação de eventos
     }
 
     configureResponsiveButtons() {
-        const desktopLoginBtn = document.getElementById('desktop-login-btn');
-        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        // O DynamicUserButton agora gerencia os eventos de clique dos botões
+        // Não precisamos mais configurar eventos manuais aqui
+        // O componente se auto-inicializa e gerencia todo o comportamento
         
-        if (desktopLoginBtn) {
-            desktopLoginBtn.addEventListener('click', () => this.handleLoginClick());
-        }
-        
-        if (mobileLoginBtn) {
-            mobileLoginBtn.addEventListener('click', () => this.handleLoginClick());
-        }
-    }
-
-    /**
-     * Handle do clique no botão de login
-     */
-    handleLoginClick() {
-        if (window.authManager && window.authManager.isAuthenticated()) {
-            // Se já está logado, mostrar menu do usuário
-            if (window.userMenu) {
-                window.userMenu.toggle();
-            }
-        } else {
-            // Se não está logado, abrir modal de login
-            if (window.loginModal) {
-                window.loginModal.open();
-            }
+        // Notificar o componente sobre mudanças de estado de autenticação
+        if (window.dynamicUserButton) {
+            window.dynamicUserButton.updateButtonState();
         }
     }
 
@@ -463,18 +436,33 @@ class PontosEntretenimentoApp {
      */
     handleFavoriteAction(e) {
         e.preventDefault();
+        e.stopPropagation();
         
+        // Verificar se o usuário está autenticado
         if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.log('Usuário não autenticado - abrindo modal de login');
+            
+            // Verificar se loginModal existe
+            if (!window.loginModal) {
+                console.error('Modal de login não disponível');
+                this.mostrarNotificacao('Sistema de login não disponível. Recarregue a página.', 'error');
+                return;
+            }
+            
+            // Abrir modal de login com ação pendente
             window.loginModal.open({
                 pendingAction: () => this.handleFavoriteAction(e)
             });
             return;
         }
         
-        // !TODO: Implement favorites logic for logged users
-        const pointId = this.getCurrentPointId();
+        // Implementar lógica de favoritos para usuários logados
+        const pontoId = this.getCurrentPontoId();
         if (pontoId) {
             this.toggleFavorito(pontoId);
+        } else {
+            console.warn('Nenhum ponto selecionado para favoritar');
+            this.mostrarNotificacao('Selecione um ponto para favoritar', 'warning');
         }
     }
 
@@ -483,18 +471,33 @@ class PontosEntretenimentoApp {
      */
     handleSuggestAction(e) {
         e.preventDefault();
+        e.stopPropagation();
         
+        // Verificar se o usuário está autenticado
         if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.log('Usuário não autenticado - abrindo modal de login');
+            
+            // Verificar se loginModal existe
+            if (!window.loginModal) {
+                console.error('Modal de login não disponível');
+                this.mostrarNotificacao('Sistema de login não disponível. Recarregue a página.', 'error');
+                return;
+            }
+            
+            // Abrir modal de login com ação pendente
             window.loginModal.open({
                 pendingAction: () => this.handleSuggestAction(e)
             });
             return;
         }
         
-        // !TODO: Implement suggestion system for point changes
+        // Implementar sistema de sugestões para mudanças nos pontos
         const pontoId = this.getCurrentPontoId();
         if (pontoId) {
             this.abrirModalSugestao(pontoId);
+        } else {
+            console.warn('Nenhum ponto selecionado para sugerir mudança');
+            this.mostrarNotificacao('Selecione um ponto para sugerir mudanças', 'warning');
         }
     }
 
@@ -554,19 +557,127 @@ class PontosEntretenimentoApp {
      * Get current point ID
      */
     getCurrentPontoId() {
-        // !TODO: Implement logic to get currently selected point ID
+        // Tentar obter o ID do ponto a partir do painel de informações aberto
+        const infoPanel = document.getElementById('info-panel');
+        
+        if (infoPanel && !infoPanel.classList.contains('hidden')) {
+            // Primeiro: verificar se há um botão com data-ponto-id (mais confiável)
+            const pontoButton = infoPanel.querySelector('[data-ponto-id]');
+            if (pontoButton) {
+                const pontoId = pontoButton.getAttribute('data-ponto-id');
+                console.log('PontosApp: ID do ponto atual obtido:', pontoId);
+                return pontoId;
+            }
+            
+            // Fallback: tentar obter do título do painel
+            const titleElement = infoPanel.querySelector('.info-panel-title');
+            if (titleElement && titleElement.textContent) {
+                // Buscar o ponto pelos dados carregados usando o nome
+                const pontos = window.databaseManager ? window.databaseManager.getPontosConfirmados() : [];
+                const ponto = pontos.find(p => p.nome === titleElement.textContent.trim());
+                if (ponto) {
+                    console.log('PontosApp: ID do ponto obtido via fallback:', ponto.id);
+                    return ponto.id;
+                }
+            }
+        }
+        
+        console.warn('PontosApp: Nenhum ponto atualmente selecionado');
         return null;
+    }
+
+    /**
+     * Abrir modal de sugestão (placeholder)
+     */
+    abrirModalSugestao(pontoId) {
+        console.log(`Abrindo modal de sugestão para ponto ID: ${pontoId}`);
+        this.mostrarNotificacao('Sistema de sugestões em desenvolvimento', 'info');
+        // TODO: Implementar modal de sugestões
     }
 
     /**
      * Mostrar notificação
      */
     mostrarNotificacao(mensagem, tipo = 'info') {
-        // Usar errorHandler para notificações de sucesso
-        if (window.errorHandler && tipo === 'success') {
-            window.errorHandler.showSuccess(mensagem);
+        // Usar errorHandler se disponível
+        if (window.errorHandler) {
+            switch (tipo) {
+                case 'success':
+                    window.errorHandler.showSuccess(mensagem);
+                    break;
+                case 'error':
+                    window.errorHandler.showCustomError(mensagem);
+                    break;
+                case 'warning':
+                case 'info':
+                default:
+                    // Para warning e info, usar notificação simples
+                    this.createSimpleNotification(mensagem, tipo);
+                    break;
+            }
         } else {
+            // Fallback para console
             console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+            
+            // Criar notificação simples se não há errorHandler
+            this.createSimpleNotification(mensagem, tipo);
+        }
+    }
+
+    /**
+     * Criar notificação simples como fallback
+     */
+    createSimpleNotification(mensagem, tipo) {
+        // Remover notificação anterior se existir
+        const existingNotification = document.querySelector('.simple-notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        // Criar nova notificação
+        const notification = document.createElement('div');
+        notification.className = `simple-notification ${tipo}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${tipo === 'error' ? '#ef4444' : tipo === 'warning' ? '#f59e0b' : tipo === 'success' ? '#10b981' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 300px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        notification.textContent = mensagem;
+        document.body.appendChild(notification);
+
+        // Remover após 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+
+        // Adicionar CSS de animação se não existir
+        if (!document.querySelector('#simple-notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'simple-notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 

@@ -326,7 +326,16 @@ class InfoPanelManager {
      * Handle clique no botão de favoritar
      */
     handleFavoriteClick(ponto) {
-        if (!window.authManager.isAuthenticated()) {
+        // Verificação segura de autenticação
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.log('InfoPanel: Usuário não autenticado - abrindo modal de login');
+            
+            if (!window.loginModal) {
+                console.error('InfoPanel: Modal de login não disponível');
+                this.showNotification('Sistema de login não disponível. Recarregue a página.', 'error');
+                return;
+            }
+            
             window.loginModal.open({
                 pendingAction: () => this.handleFavoriteClick(ponto)
             });
@@ -363,7 +372,16 @@ class InfoPanelManager {
      * Handle clique no botão de sugerir mudança
      */
     handleSuggestClick(ponto) {
-        if (!window.authManager.isAuthenticated()) {
+        // Verificação segura de autenticação
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.log('InfoPanel: Usuário não autenticado - abrindo modal de login');
+            
+            if (!window.loginModal) {
+                console.error('InfoPanel: Modal de login não disponível');
+                this.showNotification('Sistema de login não disponível. Recarregue a página.', 'error');
+                return;
+            }
+            
             window.loginModal.open({
                 pendingAction: () => this.handleSuggestClick(ponto)
             });

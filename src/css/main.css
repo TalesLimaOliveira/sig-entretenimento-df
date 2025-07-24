@@ -91,7 +91,6 @@ body {
 
 .header-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 1rem;
     position: relative;
@@ -121,6 +120,7 @@ body {
     align-items: center;
     gap: 1rem;
     flex-shrink: 0;
+    margin-left: auto; /* Força o botão para a direita */
 }
 
 /* ===== DESKTOP ACTIONS ===== */
@@ -164,9 +164,7 @@ body {
 
 /* Tablet e telas médias */
 @media (max-width: 1024px) {
-    .header-actions {
-        justify-content: flex-end;
-    }
+    /* Mantém o alinhamento padrão do header-actions com margin-left: auto */
 }
 
 /* Mobile - Botões sempre visíveis */

@@ -1,1 +1,26 @@
-{}
+{
+  "admin": {
+    "id": "admin",
+    "nome": "Administrador do Sistema",
+    "usuario": "admin", 
+    "email": "admin@sistema.com",
+    "senha": "admin",
+    "role": "administrator",
+    "permissions": ["view", "create", "edit", "delete", "approve", "manage_users", "hide_points"],
+    "dataCriacao": "2024-01-01T00:00:00.000Z",
+    "ultimoLogin": null,
+    "ativo": true
+  },
+  "user": {
+    "id": "user",
+    "nome": "Usuário Padrão",
+    "usuario": "user",
+    "email": "user@sistema.com", 
+    "senha": "user",
+    "role": "user",
+    "permissions": ["view", "create_pending", "suggest_changes", "favorite"],
+    "dataCriacao": "2024-01-01T00:00:00.000Z",
+    "ultimoLogin": null,
+    "ativo": true
+  }
+}

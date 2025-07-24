@@ -240,9 +240,14 @@ class LoginModal {
             }
         });
 
-        // Botão cadastrar (placeholder)
+        // Botão cadastrar - abrir modal de cadastro
         document.getElementById('login-register').addEventListener('click', () => {
-            this.showRegisterPlaceholder();
+            this.close(); // Fechar modal de login
+            if (window.registerModal) {
+                window.registerModal.open();
+            } else {
+                console.error('Modal de cadastro não disponível');
+            }
         });
 
         // Form submit
@@ -272,18 +277,29 @@ class LoginModal {
         submitBtn.innerHTML = '<div class="login-spinner"></div> Entrando...';
         
         try {
+            // Verificar se authManager está disponível
+            if (!window.authManager) {
+                throw new Error('Sistema de autenticação não carregado. Recarregue a página.');
+            }
+            
+            // Verificar se o método login existe
+            if (typeof window.authManager.login !== 'function') {
+                throw new Error('Método de login não disponível');
+            }
+            
             const result = await window.authManager.login(emailInput.value.trim(), passwordInput.value);
             
-            if (result.success) {
+            if (result && result.success) {
                 // Login bem-sucedido
                 this.close();
                 this.handleLoginSuccess(result.user);
             } else {
                 // Login falhou
-                this.showError(result.message || 'Credenciais inválidas');
+                this.showError(result ? (result.message || 'Credenciais inválidas') : 'Erro desconhecido no login');
             }
         } catch (error) {
-            this.showError('Erro no sistema de login: ' + error.message);
+            console.error('Erro no processo de login:', error);
+            this.showError('Erro no sistema de login: ' + (error.message || 'Erro desconhecido'));
         } finally {
             // Restaurar botão
             submitBtn.disabled = false;
@@ -293,7 +309,7 @@ class LoginModal {
 
     handleLoginSuccess(user) {
         // Mostrar notificação
-        this.showNotification(`Bem-vindo, ${user.name}!`, 'success');
+        this.showNotification(`Bem-vindo, ${user.nome || user.name}!`, 'success');
         
         // Executar callback se existir
         if (this.onLoginSuccess) {
@@ -324,7 +340,7 @@ class LoginModal {
         // Atualizar botão de login no header
         const loginBtn = document.querySelector('.admin-login');
         if (loginBtn) {
-            loginBtn.innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
+            loginBtn.innerHTML = `<i class="fas fa-user"></i> ${user.nome || user.name}`;
             loginBtn.onclick = () => this.showUserMenu(user);
         }
 
@@ -352,15 +368,17 @@ class LoginModal {
         // Criar menu dropdown simples
         const menu = `
             <div class="user-dropdown" style="position: absolute; top: 100%; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; min-width: 150px; z-index: 1000;">
-                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); font-weight: bold;">${user.name}</div>
-                <button onclick="window.authManager.logout()" style="width: 100%; padding: 0.5rem; border: none; background: none; color: var(--text-primary); cursor: pointer; text-align: left;">
+                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color); font-weight: bold;">${user.nome || user.name}</div>
+                <button onclick="if(window.authManager) window.authManager.logout()" style="width: 100%; padding: 0.5rem; border: none; background: none; color: var(--text-primary); cursor: pointer; text-align: left;">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         `;
         // Implementação simples - em produção seria mais sofisticada
         alert('Menu do usuário - Clique OK para fazer logout');
-        window.authManager.logout();
+        if (window.authManager) {
+            window.authManager.logout();
+        }
     }
 
     showError(message) {

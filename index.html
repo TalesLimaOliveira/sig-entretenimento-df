@@ -139,7 +139,9 @@
     <script src="src/js/theme-colors.js"></script>
     <script src="src/components/modal.js"></script>
     <script src="src/components/login-modal.js"></script>
+    <script src="src/components/register-modal.js"></script>
     <script src="src/components/user-menu.js"></script>
+    <script src="src/components/dynamic-user-button.js"></script>
     <script src="src/components/add-point-modal.js"></script>
     <script src="src/components/error-handler.js"></script>
     <script src="src/js/app.js"></script>
@@ -204,6 +206,8 @@
                 const managersToCheck = [
                     { name: 'databaseManager', critical: true },
                     { name: 'authManager', critical: false },
+                    { name: 'loginModal', critical: false },
+                    { name: 'registerModal', critical: false },
                     { name: 'modalManager', critical: false },
                     { name: 'themeManager', critical: false },
                     { name: 'mapManager', critical: true }

@@ -98,29 +98,6 @@ Este arquivo lista todas as funções e implementações que ainda precisam ser 
 - `adicionarMarcador()` → `addMarker()`
 - `removerMarcador()` → `removeMarker()`
 
-## Logs com Emojis (Para Remover)
-
-**Arquivos com logs que contêm emojis:**
-- src/js/auth.js (linhas 21, 24, 151)
-- src/js/app.js (vários logs de debug)
-- src/js/admin.js (logs de status)
-- src/js/database.js (logs de operações)
-
-## Comentários Desnecessários (Para Limpar)
-
-**Tipos de comentários a remover:**
-- Comentários obviamente redundantes
-- Comentários em português que apenas repetem o código
-- Comentários temporários de debug
-- Comentários que não agregam contexto
-
-## Status Geral
-
-- **Total de pendências:** 10 implementações principais
-- **Refatoração de nomenclatura:** ~30 métodos/variáveis
-- **Limpeza de logs:** ~15 arquivos com emojis
-- **Limpeza de comentários:** Todo o projeto
-
 ## Prioridade de Implementação
 
 **Alta Prioridade:**
@@ -136,5 +113,5 @@ Este arquivo lista todas as funções e implementações que ainda precisam ser 
 
 **Baixa Prioridade:**
 8. Tooltips administrativos (implementarTooltips)
-9. Controles específicos do mapa
-10. Controles de remoção do mapa
+9. Aumentar o tamanho dos pontos no mapa
+10. Alinhar botao "ENTRAR" a Direita da pagina, Nao ficando "colado" com o nav-buttons

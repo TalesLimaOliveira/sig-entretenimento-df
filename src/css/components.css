@@ -1669,3 +1669,176 @@
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.2);
 }
+
+/* ===== DYNAMIC USER BUTTON ===== */
+
+/* User Button Styles */
+.user-btn,
+.admin-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    position: relative;
+}
+
+.user-btn:hover,
+.admin-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Admin button specific styling */
+.admin-btn {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #ffc107;
+}
+
+.admin-btn:hover {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.6);
+}
+
+/* Menu arrow styling */
+.user-menu-arrow {
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+    transition: transform var(--transition-fast);
+}
+
+.user-btn:hover .user-menu-arrow,
+.admin-btn:hover .user-menu-arrow {
+    transform: rotate(180deg);
+}
+
+/* User Dropdown Menu */
+.user-dropdown-menu {
+    position: fixed;
+    z-index: 10000;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    min-width: 220px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    display: none;
+}
+
+.user-dropdown-menu.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.user-dropdown-content {
+    padding: 0.5rem 0;
+}
+
+.user-menu-item {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    transition: background-color var(--transition-fast);
+}
+
+.user-menu-item:hover {
+    background: var(--gray-100);
+}
+
+.user-menu-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Specific menu item styling */
+.user-menu-item.admin-item {
+    color: var(--warning-color);
+}
+
+.user-menu-item.admin-item:hover {
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.user-menu-item.logout-item {
+    color: var(--error-color);
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.25rem;
+}
+
+.user-menu-item.logout-item:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.user-menu-item.account-item:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+/* Dark theme support for user dropdown */
+.theme-dark .user-dropdown-menu {
+    background: var(--gray-800);
+    border-color: var(--gray-600);
+    color: var(--gray-100);
+}
+
+.theme-dark .user-menu-item {
+    color: var(--gray-100);
+}
+
+.theme-dark .user-menu-item:hover {
+    background: var(--gray-700);
+}
+
+.theme-dark .user-menu-item.admin-item:hover {
+    background: rgba(255, 193, 7, 0.2);
+}
+
+.theme-dark .user-menu-item.logout-item {
+    border-top-color: var(--gray-600);
+}
+
+.theme-dark .user-menu-item.logout-item:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.theme-dark .user-menu-item.account-item:hover {
+    background: rgba(52, 152, 219, 0.2);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .user-dropdown-menu {
+        min-width: 200px;
+        max-width: calc(100vw - 16px);
+    }
+    
+    .user-menu-item {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+    
+    .user-btn .login-btn-text,
+    .admin-btn .login-btn-text {
+        font-size: 0.9rem;
+    }
+}
