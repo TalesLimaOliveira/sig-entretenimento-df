@@ -43,7 +43,7 @@ class DatabaseManager {
 // ANTES
 class PontosEntretenimentoApp {
     filtrarPorCategoria(categoria) { }
-    configurarInterface() { }
+    configureInterface() { }
     carregarDados() { }
     atualizarIconesTema() { }
 }

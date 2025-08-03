@@ -20,19 +20,29 @@ addMarker()
 const activeCategory = 'todos';  // ✓ Correto
 const categoriaAtiva = 'todos';  // ✗ Evitar português
 
-// Métodos refatorados (português → inglês) - EM PROGRESSO
-loadData()              // ✓ Refatorado (era: carregarDados)
-removeLoadingScreen()   // ✓ Refatorado (era: removerLoadingScreen)
-filterByCategory()      // ✓ Refatorado (era: filtrarPorCategoria)
-updateCategoryButtons() // ✓ Refatorado (era: atualizarBotoesCategoria)
-updateStatistics()     // ✓ Refatorado (era: atualizarEstatisticas)
-forceMapResize()       // ✓ Refatorado (era: forcarRedimensionamentoMapa)
-reloadData()           // ✓ Refatorado (era: recarregarDados)
+// Métodos refatorados (português → inglês) - CONCLUÍDO
+loadData()                    // ✓ Refatorado (era: carregarDados)
+removeLoadingScreen()         // ✓ Refatorado (era: removerLoadingScreen)
+filterByCategory()            // ✓ Refatorado (era: filtrarPorCategoria)
+updateCategoryButtons()       // ✓ Refatorado (era: atualizarBotoesCategoria)
+updateStatistics()           // ✓ Refatorado (era: atualizarEstatisticas)
+forceMapResize()             // ✓ Refatorado (era: forcarRedimensionamentoMapa)
+reloadData()                 // ✓ Refatorado (era: recarregarDados)
+configureCategoryMenu()      // ✓ Refatorado (era: configurarMenuCategorias)
+renderPoints()               // ✓ Refatorado (era: renderizarPontos)
+showNotification()           // ✓ Refatorado (era: mostrarNotificacao)
+showError()                  // ✓ Refatorado (era: mostrarErro)
+configureResponsiveness()    // ✓ Refatorado (era: configurarResponsividade)
+configureViewport()          // ✓ Refatorado (era: configurarViewport)
+configureResponsiveEventListeners() // ✓ Refatorado (era: configurarEventListenersResponsivos)
+configureTouchBehavior()     // ✓ Refatorado (era: configurarComportamentoTouch)
+applyResponsiveClasses()     // ✓ Refatorado (era: aplicarClassesResponsivas)
+adjustLayoutForScreenSize()  // ✓ Refatorado (era: ajustarLayoutParaTamanhoTela)
 
-// PENDENTES DE REFATORAÇÃO:
-// configurarMenuCategorias() → configureMenuCategories()
-// adicionarMarcador() → addMarker()
-// removerMarcador() → removeMarker()
+// PENDENTES DE REFATORAÇÃO (ver PENDENCIAS.md):
+// MapManager: _configurarCamadas() → _configureLayers()
+// MapManager: _configurarEventListeners() → _configureEventListeners()
+// DatabaseManager: vários métodos em português
 ```
 
 #### Constantes
@@ -48,6 +58,28 @@ const DEFAULT_ZOOM_LEVEL = 11;
 class DatabaseManager {
     constructor() {
         this.confirmedPoints = [];  // ✓ Correto
+        this.pendingPoints = [];    // ✓ Correto
+        this.hiddenPoints = [];     // ✓ Correto
+        // Evitar: pontosConfirmados, pontosPendentes, etc.
+    }
+}
+
+class MapManager {
+    constructor() {
+        this.markers = new Map();           // ✓ Refatorado (era: marcadores)
+        this.groupsByCategory = new Map();  // ✓ Refatorado (era: gruposPorCategoria)
+        this.openPopup = null;              // ✓ Refatorado (era: popupAberto)
+        this.additionMode = false;          // ✓ Refatorado (era: modoAdicao)
+    }
+}
+
+class ModalManager {
+    constructor() {
+        this.activeModal = null;  // ✓ Correto
+        // Evitar: modalAtivo
+    }
+}
+```
         this.pendingPoints = [];    // ✓ Correto
         this.hiddenPoints = [];     // ✓ Correto
         // Evitar: pontosConfirmados, pontosPendentes, etc.
@@ -133,7 +165,7 @@ class ExemploManager {
     metodoPublico() { }
 
     // Métodos de configuração
-    configurarElemento() { }
+    configureElement() { }
 
     // Métodos de manipulação
     adicionarItem() { }

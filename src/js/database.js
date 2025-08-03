@@ -33,6 +33,23 @@ class DatabaseManager {
             this.migrarDadosAntigos();
             console.log('✅ Migração de dados concluída');
             
+            this.migrarCategoriaAlternativo();
+            console.log('✅ Migração da categoria alternativo concluída');
+            
+            // Verificação final - garantir que há dados
+            if (this.confirmedPoints.length === 0) {
+                console.warn('⚠️ Nenhum ponto confirmado após carregamento, forçando dados padrão...');
+                this.confirmedPoints = this.getConfirmedPointsDefault();
+                this.salvarTodosDados();
+            }
+            
+            if (this.categorias.length === 0) {
+                console.warn('⚠️ Nenhuma categoria após carregamento, forçando categorias padrão...');
+                this.categorias = this.getCategoriesDefault();
+                this.salvarCategorias();
+            }
+            
+            console.log(`📊 Estado final: ${this.confirmedPoints.length} pontos confirmados, ${this.categorias.length} categorias`);
             console.log('✅ DatabaseManager inicializado com sucesso');
         } catch (error) {
             console.error('❌ Erro ao inicializar DatabaseManager:', error);
@@ -45,73 +62,95 @@ class DatabaseManager {
      */
     async carregarTodosDados() {
         try {
-            // Carregar dados do localStorage primeiro
-            const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
-            const pendingPoints = localStorage.getItem(this.baseStorageKey + '_pontosPendentes');
-            const hiddenPoints = localStorage.getItem(this.baseStorageKey + '_pontosOcultos');
-            const usuarios = localStorage.getItem(this.baseStorageKey + '_usuarios');
-
-            this.confirmedPoints = confirmedPoints ? JSON.parse(confirmedPoints) : [];
-            this.pendingPoints = pendingPoints ? JSON.parse(pendingPoints) : [];
-            this.hiddenPoints = hiddenPoints ? JSON.parse(hiddenPoints) : [];
-            this.usuarios = usuarios ? JSON.parse(usuarios) : {};
-
-            // Se não há pontos confirmados, tentar carregar dos arquivos JSON
-            if (this.confirmedPoints.length === 0) {
-                console.log('Nenhum ponto confirmado encontrado, tentando carregar dos arquivos JSON...');
+            console.log('🔄 Iniciando carregamento de dados dos arquivos JSON...');
+            
+            // Primeiro, tentar carregar dos arquivos JSON (prioridade)
+            let dadosCarregadosJSON = false;
+            
+            try {
+                console.log('📂 Tentando carregar dados dos arquivos JSON...');
                 
-                try {
-                    // Carregar pontos confirmados
-                    const pontosConfirmados = await this.loadJsonFile('./database/pontos_confirmados.json');
-                    if (pontosConfirmados && Array.isArray(pontosConfirmados)) {
-                        this.confirmedPoints = pontosConfirmados;
-                        this.salvarPontosConfirmados();
-                    }
+                // Carregar pontos confirmados
+                const pontosConfirmados = await this.loadJsonFile('./database/pontos_confirmados.json');
+                if (pontosConfirmados && Array.isArray(pontosConfirmados) && pontosConfirmados.length > 0) {
+                    this.confirmedPoints = pontosConfirmados;
+                    dadosCarregadosJSON = true;
+                    console.log(`✅ ${pontosConfirmados.length} pontos confirmados carregados do JSON`);
+                }
 
-                    // Carregar pontos pendentes
-                    const pontosPendentes = await this.loadJsonFile('./database/pontos_pendentes.json');
-                    if (pontosPendentes && Array.isArray(pontosPendentes)) {
-                        this.pendingPoints = pontosPendentes;
-                        this.salvarPontosPendentes();
-                    }
+                // Carregar pontos pendentes
+                const pontosPendentes = await this.loadJsonFile('./database/pontos_pendentes.json');
+                if (pontosPendentes && Array.isArray(pontosPendentes)) {
+                    this.pendingPoints = pontosPendentes;
+                    console.log(`✅ ${pontosPendentes.length} pontos pendentes carregados do JSON`);
+                }
 
-                    // Carregar pontos ocultos
-                    const pontosOcultos = await this.loadJsonFile('./database/pontos_ocultos.json');
-                    if (pontosOcultos && Array.isArray(pontosOcultos)) {
-                        this.hiddenPoints = pontosOcultos;
-                        this.salvarPontosOcultos();
-                    }
+                // Carregar pontos ocultos
+                const pontosOcultos = await this.loadJsonFile('./database/pontos_ocultos.json');
+                if (pontosOcultos && Array.isArray(pontosOcultos)) {
+                    this.hiddenPoints = pontosOcultos;
+                    console.log(`✅ ${pontosOcultos.length} pontos ocultos carregados do JSON`);
+                }
 
-                    // Carregar usuários
-                    const usuarios = await this.loadJsonFile('./database/usuarios.json');
-                    if (usuarios && Array.isArray(usuarios)) {
-                        this.usuarios = usuarios.reduce((acc, user) => {
-                            acc[user.username] = user;
-                            return acc;
-                        }, {});
-                        this.salvarUsuarios();
-                    }
+                // Carregar usuários
+                const usuarios = await this.loadJsonFile('./database/usuarios.json');
+                if (usuarios && Array.isArray(usuarios)) {
+                    this.usuarios = usuarios.reduce((acc, user) => {
+                        acc[user.username] = user;
+                        return acc;
+                    }, {});
+                    console.log(`✅ ${usuarios.length} usuários carregados do JSON`);
+                }
 
-                    console.log(`✅ Dados carregados: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes`);
-                } catch (error) {
-                    console.error('Erro ao carregar dos arquivos JSON:', error);
-                    // Fallback para dados padrão se os arquivos não puderem ser carregados
-                    this.inicializarPontosDefault();
+            } catch (error) {
+                console.warn('⚠️ Erro ao carregar dos arquivos JSON:', error);
+            }
+            
+            // Se não conseguiu carregar do JSON, tentar localStorage
+            if (!dadosCarregadosJSON) {
+                console.log('📦 Tentando carregar do localStorage...');
+                
+                const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
+                const pendingPoints = localStorage.getItem(this.baseStorageKey + '_pontosPendentes');
+                const hiddenPoints = localStorage.getItem(this.baseStorageKey + '_pontosOcultos');
+                const usuarios = localStorage.getItem(this.baseStorageKey + '_usuarios');
+
+                if (confirmedPoints) {
+                    this.confirmedPoints = JSON.parse(confirmedPoints);
+                    console.log(`✅ ${this.confirmedPoints.length} pontos confirmados carregados do localStorage`);
+                    dadosCarregadosJSON = true;
+                }
+                if (pendingPoints) {
+                    this.pendingPoints = JSON.parse(pendingPoints);
+                }
+                if (hiddenPoints) {
+                    this.hiddenPoints = JSON.parse(hiddenPoints);
+                }
+                if (usuarios) {
+                    this.usuarios = JSON.parse(usuarios);
                 }
             }
 
-            // Se ainda não há pontos no localStorage, carregar dados padrão
-            if (this.confirmedPoints.length === 0) {
-                console.log('Carregando dados padrao...');
+            // Se ainda não há pontos, usar dados padrão
+            if (!dadosCarregadosJSON || this.confirmedPoints.length === 0) {
+                console.log('📝 Carregando dados padrão...');
                 this.inicializarPontosDefault();
+            }
+
+            // Salvar dados carregados no localStorage para cache
+            if (this.confirmedPoints.length > 0) {
+                this.salvarTodosDados();
+                console.log('💾 Dados salvos no localStorage para cache');
             }
 
             // Calcular próximo ID
             const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
             this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
 
+            console.log(`🎯 Total final: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes, ${this.hiddenPoints.length} ocultos`);
+
         } catch (error) {
-            console.error('Erro ao carregar dados:', error);
+            console.error('❌ Erro crítico ao carregar dados:', error);
             this.inicializarDadosDefault();
         }
     }
@@ -125,11 +164,11 @@ class DatabaseManager {
         // Detectar se estamos usando protocolo file://
         const isFileProtocol = window.location.protocol === 'file:';
         
-        console.log(`🌐 Protocolo detectado: ${window.location.protocol}, URL: ${url}`);
+        console.log(`🌐 Carregando: ${url} (Protocolo: ${window.location.protocol})`);
         
         if (isFileProtocol) {
-            // Para protocolo file://, tentar usar dados incorporados ou fallback
-            console.log(`📁 Protocolo file:// detectado, usando fallback para: ${url}`);
+            // Para protocolo file://, usar dados padrão incorporados
+            console.log(`📁 Protocolo file:// detectado, usando dados padrão para: ${url}`);
             
             // Retornar dados padrão baseado na URL
             if (url.includes('categorias.json')) {
@@ -144,15 +183,30 @@ class DatabaseManager {
                 return this.getUsersDefault();
             }
             
-            return {};
+            return [];
         } else {
             // Para protocolo HTTP/HTTPS, usar fetch normal
             console.log(`🌍 Protocolo HTTP detectado, carregando via fetch: ${url}`);
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log(`✅ Dados carregados com sucesso de ${url}:`, data.length || Object.keys(data).length, 'itens');
+                return data;
+            } catch (error) {
+                console.error(`❌ Erro ao carregar ${url}:`, error);
+                throw error;
             }
-            return await response.json();
         }
     }
 
@@ -218,12 +272,57 @@ class DatabaseManager {
         }
     }
 
+    /**
+     * Migra pontos da categoria "alternativo" para "geral"
+     */
+    migrarCategoriaAlternativo() {
+        let alteracoes = 0;
+        
+        // Migrar pontos confirmados
+        this.confirmedPoints.forEach(ponto => {
+            if (ponto.categoria === 'alternativo') {
+                ponto.categoria = 'geral';
+                alteracoes++;
+            }
+        });
+        
+        // Migrar pontos pendentes
+        this.pendingPoints.forEach(ponto => {
+            if (ponto.categoria === 'alternativo') {
+                ponto.categoria = 'geral';
+                alteracoes++;
+            }
+        });
+        
+        // Migrar pontos ocultos
+        this.hiddenPoints.forEach(ponto => {
+            if (ponto.categoria === 'alternativo') {
+                ponto.categoria = 'geral';
+                alteracoes++;
+            }
+        });
+        
+        if (alteracoes > 0) {
+            this.salvarTodosDados();
+            console.log(`${alteracoes} pontos migrados da categoria 'alternativo' para 'geral'`);
+        }
+        
+        // Remover categoria "alternativo" das categorias salvas
+        this.categorias = this.categorias.filter(cat => cat.id !== 'alternativo');
+        this.salvarCategorias();
+    }
+
     async carregarCategorias() {
         try {
             // Tentar carregar usando a função compatível
             const categorias = await this.loadJsonFile('./database/categorias.json');
             this.categorias = categorias;
             console.log('Categorias carregadas:', categorias.length);
+            
+            // Disparar evento para atualizar marcadores
+            document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
+                detail: { categorias: this.categorias }
+            }));
             return;
         } catch (error) {
             console.warn('Erro ao carregar categorias:', error);
@@ -234,6 +333,11 @@ class DatabaseManager {
         if (saved) {
             this.categorias = JSON.parse(saved);
             console.log('Categorias carregadas do localStorage');
+            
+            // Disparar evento para atualizar marcadores
+            document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
+                detail: { categorias: this.categorias }
+            }));
         } else {
             // Fallback final: categorias padrão
             this.categorias = [
@@ -265,13 +369,7 @@ class DatabaseManager {
                     cor: '#7c3aed',
                     descricao: 'Lojas de board games, card games, action figures, eventos de cultura pop, espaços de e-sports'
                 },
-                { 
-                    id: 'alternativo', 
-                    nome: 'Alternativo', 
-                    icon: 'fas fa-palette', 
-                    cor: '#ef4444',
-                    descricao: 'Espaços culturais, saraus, exposições independentes, feiras de arte'
-                },
+
                 { 
                     id: 'casas-noturnas', 
                     nome: 'Casas Noturnas', 
@@ -289,6 +387,11 @@ class DatabaseManager {
             ];
             this.salvarCategorias();
             console.log('Categorias padrão carregadas');
+            
+            // Disparar evento para atualizar marcadores
+            document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
+                detail: { categorias: this.categorias }
+            }));
         }
     }
 
@@ -472,7 +575,7 @@ class DatabaseManager {
                 id: 9,
                 nome: 'Centro Cultural da República',
                 descricao: 'Espaço cultural independente com exposições alternativas',
-                categoria: 'alternativo',
+                categoria: 'geral',
                 coordenadas: [-15.797, -47.879],
                 endereco: 'Eixo Monumental, Brasília',
                 horario: '9h às 18h',
@@ -486,7 +589,7 @@ class DatabaseManager {
                 id: 10,
                 nome: 'Sarau do Beco',
                 descricao: 'Sarau independente com poesia e música',
-                categoria: 'alternativo',
+                categoria: 'geral',
                 coordenadas: [-15.840, -48.045],
                 endereco: 'Taguatinga Norte, Brasília',
                 horario: 'Quintas, 19h às 23h',
@@ -1216,42 +1319,36 @@ class DatabaseManager {
             {
                 "id": "geral",
                 "nome": "Geral",
-                "icone": "📍",
+                "icon": "fas fa-theater-masks",
                 "cor": "#6c757d",
                 "descricao": "Pontos de interesse geral e diversos"
             },
             {
                 "id": "esportes-lazer",
-                "nome": "Esportes e Lazer",
-                "icone": "⚽",
+                "nome": "Esportes",
+                "icon": "fas fa-running",
                 "cor": "#28a745",
                 "descricao": "Atividades esportivas e de lazer"
             },
             {
                 "id": "gastronomia",
                 "nome": "Gastronomia",
-                "icone": "🍽️",
+                "icon": "fas fa-utensils",
                 "cor": "#dc3545",
                 "descricao": "Restaurantes, bares e experiências culinárias"
             },
             {
                 "id": "geek-nerd",
-                "nome": "Geek e Nerd",
-                "icone": "🎮",
+                "nome": "Geek",
+                "icon": "fas fa-gamepad",
                 "cor": "#6f42c1",
                 "descricao": "Cultura geek, games e tecnologia"
             },
-            {
-                "id": "alternativo",
-                "nome": "Alternativo",
-                "icone": "🎨",
-                "cor": "#fd7e14",
-                "descricao": "Arte, cultura alternativa e eventos especiais"
-            },
+
             {
                 "id": "casas-noturnas",
                 "nome": "Casas Noturnas",
-                "icone": "🌙",
+                "icon": "fas fa-glass-cheers",
                 "cor": "#6610f2",
                 "descricao": "Vida noturna, bares e casas de show"
             }

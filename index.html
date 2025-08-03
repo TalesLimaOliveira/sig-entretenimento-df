@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pontos de Entretenimento DF</title>
     
-    <!-- Favico                console.log('DOM pronto');
-            }
-            
-            async checkDependencies() {
-                console.log('Verificando dependências...');
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ff69b4%22/><text x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22>👠</text></svg>" type="image/svg+xml">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ff69b4%22/><text x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22>🎭</text></svg>" type="image/svg+xml">
     
     <!-- CSS - Layout Responsivo Otimizado -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -147,6 +143,17 @@
     <script src="src/components/error-handler.js"></script>
     <script src="src/js/app.js"></script>
     
+    <!-- Create Global Instances -->
+    <script>
+        // Criar instâncias globais dos managers
+        if (typeof MapManager !== 'undefined') {
+            window.mapManager = new MapManager('map');
+            console.log('✅ MapManager instanciado');
+        } else {
+            console.error('❌ MapManager não foi carregado');
+        }
+    </script>
+    
     <!-- Initialize -->
     <script>
         // Sistema de inicialização robusto
@@ -235,6 +242,31 @@
                             try {
                                 await window.databaseManager.init();
                                 console.log('✅ DatabaseManager inicializado com sucesso');
+                                
+                                // Verificar se pontos foram carregados
+                                const pontos = window.databaseManager.getPontos();
+                                console.log(`📊 Pontos carregados: ${pontos.length}`);
+                                
+                                if (pontos.length === 0) {
+                                    console.warn('⚠️ Nenhum ponto foi carregado, forçando dados padrão...');
+                                    // Forçar uso de dados padrão
+                                    window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
+                                    window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
+                                    
+                                    // Salvar no localStorage para próximas sessões
+                                    window.databaseManager.salvarTodosDados();
+                                    
+                                    console.log(`✅ Dados padrão forçados: ${window.databaseManager.confirmedPoints.length} pontos`);
+                                }
+                                
+                                // Verificar categorias também
+                                const categorias = window.databaseManager.getCategorias();
+                                if (!categorias || categorias.length === 0) {
+                                    console.warn('⚠️ Nenhuma categoria carregada, forçando categorias padrão...');
+                                    window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
+                                    window.databaseManager.salvarCategorias();
+                                }
+                                
                             } catch (error) {
                                 console.error('❌ Erro ao inicializar DatabaseManager:', error);
                                 
@@ -258,6 +290,36 @@
                                     }
                                 } else if (manager.critical) {
                                     throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
+                                }
+                            }
+                        }
+                        
+                        // Inicializar o mapManager se necessário
+                        if (manager.name === 'mapManager' && window.mapManager && window.mapManager.init) {
+                            console.log('🗺️ Inicializando mapManager...');
+                            try {
+                                await window.mapManager.init();
+                                console.log('✅ MapManager inicializado com sucesso');
+                                
+                                // Forçar carregamento dos pontos após inicialização
+                                setTimeout(async () => {
+                                    if (window.databaseManager && window.databaseManager.getPontos) {
+                                        const pontos = window.databaseManager.getPontos();
+                                        console.log(`🔄 Forçando carregamento de ${pontos.length} pontos no mapa...`);
+                                        
+                                        if (pontos.length > 0) {
+                                            window.mapManager._loadPoints(pontos);
+                                            console.log('✅ Pontos carregados no mapa');
+                                        } else {
+                                            console.warn('⚠️ Nenhum ponto disponível para carregar no mapa');
+                                        }
+                                    }
+                                }, 500);
+                                
+                            } catch (mapError) {
+                                console.error('❌ Erro ao inicializar MapManager:', mapError);
+                                if (manager.critical) {
+                                    throw new Error(`Falha crítica na inicialização do MapManager: ${mapError.message}`);
                                 }
                             }
                         }

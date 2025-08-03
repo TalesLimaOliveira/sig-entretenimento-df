@@ -97,7 +97,7 @@ class PontosEntretenimentoApp {
             console.log('Managers loaded');
 
             console.log('Configuring responsiveness...');
-            this.configurarResponsividade();
+            this.configureResponsiveness();
             console.log('Responsiveness configured');
             
             console.log('Verifying authentication...');
@@ -388,7 +388,7 @@ class PontosEntretenimentoApp {
             
             // Configurar menu de categorias após dados estarem carregados
             // Será chamado novamente em carregarDados() para garantir que está atualizado
-            this.configurarMenuCategorias();
+            this.configureCategoryMenu();
             this.updateStatistics();
             console.log('Interface configurada');
         } catch (error) {
@@ -542,7 +542,7 @@ class PontosEntretenimentoApp {
             
             // Mostrar feedback
             const mensagem = foiAdicionado ? 'Adicionado aos favoritos!' : 'Removido dos favoritos!';
-            this.showNotification(mensagem, foiAdicionado ? 'success' : 'info');
+            this.showNotification(message, isAdded ? 'success' : 'info');
             
         } catch (error) {
             console.error('Erro ao favoritar:', error);
@@ -605,56 +605,62 @@ class PontosEntretenimentoApp {
     openSuggestionModal(pontoId) {
         console.log(`Abrindo modal de sugestão para ponto ID: ${pontoId}`);
         this.showNotification('Sistema de sugestões em desenvolvimento', 'info');
-        // TODO: Implementar modal de sugestões
     }
 
     /**
-     * Mostrar notificação
+     * Show notification to user
+     * @param {string} message - Message to display
+     * @param {string} type - Type of notification (success, error, warning, info)
      */
-    showNotification(mensagem, tipo = 'info') {
-        // Usar errorHandler se disponível
-        if (window.errorHandler) {
-            switch (tipo) {
-                case 'success':
-                    window.errorHandler.showSuccess(mensagem);
-                    break;
-                case 'error':
-                    window.errorHandler.showCustomError(mensagem);
-                    break;
-                case 'warning':
-                case 'info':
-                default:
-                    // Para warning e info, usar notificação simples
-                    this.createSimpleNotification(mensagem, tipo);
-                    break;
+    showNotification(message, type = 'info') {
+        try {
+            // Use errorHandler if available
+            if (window.errorHandler) {
+                switch (type) {
+                    case 'success':
+                        window.errorHandler.showSuccess(message);
+                        break;
+                    case 'error':
+                        window.errorHandler.showCustomError(message);
+                        break;
+                    case 'warning':
+                    case 'info':
+                    default:
+                        // For warning and info, use simple notification
+                        this.createSimpleNotification(message, type);
+                        break;
+                }
+            } else {
+                // Fallback to console
+                console.log(`${type.toUpperCase()}: ${message}`);
+                
+                // Create simple notification if no errorHandler
+                this.createSimpleNotification(message, type);
             }
-        } else {
-            // Fallback para console
-            console.log(`${tipo.toUpperCase()}: ${mensagem}`);
-            
-            // Criar notificação simples se não há errorHandler
-            this.createSimpleNotification(mensagem, tipo);
+        } catch (error) {
+            console.error('Error showing notification:', error);
+            console.log(`[${type.toUpperCase()}] ${message}`);
         }
     }
 
     /**
-     * Criar notificação simples como fallback
+     * Create simple notification as fallback
      */
-    createSimpleNotification(mensagem, tipo) {
-        // Remover notificação anterior se existir
+    createSimpleNotification(message, type) {
+        // Remove previous notification if exists
         const existingNotification = document.querySelector('.simple-notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
-        // Criar nova notificação
+        // Create new notification
         const notification = document.createElement('div');
-        notification.className = `simple-notification ${tipo}`;
+        notification.className = `simple-notification ${type}`;
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${tipo === 'error' ? '#ef4444' : tipo === 'warning' ? '#f59e0b' : tipo === 'success' ? '#10b981' : '#3b82f6'};
+            background: ${type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : type === 'success' ? '#10b981' : '#3b82f6'};
             color: white;
             padding: 12px 20px;
             border-radius: 6px;
@@ -665,7 +671,7 @@ class PontosEntretenimentoApp {
             animation: slideIn 0.3s ease;
         `;
         
-        notification.textContent = mensagem;
+        notification.textContent = message;
         document.body.appendChild(notification);
 
         // Remover após 5 segundos
@@ -716,25 +722,25 @@ class PontosEntretenimentoApp {
             }
             
             // Renderizar pontos e atualizar estatísticas
-            this.renderizarPontos();
+            this.renderPoints();
             this.updateStatistics();
             
             // Reconfigurar menu de categorias após dados estarem carregados
             console.log('Reconfigurando menu de categorias...');
-            this.configurarMenuCategorias();
+            this.configureCategoryMenu();
             
             console.log('Dados carregados com sucesso');
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             // Only show error pop-up if not during initialization
             if (this.isInitialized) {
-                this.mostrarErro('Erro ao carregar dados do mapa.');
+                this.showError('Erro ao carregar dados do mapa.');
             }
             throw error;
         }
     }
 
-    configurarMenuCategorias() {
+    configureCategoryMenu() {
         const container = document.getElementById('nav-buttons-container');
         if (!container) {
             console.warn('Container de navegação não encontrado');
@@ -751,7 +757,7 @@ class PontosEntretenimentoApp {
 
         // Criar botão "Todos" primeiro
         let buttonsHtml = `
-            <button class="nav-btn active category-btn" data-categoria="todos">
+            <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos">
                 <i class="fas fa-globe"></i>
                 <span class="nav-btn-text">Todos</span>
             </button>
@@ -759,7 +765,7 @@ class PontosEntretenimentoApp {
 
         // Adicionar botão de favoritos (inicialmente oculto)
         buttonsHtml += `
-            <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos">
+            <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos" title="Pontos favoritos">
                 <i class="fas fa-heart"></i>
                 <span class="nav-btn-text">Favoritos</span>
             </button>
@@ -773,7 +779,8 @@ class PontosEntretenimentoApp {
                 console.log(`🏷️ Categoria: ${categoria.id}, Ícone: ${iconClass}, Nome: ${categoria.nome}`);
                 buttonsHtml += `
                     <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
-                            style="--category-color: ${categoria.cor}">
+                            style="--category-color: ${categoria.cor}"
+                            title="${categoria.nome}">
                         <i class="${iconClass}"></i>
                         <span class="nav-btn-text">${categoria.nome}</span>
                     </button>
@@ -813,7 +820,6 @@ class PontosEntretenimentoApp {
             'esportes-lazer': 'fas fa-futbol',
             'gastronomia': 'fas fa-utensils',
             'geek-nerd': 'fas fa-gamepad',
-            'alternativo': 'fas fa-palette',
             'casas-noturnas': 'fas fa-glass-cheers'
         };
 
@@ -880,7 +886,7 @@ class PontosEntretenimentoApp {
         });
     }
 
-    renderizarPontos() {
+    renderPoints() {
         try {
             if (!window.mapManager) {
                 console.warn('MapManager nao disponivel para renderizar pontos');
@@ -892,22 +898,57 @@ class PontosEntretenimentoApp {
                 return;
             }
             
-            console.log('Iniciando renderização de pontos via app...');
+            console.log('🎯 Iniciando renderização de pontos via app...');
+            
+            // Debug: verificar se há pontos no DatabaseManager
+            const pontosDisponiveis = window.databaseManager.getPontos();
+            console.log(`📊 Pontos disponíveis no DatabaseManager:`, pontosDisponiveis.length);
+            
+            if (pontosDisponiveis.length === 0) {
+                console.warn('⚠️ Nenhum ponto encontrado no DatabaseManager!');
+                
+                // Tentar forçar recarregamento dos dados
+                console.log('🔄 Tentando forçar recarregamento dos dados...');
+                window.databaseManager.carregarTodosDados().then(() => {
+                    const novospontos = window.databaseManager.getPontos();
+                    console.log(`✅ Após recarregamento: ${novospontos.length} pontos`);
+                    if (novospontos.length > 0) {
+                        this.renderPoints(); // Tentar novamente
+                    }
+                }).catch(error => {
+                    console.error('❌ Erro ao recarregar dados:', error);
+                });
+                return;
+            }
+            
+            // Debug: mostrar alguns pontos de exemplo
+            console.log('🔍 Exemplos de pontos:', pontosDisponiveis.slice(0, 3).map(p => ({
+                id: p.id,
+                nome: p.nome,
+                categoria: p.categoria,
+                coordenadas: p.coordenadas
+            })));
             
             // Usar o método reloadPoints do MapManager em vez de renderizar manualmente
             const user = window.authManager?.getCurrentUser();
             const userRole = user?.role || 'visitor';
             const username = user?.username || null;
             
+            console.log(`👤 Contexto do usuário: ${userRole} (${username || 'anonymous'})`);
+            
             // Delegar para o MapManager que agora tem lógica aprimorada
+            console.log('🗺️ Delegando carregamento para MapManager...');
             window.mapManager.reloadPoints(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
-            this.filterByCategory('todos');
+            setTimeout(() => {
+                console.log('🔍 Aplicando filtro "todos" após carregamento...');
+                this.filterByCategory('todos');
+            }, 200);
             
-            console.log('Renderização delegada para MapManager');
+            console.log('✅ Renderização delegada para MapManager');
         } catch (error) {
-            console.error('Erro ao renderizar pontos:', error);
+            console.error('❌ Erro ao renderizar pontos:', error);
         }
     }
 
@@ -941,11 +982,11 @@ class PontosEntretenimentoApp {
         }
     }
 
-    mostrarErro(mensagem) {
-        console.error(mensagem);
-        // Usar error handler para exibir pop-up interativo
+    showError(message) {
+        console.error(message);
+        // Use error handler to show interactive popup
         if (window.errorHandler) {
-            window.errorHandler.showCustomError(mensagem);
+            window.errorHandler.showCustomError(message);
         }
     }
 
@@ -965,7 +1006,7 @@ class PontosEntretenimentoApp {
             } else {
                 console.log('Loading screen nao encontrado');
                 // Mesmo sem loading screen, tentar redimensionar o mapa
-                this.forcarRedimensionamentoMapa();
+                this.forceMapResize();
             }
         } catch (error) {
             console.error('Erro ao remover loading screen:', error);
@@ -1000,30 +1041,30 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Configurar responsividade global da aplicação
+     * Configure global application responsiveness
      */
-    configurarResponsividade() {
+    configureResponsiveness() {
         console.log('Configurando responsividade...');
         
-        // Configurar viewport meta tag se não existir
-        this.configurarViewport();
+        // Configure viewport meta tag if it doesn't exist
+        this.configureViewport();
         
-        // Event listeners para mudanças de orientação e redimensionamento
-        this.configurarEventListenersResponsivos();
+        // Event listeners for orientation changes and resizing
+        this.configureResponsiveEventListeners();
         
-        // Configurar comportamento touch para mobile
-        this.configurarComportamentoTouch();
+        // Configure touch behavior for mobile
+        this.configureTouchBehavior();
         
-        // Aplicar classes baseadas no tamanho da tela
-        this.aplicarClassesResponsivas();
+        // Apply classes based on screen size
+        this.applyResponsiveClasses();
         
         console.log('Responsividade configurada');
     }
 
     /**
-     * Configurar viewport meta tag
+     * Configure viewport meta tag
      */
-    configurarViewport() {
+    configureViewport() {
         let viewportMeta = document.querySelector('meta[name="viewport"]');
         
         if (!viewportMeta) {
@@ -1036,26 +1077,26 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Configurar event listeners responsivos
+     * Configure responsive event listeners
      */
-    configurarEventListenersResponsivos() {
+    configureResponsiveEventListeners() {
         // Debounced resize handler
         let resizeTimeout;
         const handleResize = () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                this.aplicarClassesResponsivas();
-                this.ajustarLayoutParaTamanhoTela();
+                this.applyResponsiveClasses();
+                this.adjustLayoutForScreenSize();
             }, 150);
         };
         
         // Orientation change handler
         const handleOrientationChange = () => {
             setTimeout(() => {
-                this.aplicarClassesResponsivas();
-                this.ajustarLayoutParaTamanhoTela();
+                this.applyResponsiveClasses();
+                this.adjustLayoutForScreenSize();
                 // Trigger map resize se existir
-                this.forcarRedimensionamentoMapa();
+                this.forceMapResize();
             }, 300);
         };
         
@@ -1064,9 +1105,9 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Configurar comportamento touch para dispositivos móveis
+     * Configure touch behavior for mobile devices
      */
-    configurarComportamentoTouch() {
+    configureTouchBehavior() {
         // Melhorar performance touch em iOS
         document.addEventListener('touchstart', () => {}, { passive: true });
         
@@ -1081,9 +1122,9 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Aplicar classes CSS baseadas no tamanho da tela
+     * Apply CSS classes based on screen size
      */
-    aplicarClassesResponsivas() {
+    applyResponsiveClasses() {
         const width = window.innerWidth;
         const body = document.body;
         
@@ -1101,9 +1142,9 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Ajustar layout para tamanho da tela
+     * Adjust layout for screen size
      */
-    ajustarLayoutParaTamanhoTela() {
+    adjustLayoutForScreenSize() {
         const isMobile = window.innerWidth <= 768;
         
         // Ajustar altura do mapa

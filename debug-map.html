@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Mapa SIG Entretenimento DF</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        
+        .debug-info {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007cba;
+        }
+        
+        .marker-icon {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 3px solid white !important;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4) !important;
+            cursor: pointer !important;
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug - Teste de Marcadores</h1>
+    
+    <div class="debug-info">
+        <h3>Informações de Debug:</h3>
+        <div id="debug-output">Inicializando...</div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const debugOutput = document.getElementById('debug-output');
+        
+        function log(message) {
+            console.log(message);
+            debugOutput.innerHTML += '<br>' + message;
+        }
+        
+        // Inicializar mapa
+        log('1. Inicializando mapa...');
+        const map = L.map('map').setView([-15.7939, -47.8828], 12);
+        
+        // Adicionar tile layer
+        log('2. Adicionando camada de tiles...');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Teste 1: Marcador padrão do Leaflet
+        log('3. Teste 1: Marcador padrão Leaflet...');
+        const marcadorPadrao = L.marker([-15.7939, -47.8828])
+            .addTo(map)
+            .bindPopup('Marcador Padrão - Centro de Brasília');
+        
+        // Teste 2: DivIcon simples
+        log('4. Teste 2: DivIcon simples...');
+        const iconSimples = L.divIcon({
+            className: 'marker-icon',
+            html: '<i class="fas fa-map-marker-alt" style="color: white; font-size: 20px;"></i>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+        
+        const marcadorDiv = L.marker([-15.7839, -47.8828], { icon: iconSimples })
+            .addTo(map)
+            .bindPopup('DivIcon Simples');
+        
+        // Teste 3: Carregar dados JSON e criar marcadores
+        log('5. Teste 3: Carregando dados JSON...');
+        fetch('./database/pontos_confirmados.json')
+            .then(response => {
+                log('5.1. Resposta JSON recebida: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                log('5.2. Dados carregados: ' + data.length + ' pontos');
+                
+                // Mostrar primeiro ponto
+                if (data.length > 0) {
+                    const ponto = data[0];
+                    log('5.3. Primeiro ponto: ' + ponto.nome + ' - ' + ponto.coordenadas);
+                    
+                    // Criar marcador para o primeiro ponto
+                    const iconPonto = L.divIcon({
+                        className: 'marker-icon',
+                        html: '<i class="fas fa-theater-masks" style="color: white; font-size: 18px;"></i>',
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18]
+                    });
+                    
+                    const marcadorPonto = L.marker(ponto.coordenadas, { icon: iconPonto })
+                        .addTo(map)
+                        .bindPopup(ponto.nome + '<br>' + ponto.descricao);
+                    
+                    log('5.4. Marcador criado para: ' + ponto.nome);
+                    
+                    // Criar mais alguns marcadores de teste
+                    for (let i = 1; i < Math.min(5, data.length); i++) {
+                        const p = data[i];
+                        const icon = L.divIcon({
+                            className: 'marker-icon',
+                            html: `<i class="fas fa-map-marker-alt" style="color: white; font-size: 16px;"></i>`,
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        });
+                        
+                        L.marker(p.coordenadas, { icon: icon })
+                            .addTo(map)
+                            .bindPopup(p.nome);
+                    }
+                    
+                    log('6. Teste concluído! Verifique se os marcadores aparecem no mapa.');
+                }
+            })
+            .catch(error => {
+                log('❌ Erro ao carregar dados: ' + error.message);
+            });
+        
+        // Eventos do mapa para debug
+        map.on('load', () => log('Mapa carregado completamente'));
+        map.on('zoomend', () => log('Zoom alterado para: ' + map.getZoom()));
+        
+        setTimeout(() => {
+            log('7. Invalidando tamanho do mapa...');
+            map.invalidateSize();
+        }, 1000);
+    </script>
+</body>
+</html>

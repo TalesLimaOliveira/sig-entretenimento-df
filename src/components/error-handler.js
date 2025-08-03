@@ -190,6 +190,24 @@ class ErrorHandler {
     }
 
     showError(type, errorInfo) {
+        // Em vez de mostrar o modal, mostrar uma notificação simples
+        console.error('ERRO:', errorInfo.message || 'Erro desconhecido');
+        console.error('DETALHES:', errorInfo);
+        
+        // Mostrar notificação simples
+        this.showSimpleErrorNotification(errorInfo.message || 'Erro desconhecido');
+    }
+
+    /**
+     * Mostra uma notificação simples de erro no topo da tela
+     */
+    showSimpleErrorNotification(message) {
+        // Usar a função unificada
+        this.showSimpleNotification('Erro. Verifique console para mais informações', 'error');
+    }
+
+    showErrorModal(type, errorInfo) {
+        // Função original do modal (mantida para casos específicos)
         const config = this.getErrorConfig(type);
         
         // Atualizar conteúdo do modal
@@ -331,10 +349,100 @@ class ErrorHandler {
     }
 
     showSuccess(message) {
-        if (window.infoPanelManager?.showNotification) {
-            window.infoPanelManager.showNotification(message, 'success');
-        } else {
-            console.log(message);
+        this.showSimpleNotification(message, 'success');
+    }
+
+    showWarning(message) {
+        this.showSimpleNotification(message, 'warning');
+    }
+
+    showInfo(message) {
+        this.showSimpleNotification(message, 'info');
+    }
+
+    /**
+     * Mostra uma notificação simples com diferentes tipos
+     */
+    showSimpleNotification(message, type = 'info') {
+        // Remover notificação anterior do mesmo tipo se existir
+        const existingNotification = document.querySelector(`.${type}-notification`);
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        // Configurações por tipo
+        const configs = {
+            error: { color: '#ef4444', icon: 'fas fa-exclamation-triangle', border: '#dc2626' },
+            success: { color: '#10b981', icon: 'fas fa-check-circle', border: '#059669' },
+            warning: { color: '#f59e0b', icon: 'fas fa-exclamation-circle', border: '#d97706' },
+            info: { color: '#3b82f6', icon: 'fas fa-info-circle', border: '#2563eb' }
+        };
+
+        const config = configs[type] || configs.info;
+
+        // Criar nova notificação
+        const notification = document.createElement('div');
+        notification.className = `${type}-notification simple-notification`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${config.color};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 350px;
+            font-size: 14px;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid ${config.border};
+            cursor: pointer;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="${config.icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Permitir fechar clicando
+        notification.addEventListener('click', () => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        });
+        
+        document.body.appendChild(notification);
+
+        // Remover após tempo baseado no tipo
+        const duration = type === 'error' ? 6000 : 4000;
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+
+        // Adicionar CSS de animação se não existir
+        if (!document.querySelector('#notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+                .simple-notification:hover {
+                    transform: scale(1.02);
+                    transition: transform 0.2s ease;
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 

@@ -25,15 +25,17 @@ class MapManager {
         this.containerId = containerId;
         this.map = null;
         
-        // Gerenciamento de marcadores
-        this.marcadores = new Map();              // Mapa de marcadores por ID
-        this.gruposPorCategoria = new Map();      // Grupos de marcadores por categoria
-        this.iconCache = new Map();               // Cache de ícones para melhor performance
+        // Marker management
+        this.markers = new Map();                // Map of markers by ID  
+        this.marcadores = new Map();             // Alias para compatibilidade
+        this.groupsByCategory = new Map();       // Marker groups by category
+        this.gruposPorCategoria = this.groupsByCategory; // Alias para compatibilidade
+        this.iconCache = new Map();              // Icon cache for better performance
         
-        // Estado da aplicação
-        this.activeCategory = 'todos';           // Categoria atualmente filtrada
-        this.popupAberto = null;                 // ID do popup atualmente aberto
-        this.modoAdicao = false;                 // Se está em modo de adição de pontos
+        // Application state
+        this.activeCategory = 'todos';           // Currently filtered category
+        this.openPopup = null;                   // ID of currently open popup
+        this.additionMode = false;               // If in point addition mode
         
         // Constantes do mapa
         this.BRASILIA_CENTER = [-15.794700, -47.890000];
@@ -400,22 +402,33 @@ class MapManager {
      */
     _loadPoints(pontos) {
         try {
-            console.log(`Loading ${pontos.length} points on map...`);
+            console.log(`📍 Loading ${pontos.length} points on map...`);
+            console.log('📋 Dados dos pontos:', pontos);
             
             // Limpar marcadores existentes
             this.clearMarkers();
             
             // Inicializar grupos primeiro se necessário
             if (this.gruposPorCategoria.size === 0) {
+                console.log('🔧 Criando grupos básicos...');
                 this._criarGruposBasicos();
             }
+            
+            // Verificar se o mapa está pronto
+            if (!this.map) {
+                console.error('❌ Mapa não está inicializado');
+                return;
+            }
+            
+            console.log(`🗺️ Mapa pronto, processando ${pontos.length} pontos...`);
             
             // Adicionar cada ponto
             pontos.forEach((ponto, index) => {
                 try {
+                    console.log(`🔄 Processando ponto ${index + 1}/${pontos.length}: ${ponto.nome} (ID: ${ponto.id})`);
                     this.addMarker(ponto);
                 } catch (error) {
-                    console.error(`Erro ao adicionar ponto ${ponto.id || index}:`, error);
+                    console.error(`❌ Erro ao adicionar ponto ${ponto.id || index}:`, error);
                 }
             });
 
@@ -428,6 +441,8 @@ class MapManager {
             });
             
             console.log(`✅ Total de ${pontos.length} pontos processados`);
+            console.log(`📍 Total de marcadores criados: ${this.marcadores.size}`);
+            
         } catch (error) {
             console.error('❌ Erro ao carregar pontos:', error);
         }
@@ -439,7 +454,7 @@ class MapManager {
      */
     _criarGruposBasicos() {
         const gruposNecessarios = ['todos', 'favoritos', 'geral', 'esportes-lazer', 
-                                   'gastronomia', 'geek-nerd', 'alternativo', 'casas-noturnas'];
+                                   'gastronomia', 'geek-nerd', 'casas-noturnas'];
         
         gruposNecessarios.forEach(categoria => {
             if (!this.gruposPorCategoria.has(categoria)) {
@@ -523,6 +538,12 @@ class MapManager {
         // Ponto removido
         document.addEventListener('database_pontoRemovido', (e) => {
             this.removeMarker(e.detail.id);
+        });
+
+        // Categorias carregadas/atualizadas - recarregar marcadores
+        document.addEventListener('database_categoriasCarregadas', () => {
+            console.log('Categorias carregadas, recarregando marcadores...');
+            this.recarregarMarcadores();
         });
     }
 
@@ -767,18 +788,45 @@ class MapManager {
     }
 
     /**
+     * Limpar cache de ícones (útil quando categorias são atualizadas)
+     */
+    limparCacheIcones() {
+        this.iconCache.clear();
+        if (this._iconeCache) {
+            this._iconeCache.clear();
+        }
+        console.log('Cache de ícones limpo');
+    }
+
+    /**
+     * Recarregar todos os marcadores com ícones atualizados
+     */
+    recarregarMarcadores() {
+        this.limparCacheIcones();
+        // Recarregar pontos para aplicar novos ícones
+        if (window.databaseManager) {
+            this.carregarPontos();
+        }
+    }
+
+    /**
      * Limpar todos os marcadores do mapa
      */
     clearMarkers() {
         try {
-            console.log('Limpando marcadores existentes...');
+            console.log('🧹 Limpando marcadores existentes...');
             
-            // Remover todos os marcadores dos grupos
+            // Remover grupos do mapa e limpar suas camadas
             this.gruposPorCategoria.forEach((grupo, categoria) => {
+                if (this.map.hasLayer(grupo)) {
+                    this.map.removeLayer(grupo);
+                    console.log(`➖ Grupo ${categoria} removido do mapa`);
+                }
                 grupo.clearLayers();
             });
             
-            // Limpar a lista de marcadores
+            // Limpar todas as referências
+            this.gruposPorCategoria.clear();
             this.marcadores.clear();
             
             console.log('Marcadores limpos');
@@ -793,68 +841,72 @@ class MapManager {
      */
     addMarker(ponto) {
         try {
-            if (!window.databaseManager) {
-                console.warn('DatabaseManager não disponível');
+            if (!ponto || !ponto.id || !ponto.nome) {
+                console.warn('Dados do ponto inválidos:', ponto);
                 return;
             }
-            
-            console.log(`🔍 Adicionando marcador para ponto: ${ponto.nome}, categoria original: ${ponto.categoria}`);
-            
-            const categoria = window.databaseManager.obterCategoria(ponto.categoria);
-            console.log(`📋 Categoria encontrada:`, categoria);
-            
-            if (!categoria) {
-                console.warn(`⚠️ Categoria não encontrada: ${ponto.categoria}`);
-                // Usar categoria padrão se não encontrada
-                ponto.categoria = 'geral';
-                console.log(`🔄 Categoria alterada para: ${ponto.categoria}`);
+
+            // Verificar se já existe um marcador para este ponto
+            if (this.marcadores && this.marcadores.has(ponto.id)) {
+                console.log(`Marcador já existe para ponto ${ponto.id}, ignorando...`);
+                return;
             }
 
-            // Criar ícone personalizado (com cache para performance)
-            const isPendente = ponto.status === 'pendente';
-            const icone = this._obterIconeCache(categoria || { id: 'geral', cor: '#999', icon: 'fas fa-map-marker-alt' }, isPendente);
-
-            // Criar coordenadas (latitude, longitude)
-            // Verificar se temos coordenadas no formato array ou propriedades separadas
+            console.log(`📍 Adicionando marcador: ${ponto.nome} (ID: ${ponto.id})`);
+            
+            // Verificar coordenadas
             let coordenadas;
-            if (ponto.coordenadas && Array.isArray(ponto.coordenadas)) {
+            if (ponto.coordenadas && Array.isArray(ponto.coordenadas) && ponto.coordenadas.length === 2) {
                 coordenadas = ponto.coordenadas; // [latitude, longitude]
             } else if (ponto.latitude && ponto.longitude) {
                 coordenadas = [ponto.latitude, ponto.longitude];
             } else {
-                console.warn(`⚠️ Coordenadas inválidas para ponto: ${ponto.nome}`, ponto);
+                console.warn(`❌ Coordenadas inválidas para ponto: ${ponto.nome}`, ponto.coordenadas);
                 return;
             }
 
+            // Obter categoria ou usar padrão
+            let categoria = null;
+            if (window.databaseManager && window.databaseManager.obterCategoria) {
+                categoria = window.databaseManager.obterCategoria(ponto.categoria);
+            }
+            
+            if (!categoria) {
+                console.warn(`⚠️ Categoria não encontrada: ${ponto.categoria}, usando padrão`);
+                categoria = { 
+                    id: ponto.categoria || 'geral', 
+                    cor: '#3b82f6', 
+                    icon: 'fas fa-map-marker-alt',
+                    nome: ponto.categoria || 'Geral'
+                };
+            }
+            
+            // Criar ícone
+            const isPendente = ponto.status === 'pendente';
+            console.log(`🎨 Criando ícone para categoria: ${categoria.id} (pendente: ${isPendente})`);
+            const icone = this._criarIconeOtimizado(categoria, isPendente);
+            
             // Criar marcador
             const marcador = L.marker(coordenadas, {
                 icon: icone,
-                title: ponto.nome
+                title: ponto.nome,
+                riseOnHover: true
             });
 
-            // Configurar eventos do marcador para usar painel lateral
+            // Configurar eventos do marcador
             marcador.on('click', (e) => {
-                // Prevenir propagação para evitar conflitos com listeners do document
-                if (e.originalEvent) {
-                    e.originalEvent.stopPropagation();
-                    e.originalEvent.preventDefault();
-                }
-                
-                // Adicionar um delay mínimo para garantir que o clique seja processado corretamente
-                setTimeout(() => {
-                    this.selecionarPonto(ponto);
-                }, 10);
+                e.originalEvent?.stopPropagation();
+                this.selecionarPonto(ponto);
             });
 
-            // Eventos de hover para feedback visual sutil (sem mover o ícone)
+            // Eventos de hover simples
             marcador.on('mouseover', () => {
                 const element = marcador.getElement();
                 if (element) {
-                    const iconDiv = element.querySelector('div');
+                    const iconDiv = element.querySelector('.marker-icon');
                     if (iconDiv) {
+                        iconDiv.style.transform = 'scale(1.1)';
                         iconDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.6)';
-                        iconDiv.style.filter = 'brightness(1.1)';
-                        // Não alterar transform para não interferir com posicionamento do Leaflet
                     }
                 }
             });
@@ -862,32 +914,58 @@ class MapManager {
             marcador.on('mouseout', () => {
                 const element = marcador.getElement();
                 if (element && !element.classList.contains('marcador-selecionado')) {
-                    const iconDiv = element.querySelector('div');
+                    const iconDiv = element.querySelector('.marker-icon');
                     if (iconDiv) {
+                        iconDiv.style.transform = 'scale(1)';
                         iconDiv.style.boxShadow = '0 3px 8px rgba(0,0,0,0.4)';
-                        iconDiv.style.filter = 'brightness(1)';
-                        // Não alterar transform para não interferir com posicionamento do Leaflet
                     }
                 }
             });
 
-            // Garantir que os grupos existam antes de adicionar
+            // Garantir que os grupos existam
             this._criarGruposBasicos();
 
+            // Inicializar Map se necessário
+            if (!this.marcadores) {
+                this.marcadores = new Map();
+            }
+
             // Adicionar ao grupo da categoria específica
-            const categoriaId = ponto.categoria;
-            if (this.gruposPorCategoria.has(categoriaId)) {
-                this.gruposPorCategoria.get(categoriaId).addLayer(marcador);
-                console.log(`✅ Marcador '${ponto.nome}' adicionado ao grupo '${categoriaId}'`);
-            } else {
-                // Se a categoria não existe, criar o grupo e adicionar
+            const categoriaId = categoria.id;
+            if (!this.gruposPorCategoria.has(categoriaId)) {
                 this.gruposPorCategoria.set(categoriaId, L.layerGroup());
-                this.gruposPorCategoria.get(categoriaId).addLayer(marcador);
-                console.log(`✅ Criado grupo '${categoriaId}' e adicionado marcador '${ponto.nome}'`);
+            }
+            const grupoCategoriaAtual = this.gruposPorCategoria.get(categoriaId);
+            grupoCategoriaAtual.addLayer(marcador);
+            
+            // Adicionar também ao grupo "todos"
+            if (!this.gruposPorCategoria.has('todos')) {
+                this.gruposPorCategoria.set('todos', L.layerGroup());
+            }
+            const grupoTodos = this.gruposPorCategoria.get('todos');
+            grupoTodos.addLayer(marcador);
+
+            // *** IMPORTANTE: Adicionar os grupos ao mapa para que os marcadores apareçam ***
+            if (!this.map.hasLayer(grupoCategoriaAtual)) {
+                grupoCategoriaAtual.addTo(this.map);
+                console.log(`🗺️ Grupo da categoria ${categoriaId} adicionado ao mapa`);
+            }
+            
+            if (!this.map.hasLayer(grupoTodos)) {
+                grupoTodos.addTo(this.map);
+                console.log('🗺️ Grupo "todos" adicionado ao mapa');
             }
 
             // Salvar referência do marcador
             this.marcadores.set(ponto.id, marcador);
+            
+            console.log(`✅ Marcador adicionado: ${ponto.nome} na categoria ${categoriaId}`);
+            
+            // Debug: Verificar se o marcador foi adicionado corretamente aos grupos
+            console.log(`📊 Debug grupos após adicionar marcador:`);
+            console.log(`  - Grupo ${categoriaId}: ${grupoCategoriaAtual.getLayers().length} marcadores`);
+            console.log(`  - Grupo todos: ${grupoTodos.getLayers().length} marcadores`);
+            console.log(`  - Total marcadores salvos: ${this.marcadores.size}`);
 
         } catch (error) {
             console.error('❌ Erro ao adicionar marcador:', error, ponto);
@@ -960,7 +1038,6 @@ class MapManager {
             'esportes-lazer': '⚽',
             'gastronomia': '�',
             'geek-nerd': '�',
-            'alternativo': '�',
             'casas-noturnas': '�',
             'favoritos': '❤️'
         };
@@ -972,76 +1049,6 @@ class MapManager {
         
         // Fallback para ícone padrão
         return '📍';
-    }
-
-    /**
-     * Criar ícone personalizado
-     * @param {Object} categoria - Dados da categoria
-     * @returns {Object} Ícone Leaflet
-     */
-    criarIconePersonalizado(categoria, ponto = null) {
-        // Verificar se é ponto pendente
-        const isPendente = ponto && ponto.status === 'pendente';
-        
-        // Criar chave de cache baseada na categoria e estado
-        const cacheKey = `${categoria?.id || 'default'}_${isPendente}_${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`;
-        
-        // Verificar cache primeiro para melhor performance
-        if (this.iconCache.has(cacheKey)) {
-            return this.iconCache.get(cacheKey);
-        }
-        
-        // Tamanho aumentado para melhor visibilidade e usabilidade
-        const tamanho = window.innerWidth <= 768 ? 42 : 36; // Maior em mobile (aumentado de 32/28)
-        const borderWidth = window.innerWidth <= 768 ? 4 : 3;
-        
-        const corBorda = isPendente ? '#f59e0b' : 'white'; // Borda dourada para pendentes
-        const indicadorPendente = isPendente ? `
-            <div style="
-                position: absolute;
-                top: -2px;
-                right: -2px;
-                width: 8px;
-                height: 8px;
-                background: #f59e0b;
-                border-radius: 50%;
-                border: 1px solid white;
-                z-index: 1000;
-            "></div>
-        ` : '';
-        
-        const icone = L.divIcon({
-            className: 'marcador-personalizado',
-            html: `
-                <div style="
-                    position: relative;
-                    background-color: ${categoria?.cor || '#999'};
-                    width: ${tamanho}px;
-                    height: ${tamanho}px;
-                    border: ${borderWidth}px solid ${corBorda};
-                    border-radius: 50%;
-                    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: ${Math.floor(tamanho * 0.7)}px;
-                    color: white;
-                    cursor: pointer;
-                    position: relative;
-                    transform: none;
-                ">
-                    <i class="${categoria?.icon || 'fas fa-map-marker-alt'}"></i>
-                    ${indicadorPendente}
-                </div>
-            `,
-            iconSize: [tamanho, tamanho],
-            iconAnchor: [tamanho / 2, tamanho / 2], // Centro do ícone nas coordenadas
-            popupAnchor: [0, -(tamanho / 2)] // Popup acima do ícone
-        });
-        
-        // Armazenar no cache para uso futuro
-        this.iconCache.set(cacheKey, icone);
-        return icone;
     }
 
     /**
@@ -1142,10 +1149,22 @@ class MapManager {
         const favoritos = window.databaseManager.getFavoritos(username);
 
         favoritos.forEach(ponto => {
-            const marker = this.criarMarcador(ponto);
-            if (marker) {
-                grupoFavoritos.addLayer(marker);
-            }
+            // Criar marcador e adicionar ao grupo de favoritos
+            const categoria = window.databaseManager.obterCategoria(ponto.categoria) || { 
+                id: 'geral', 
+                cor: '#3b82f6', 
+                icon: 'fas fa-map-marker-alt' 
+            };
+            
+            const icone = this._obterIconeCache(categoria, false);
+            const marcador = L.marker(ponto.coordenadas, { icon: icone, title: ponto.nome });
+            
+            // Configurar evento de clique
+            marcador.on('click', () => {
+                this.selecionarPonto(ponto);
+            });
+            
+            grupoFavoritos.addLayer(marcador);
         });
 
         // Adicionar ao mapa
@@ -1164,7 +1183,23 @@ class MapManager {
      */
     reloadPoints(userRole = 'visitor', username = null) {
         try {
-            console.log(`Recarregando pontos para ${userRole}...`);
+            console.log(`🔄 Recarregando pontos para ${userRole}...`);
+            
+            // Verificar se o mapa foi inicializado
+            if (!this.map) {
+                console.warn('⚠️ Mapa não foi inicializado, inicializando agora...');
+                this.init();
+                if (!this.map) {
+                    console.error('❌ Falha ao inicializar o mapa');
+                    return;
+                }
+            }
+            
+            // Verificar se o DatabaseManager está disponível
+            if (!window.databaseManager) {
+                console.error('❌ DatabaseManager não disponível');
+                return;
+            }
             
             // Mostrar indicador de carregamento
             this._mostrarCarregamento(true);
@@ -1172,37 +1207,73 @@ class MapManager {
             // Obter pontos baseado no perfil
             let pontos;
             if (userRole === 'administrator') {
-                pontos = [...window.databaseManager.getPontos(), ...window.databaseManager.getPontosPendentes()];
+                const confirmados = window.databaseManager.getPontos() || [];
+                const pendentes = window.databaseManager.getPontosPendentes() || [];
+                pontos = [...confirmados, ...pendentes];
             } else {
-                pontos = window.databaseManager.getPontos(); // Apenas confirmados
+                pontos = window.databaseManager.getPontos() || []; // Apenas confirmados
             }
 
             console.log(`📦 ${pontos.length} pontos obtidos do banco de dados`);
 
-            // Limpar grupos existentes
-            this.gruposPorCategoria.forEach(grupo => {
-                if (this.map.hasLayer(grupo)) {
-                    this.map.removeLayer(grupo);
+            // Debug: mostrar alguns pontos de exemplo
+            if (pontos.length > 0) {
+                console.log('🔍 Exemplo de pontos:', pontos.slice(0, 3).map(p => ({
+                    id: p.id, 
+                    nome: p.nome, 
+                    categoria: p.categoria,
+                    coordenadas: p.coordenadas,
+                    ativo: p.ativo
+                })));
+                
+                // Verificar se há coordenadas válidas
+                const pontosComCoordenadas = pontos.filter(p => 
+                    p.coordenadas && Array.isArray(p.coordenadas) && p.coordenadas.length === 2
+                );
+                console.log(`📍 Pontos com coordenadas válidas: ${pontosComCoordenadas.length}`);
+            } else {
+                console.warn('⚠️ Nenhum ponto encontrado no DatabaseManager');
+                
+                // Tentar forçar recarregamento do DatabaseManager
+                if (window.databaseManager.carregarTodosDados) {
+                    console.log('🔄 Tentando recarregar dados do DatabaseManager...');
+                    window.databaseManager.carregarTodosDados().then(() => {
+                        console.log('✅ Dados recarregados, tentando novamente...');
+                        setTimeout(() => this.reloadPoints(userRole, username), 100);
+                    }).catch(error => {
+                        console.error('❌ Erro ao recarregar DatabaseManager:', error);
+                        this._mostrarCarregamento(false);
+                    });
+                    return;
+                } else {
+                    this._mostrarCarregamento(false);
+                    return;
                 }
-                grupo.clearLayers();
-            });
-            this.gruposPorCategoria.clear();
-            this.marcadores.clear();
+            }
 
-            // Recriar grupos e carregar pontos
+            // Limpar estado anterior completamente
+            console.log('🗑️ Limpando estado anterior...');
+            this.clearMarkers();
+            this.limparCacheIcones();
+
+            // Recriar grupos básicos
+            console.log('📁 Criando grupos básicos...');
             this._criarGruposBasicos();
             
+            // Se não há pontos, finalizar aqui
+            if (pontos.length === 0) {
+                console.log('⚠️ Nenhum ponto para carregar');
+                this._finalizarCarregamento(0);
+                return;
+            }
+            
             // Carregar pontos em lotes para melhor performance
+            console.log('📍 Iniciando carregamento em lotes...');
             this._loadPointsInBatches(pontos);
 
-            // Aplicar filtro atual ou "todos" se não há categoria ativa
-            const categoriaParaFiltrar = this.activeCategory || 'todos';
-            console.log(`🎯 Aplicando filtro: ${categoriaParaFiltrar}`);
-            this.filterByCategory(categoriaParaFiltrar, username);
-
-            console.log(`✅ Recarregamento concluído: ${pontos.length} pontos processados`);
         } catch (error) {
             console.error('❌ Erro ao recarregar pontos:', error);
+            this._mostrarCarregamento(false);
         }
     }
 
@@ -1536,6 +1607,13 @@ class MapManager {
     _finalizarCarregamento(totalPontos) {
         console.log(`✅ ${totalPontos} pontos carregados com sucesso`);
         
+        // Aplicar filtro para garantir que os marcadores sejam visíveis
+        setTimeout(() => {
+            const categoriaAtual = this.activeCategory || 'todos';
+            console.log(`🔄 Aplicando filtro final: ${categoriaAtual}`);
+            this.filterByCategory(categoriaAtual);
+        }, 50);
+        
         // Remover indicador de carregamento rapidamente (otimização)
         setTimeout(() => {
             this._mostrarCarregamento(false);
@@ -1552,7 +1630,7 @@ class MapManager {
      * @private
      */
     _obterIconeCache(categoria, isPendente = false) {
-        const cacheKey = `${categoria.id}_${isPendente}`;
+        const cacheKey = `${categoria.id}_${isPendente}_${window.innerWidth <= 768 ? 'mobile' : (window.innerWidth <= 1024 ? 'tablet' : 'desktop')}`;
         
         if (!this._iconeCache) {
             this._iconeCache = new Map();
@@ -1567,21 +1645,64 @@ class MapManager {
     }
 
     /**
-     * Criar ícone otimizado (simplificado)
+     * Criar ícone otimizado (simplificado e mais robusto)
      * @private
      */
     _criarIconeOtimizado(categoria, isPendente = false) {
-        const tamanho = window.innerWidth <= 768 ? 38 : 32; // Aumentado de 28/24 para 38/32
-        const cor = categoria?.cor || '#999';
+        // Tamanhos responsivos
+        const isMobile = window.innerWidth <= 768;
+        const isTablet = window.innerWidth <= 1024;
+        
+        let tamanho, fontSize;
+        if (isMobile) {
+            tamanho = 48;
+            fontSize = 26;
+        } else if (isTablet) {
+            tamanho = 42;
+            fontSize = 22;
+        } else {
+            tamanho = 38;
+            fontSize = 20;
+        }
+        
+        const cor = categoria?.cor || '#3b82f6';
         const icon = categoria?.icon || 'fas fa-map-marker-alt';
-        const corBorda = isPendente ? '#f59e0b' : 'white';
+        const opacity = isPendente ? 0.7 : 1;
+        const borderStyle = isPendente ? 'dashed' : 'solid';
         
         return L.divIcon({
             className: 'marcador-otimizado',
-            html: `<div class="marker-icon" style="background:${cor}; border-color:${corBorda}"><i class="${icon}"></i></div>`,
+            html: `
+                <div class="marker-icon" style="
+                    width: ${tamanho}px !important;
+                    height: ${tamanho}px !important;
+                    background-color: ${cor};
+                    color: white;
+                    border-radius: 50%;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    border: 3px ${borderStyle} white !important;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.4) !important;
+                    font-size: ${fontSize}px !important;
+                    opacity: ${opacity};
+                    cursor: pointer !important;
+                    position: relative !important;
+                    z-index: 1000 !important;
+                    transition: all 0.2s ease !important;
+                ">
+                    <i class="${icon}" style="
+                        color: white !important;
+                        font-size: ${fontSize}px !important;
+                        line-height: 1 !important;
+                        pointer-events: none !important;
+                    "></i>
+                </div>
+            `,
             iconSize: [tamanho, tamanho],
             iconAnchor: [tamanho / 2, tamanho / 2],
-            popupAnchor: [0, -(tamanho / 2)]
+            popupAnchor: [0, -tamanho / 2],
+            className: 'marcador-leaflet'
         });
     }
 }
@@ -1612,23 +1733,54 @@ if (!document.querySelector('#map-markers-css')) {
     const styleSheet = document.createElement('style');
     styleSheet.id = 'map-markers-css';
     styleSheet.textContent = `
+        .marcador-otimizado {
+            overflow: visible !important;
+            z-index: 1000 !important;
+        }
+        
         .marcador-otimizado .marker-icon {
             width: 100%;
             height: 100%;
-            border: 2px solid white;
+            border: 3px solid white;
             border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60%;
             color: white;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
+            overflow: visible !important;
+            position: relative;
         }
+        
         .marcador-otimizado .marker-icon:hover {
             transform: scale(1.1);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            z-index: 1001;
+        }
+        
+        .marcador-otimizado .marker-icon i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Garantir visibilidade em todos os dispositivos */
+        .leaflet-marker-icon.marcador-otimizado {
+            overflow: visible !important;
+            z-index: 1000 !important;
+        }
+        
+        /* Correção para marcadores cortados */
+        .leaflet-marker-pane {
+            overflow: visible !important;
+        }
+        
+        .leaflet-map-pane {
+            overflow: visible !important;
         }
     `;
     document.head.appendChild(styleSheet);

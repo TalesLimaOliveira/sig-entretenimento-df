@@ -193,7 +193,7 @@
     {
         "id": 9,
         "nome": "Centro Cultural da República",
-        "categoria": "alternativo",
+        "categoria": "geral",
         "coordenadas": [
             -15.797,
             -47.879
@@ -214,7 +214,7 @@
     {
         "id": 10,
         "nome": "Sarau do Beco",
-        "categoria": "alternativo",
+        "categoria": "geral",
         "coordenadas": [
             -15.84,
             -48.045

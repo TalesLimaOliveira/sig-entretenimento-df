@@ -25,11 +25,20 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
     - `isAdmin`: Estado de administrador do usuário atual
     - `activeCategory`: Categoria atualmente filtrada
     - `isInitialized`: Status de inicialização da aplicação
-  - **Métodos refatorados**:
-    - `loadData()`: Carregamento inicial de dados
-    - `filterByCategory()`: Filtro por categoria
-    - `updateStatistics()`: Atualização de estatísticas
-    - `removeLoadingScreen()`: Remoção da tela de carregamento
+  - **Métodos refatorados para inglês**:
+    - `loadData()`: Carregamento inicial de dados (era: `carregarDados`)
+    - `filterByCategory()`: Filtro por categoria (era: `filtrarPorCategoria`)
+    - `updateStatistics()`: Atualização de estatísticas (era: `atualizarEstatisticas`)
+    - `removeLoadingScreen()`: Remoção da tela de carregamento (era: `removerTelaLoading`)
+    - `configureCategoryMenu()`: Configuração do menu de categorias (era: `configurarMenuCategorias`)
+    - `renderPoints()`: Renderização de pontos no mapa (era: `renderizarPontos`)
+    - `showNotification()`: Exibição de notificações (era: `mostrarNotificacao`)
+    - `showError()`: Exibição de erros (era: `mostrarErro`)
+    - `configureResponsiveness()`: Configuração de responsividade (era: `configurarResponsividade`)
+    - `configureViewport()`: Configuração do viewport (era: `configurarViewport`)
+    - `configureTouchBehavior()`: Configuração de comportamento touch (era: `configurarComportamentoTouch`)
+    - `applyResponsiveClasses()`: Aplicação de classes responsivas (era: `aplicarClassesResponsivas`)
+    - `adjustLayoutForScreenSize()`: Ajuste de layout por tamanho de tela (era: `ajustarLayoutParaTamanhoTela`)
 
 ### 2. Camada de Negócio (Domain Layer)
 - **Gerenciador de Dados**: `src/js/database.js` (`DatabaseManager`)
@@ -43,7 +52,11 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
 
 ### 3. Camada de Apresentação (Presentation Layer)
 - **Gerenciador de Mapas**: `src/js/map.js` (`MapManager`)
-  - **Propriedades principais**:
+  - **Propriedades principais** (refatoradas para inglês):
+    - `markers`: Map de marcadores por ID (era: `marcadores`)
+    - `groupsByCategory`: Grupos de marcadores por categoria (era: `gruposPorCategoria`)
+    - `openPopup`: ID do popup atualmente aberto (era: `popupAberto`)
+    - `additionMode`: Modo de adição de pontos ativo (era: `modoAdicao`)
     - `activeCategory`: Categoria atualmente filtrada no mapa
 - **Painel de Informações**: `src/js/info-panel.js` (`InfoPanelManager`)
 - **Responsabilidade**: Interface do usuário, interações visuais, controle de aparência

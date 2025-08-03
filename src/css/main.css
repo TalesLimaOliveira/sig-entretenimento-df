@@ -162,9 +162,76 @@ body {
 
 /* ===== RESPONSIVIDADE ===== */
 
+/* Tablet modo ícones - 945px */
+@media (max-width: 945px) {
+    .nav-btn-text {
+        display: none; /* Ocultar textos dos botões */
+    }
+    
+    .nav-btn {
+        width: 45px;
+        height: 45px;
+        min-width: 45px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+        position: relative;
+    }
+    
+    .nav-buttons-container {
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    /* Ajustar header para economizar espaço */
+    .header-content {
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+    
+    /* Adicionar tooltips para os ícones */
+    .nav-btn[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        pointer-events: none;
+    }
+}
+
 /* Tablet e telas médias */
 @media (max-width: 1024px) {
-    /* Mantém o alinhamento padrão do header-actions com margin-left: auto */
+    .container {
+        padding: 0 15px;
+    }
+    
+    .header-content {
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .nav-buttons-container {
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .header-actions {
+        position: relative;
+        margin-left: auto;
+    }
 }
 
 /* Mobile - Botões sempre visíveis */
@@ -221,17 +288,101 @@ body {
     }
 }
 
-/* Telas muito pequenas */
+/* Telas muito pequenas - Smartphones */
 @media (max-width: 480px) {
+    :root {
+        --header-height: 120px; /* Altura suficiente para duas linhas de botões */
+    }
+    
+    .container {
+        padding: 0 0.5rem !important;
+        overflow: visible !important;
+    }
+    
+    /* Garantir que o container do header permita overflow */
+    .header .container {
+        height: auto !important;
+        min-height: var(--header-height) !important;
+        overflow: visible !important;
+        align-items: flex-start !important;
+        padding-top: 0.5rem !important;
+    }
+    
     .nav-btn {
-        width: 35px;
-        height: 35px;
-        min-width: 35px;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
         font-size: 0.9rem;
+        border-radius: 50% !important;
+        justify-content: center !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .nav-btn i {
+        font-size: 16px !important;
     }
     
     .nav-buttons-container {
-        gap: 0.3rem;
+        gap: 0.25rem !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 1000 !important;
+    }
+    
+    /* Garantir que cada botão seja visível */
+    .nav-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+    }
+    
+    .header-navigation {
+        flex: 1 !important;
+        display: flex !important;
+        width: 100% !important;
+    }
+    
+    .header-content {
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        padding: 0.5rem !important;
+        gap: 0.5rem !important;
+        overflow: visible !important;
+        height: auto !important;
+        min-height: var(--header-height) !important;
+    }
+    
+    .header {
+        overflow: visible !important;
+        min-height: var(--header-height) !important;
+        height: auto !important;
+    }
+    
+    /* Garantir que a navegação seja sempre visível */
+    .header-navigation {
+        order: 1;
+        width: 100%;
+    }
+    
+    .header-actions {
+        order: 2;
+        margin-left: 0 !important;
+        flex-shrink: 0;
+    }
+    
+    .header-login-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
     
     .mobile-menu-dropdown {
@@ -448,7 +599,7 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 0;
-    overflow: hidden;
+    overflow: visible; /* Mudado de hidden para visible para não cortar ícones */
     box-shadow: none;
     position: absolute;
     top: 0;
@@ -462,82 +613,82 @@ body {
     height: 100%;
     border-radius: 0;
     background: var(--bg-secondary);
+    overflow: visible; /* Garantir que ícones não sejam cortados */
 }
 
-/* Estilo para marcadores personalizados (otimizado) */
-.marcador-personalizado {
-    transition: none !important; /* Remove transições que podem causar problemas */
+/* Correções adicionais para evitar corte de ícones */
+.leaflet-container {
+    overflow: visible !important;
 }
 
-.marcador-personalizado:hover {
-    /* Remove scale que move o ícone */
-    z-index: 1000;
+.leaflet-map-pane {
+    overflow: visible !important;
 }
 
-.marcador-personalizado div {
-    /* Garantir que o div interno mantém posição */
-    position: relative;
-    margin: 0;
-    padding: 0;
-    /* Otimização para ícones maiores */
-    min-width: 36px;
-    min-height: 36px;
-}
-
-/* Aumentar tamanho específico dos ícones FontAwesome */
-.marcador-personalizado div i {
-    font-size: 20px !important; /* Tamanho base para desktop */
-}
-
-/* Responsividade para ícones FontAwesome em marcadores personalizados */
-@media (max-width: 768px) {
-    .marcador-personalizado div {
-        min-width: 42px;
-        min-height: 42px;
-    }
-    
-    .marcador-personalizado div i {
-        font-size: 26px !important; /* Maior em dispositivos móveis */
-    }
-}
-
-.marcador-personalizado div:hover {
-    /* Apenas efeito visual sutil sem mover o ícone */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
-    filter: brightness(1.1);
-    /* Remove qualquer transform adicional que possa mover o elemento */
-}
-
-.marcador-personalizado.marcador-selecionado div {
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.5), 0 4px 12px rgba(0,0,0,0.6) !important;
-    filter: brightness(1.1);
-    z-index: 1000 !important;
+.leaflet-marker-pane {
+    overflow: visible !important;
 }
 
 /* Estilo otimizado para marcadores */
 .marcador-otimizado {
     transition: none !important;
+    overflow: visible !important;
 }
 
 .marcador-otimizado .marker-icon {
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 38px;
+    min-height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
     color: white;
-    font-size: 20px; /* Aumentado de 16px para 20px */
+    font-size: 20px; /* Tamanho adequado */
+    overflow: visible !important;
+    transition: all 0.2s ease;
+}
+
+.marcador-otimizado .marker-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 
 /* Responsividade para ícones otimizados */
 @media (max-width: 768px) {
     .marcador-otimizado .marker-icon {
-        min-width: 38px;
-        min-height: 38px;
-        font-size: 24px; /* Maior em dispositivos móveis */
+        min-width: 48px !important;
+        min-height: 48px !important;
+        font-size: 26px !important; /* Maior em dispositivos móveis */
+        overflow: visible !important;
+        margin: 0 !important; /* Sem margem desnecessária */
+    }
+}
+
+/* Correções para tablets e telas intermediárias */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .marcador-personalizado div {
+        min-width: 42px !important;
+        min-height: 42px !important;
+        overflow: visible !important;
+    }
+    
+    .marcador-otimizado .marker-icon {
+        min-width: 42px !important;
+        min-height: 42px !important;
+        font-size: 22px !important;
+        overflow: visible !important;
+    }
+    
+    /* Garantir espaço para ícones em tablets */
+    .map-container {
+        padding: 20px !important;
+        box-sizing: content-box !important;
+    }
+    
+    #map {
+        margin: -20px !important;
     }
 }
 
@@ -1254,7 +1405,6 @@ body {
         padding: 0.5rem 1rem;
         font-size: 0.85rem;
     }
-}
     
     /* Painel lateral responsivo para tablets */
     .info-panel {
@@ -1282,34 +1432,7 @@ body {
         padding: 0.8rem;
     }
     
-    .container {
-        padding: 0 10px;
-    }
-
-/* Smartphones */
-@media (max-width: 480px) {
-    :root {
-        --header-height: 140px; /* Ainda maior para smartphones */
-    }
-    
-    .nav-btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
-        border-radius: 15px;
-    }
-    
-    .nav-btn i {
-        font-size: 0.8rem;
-    }
-    
-    .header-login-btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-}
-
-/* Tablets e telas médias */
-@media (max-width: 768px) {
+    /* Ajustes específicos do painel para tablets */
     .info-panel {
         width: 100vw;
         top: var(--header-height);

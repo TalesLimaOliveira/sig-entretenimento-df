@@ -1,95 +1,113 @@
-# PENDÊNCIAS - Sistema de Entretenimento DF
+# PENDÊNCIAS - SIG Entretenimento DF
 
-Este arquivo lista as funções identificadas como TODO/pendentes no projeto.
+Este arquivo contém a lista de funcionalidades ainda não implementadas ou parcialmente concluídas no projeto.
 
-## ✅ Correções Realizadas (Sessão Atual)
+## Funcionalidades Pendentes
 
-### Nomenclatura de Métodos
-- **Corrigido**: `this.filtrarPorCategoria()` → `this.filterByCategory()`
-- **Corrigido**: `this.atualizarEstatisticas()` → `this.updateStatistics()`
-- **Arquivos afetados**: `src/js/app.js` (múltiplas linhas)
-- **Descrição**: Padronização da nomenclatura para inglês conforme refatoração
+### MapManager (src/js/map.js)
 
-## Pendências Identificadas (por prioridade)
+#### `_configureControls()` - Linha 598
+**Descrição:** Implementar controles específicos do mapa se necessário
+**Status:** Método stub - necessita implementação de controles personalizados
 
-### 🔴 Alta Prioridade
+#### `_removeControls()` - Linha 626  
+**Descrição:** Implementar remoção de controles específicos se adicionados
+**Status:** Método stub - necessita implementação de limpeza de controles
 
-1. **Funcionalidade de cadastro de usuários**
-   - **Arquivo**: `src/components/login-modal.js:455`
-   - **Função**: `showRegisterForm()`
-   - **Descrição**: Implementar sistema completo de cadastro de novos usuários
+### AdminManager (src/js/admin.js)
 
-2. **Lógica de rejeição de pontos com feedback**
-   - **Arquivo**: `src/js/admin.js:1049`
-   - **Função**: `rejeitarPonto(pontoId)`
-   - **Descrição**: Implementar lógica completa de rejeição de pontos com feedback ao usuário
+#### `setupTooltips()` - Linha 791
+**Descrição:** Implementar tooltips informativos na interface administrativa
+**Status:** Método stub - necessita implementação de sistema de tooltips
 
-### 🟡 Média Prioridade
+#### `showNewCategoryModal()` - Linha 836
+**Descrição:** Implementar funcionalidade do modal de nova categoria
+**Status:** Método stub - necessita implementação completa do modal
 
-3. **Configuração de estatísticas da aplicação**
-   - **Arquivo**: `src/js/app.js:400`
-   - **Função**: `configureStatistics()`
-   - **Descrição**: Implementar lógica de configuração de estatísticas da aplicação
+#### `showNewUserModal()` - Linha 844
+**Descrição:** Implementar funcionalidade do modal de novo usuário
+**Status:** Método stub - necessita implementação completa do modal
 
-4. **Formulário de adição de pontos para usuários**
-   - **Arquivo**: `src/components/user-menu.js:165`
-   - **Função**: `openAddPointForm()`
-   - **Descrição**: Implementar abertura do formulário de adição de pontos para usuários comuns
+#### `exportReport()` - Linha 852
+**Descrição:** Implementar funcionalidade de exportação de relatório
+**Status:** Método stub - necessita implementação de exportação (PDF/Excel)
 
-5. **Tooltips informativos na interface admin**
-   - **Arquivo**: `src/js/admin.js:705`
-   - **Função**: `setupTooltips()`
-   - **Descrição**: Implementar tooltips informativos na interface administrativa
+#### `generateReport()` - Linha 860
+**Descrição:** Implementar funcionalidade de geração de relatório
+**Status:** Método stub - necessita implementação de geração de dados
 
-### 🟢 Baixa Prioridade
+#### `showHelp()` - Linha 868
+**Descrição:** Implementar sistema de ajuda
+**Status:** Método stub - necessita implementação de sistema de documentação/help
 
-6. **Controles específicos do mapa**
-   - **Arquivo**: `src/js/map.js:592`
-   - **Função**: `enableMapControls()`
-   - **Descrição**: Implementar controles específicos do mapa se necessário
+#### `showLogs()` - Linha 876
+**Descrição:** Implementar funcionalidade de visualização de logs
+**Status:** Método stub - necessita implementação de visualizador de logs
 
-7. **Remoção de controles específicos do mapa**
-   - **Arquivo**: `src/js/map.js:620`
-   - **Função**: `disableMapControls()`
-   - **Descrição**: Implementar remoção de controles específicos se adicionados
+#### `rejectPoint()` - Linha 1141
+**Descrição:** Implementar lógica de rejeição de pontos com feedback do usuário
+**Status:** Método stub - necessita implementação de workflow de rejeição
 
-### 🔵 Funcionalidades Futuras
+### PontosEntretenimentoApp (src/js/app.js)
 
-8. **Gerenciamento de conta de usuário**
-   - **Arquivo**: `src/components/dynamic-user-button.js:424`
-   - **Função**: `openAccountManagement()`
-   - **Descrição**: Implementar funcionalidade completa de gerenciamento de conta
+#### `configureStatistics()` - Linha 401
+**Descrição:** Implementar lógica de configuração de estatísticas da aplicação
+**Status:** Método stub - necessita implementação de dashboard de estatísticas
 
-9. **Sistema de rotas**
-   - **Arquivo**: `src/js/info-panel.js:328`
-   - **Função**: Sistema de direções/rotas
-   - **Descrição**: Implementar funcionalidade de rotas para pontos selecionados
+### UserMenu (src/components/user-menu.js)
 
-## Funcionalidades Ainda Não Implementadas (com alertas temporários)
+#### `showAddPointForm()` - Linha 165
+**Descrição:** Implementar abertura do formulário de adicionar ponto para usuários
+**Status:** Método stub - necessita implementação de modal/formulário
 
-### AdminManager
-- `showNewCategoryModal()` - Modal de nova categoria
-- `showNewUserModal()` - Modal de novo usuário
-- `exportReport()` - Exportação de relatórios
-- `generateReport()` - Geração de relatórios
-- `showHelp()` - Sistema de ajuda
-- `showLogs()` - Visualização de logs
+## Refatoração de Nomenclatura
 
-## Status das Implementações
+### Métodos Pendentes de Tradução (Português → Inglês)
 
-### ✅ Concluído
-- Sistema de imagens completo
-- Sistema de favoritos
-- Sistema de autenticação básico
-- Interface responsiva
-- Documentação atualizada
+#### MapManager (src/js/map.js)
+- `_configurarCamadas()` → `_configureLayers()`
+- `_configurarEventListeners()` → `_configureEventListeners()`
+- `_configurarControles()` → `_configureControls()`
+- `_configurarResponsividade()` → `_configureResponsiveness()`
+- `_configurarResizeObserver()` → `_configureResizeObserver()`
+- `_configurarEventListenersResponsivos()` → `_configureResponsiveEventListeners()`
+- `_configurarEventosDatabase()` → `_configureDatabaseEvents()`
+- `_configurarEventosAuth()` → `_configureAuthEvents()`
 
-### 🔄 Em Progresso
-- Refatoração de nomenclatura
-- Remoção de emojis dos logs
-- Padronização do código
+#### Propriedades (já refatoradas)
+- `marcadores` → `markers` ✅
+- `gruposPorCategoria` → `groupsByCategory` ✅
+- `popupAberto` → `openPopup` ✅
+- `modoAdicao` → `additionMode` ✅
 
-### ⏳ Planejado
-- Implementação das funções TODO listadas acima
-- Testes automatizados
-- Sistema de CI/CD
+### Arquivos que Necessitam Revisão Completa
+
+1. **database.js** - Métodos em português precisam ser traduzidos
+2. **admin.js** - Vários métodos em português e funcionalidades incompletas
+3. **info-panel.js** - Métodos de configuração em português
+4. **auth.js** - Verificar nomenclatura de métodos
+5. **theme-colors.js** - Verificar se há métodos em português
+
+## Padrões a Implementar
+
+### Nomenclatura de Código
+- [x] Variáveis em inglês (camelCase)
+- [x] Constantes em UPPER_SNAKE_CASE
+- [x] Classes em PascalCase
+- [x] Métodos privados com prefixo `_`
+- [ ] Completar tradução de todos os métodos para inglês
+
+### Documentação
+- [ ] Atualizar comments em português para refletir nomes em inglês
+- [ ] Documentar todos os métodos com JSDoc padrão
+- [ ] Atualizar guia de desenvolvimento com nomenclatura atual
+
+### Tratamento de Erros
+- [x] Uso do ErrorHandler para notificações
+- [ ] Implementar try/catch em todos os métodos assíncronos
+- [ ] Padronizar mensagens de erro
+
+---
+
+**Última atualização:** 02/08/2025  
+**Total de pendências:** 15 funcionalidades + refatoração de nomenclatura

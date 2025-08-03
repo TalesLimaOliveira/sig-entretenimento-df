@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - SIG Entretenimento DF</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #2a2a2a;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #00ffff;
+        }
+        .status-ok { color: #00ff00; }
+        .status-error { color: #ff0000; }
+        .status-warning { color: #ffff00; }
+        .status-info { color: #00ffff; }
+        .code {
+            background: #333;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .iframe-container {
+            margin: 20px 0;
+            border: 2px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug Console - SIG Entretenimento DF</h1>
+        
+        <div class="section">
+            <h3>🎮 Controles de Debug</h3>
+            <button onclick="executarDebugCompleto()">🔍 Debug Completo</button>
+            <button onclick="testarCarregamentoPontos()">📍 Testar Pontos</button>
+            <button onclick="testarCategorias()">📋 Testar Categorias</button>
+            <button onclick="forcarRecarregamento()">🔄 Forçar Reload</button>
+            <button onclick="limparCache()">🗑️ Limpar Cache</button>
+            <button onclick="mostrarTodosPontos()">👁️ Mostrar Todos</button>
+        </div>
+        
+        <div class="section">
+            <h3>📊 Status dos Managers</h3>
+            <div id="status-managers">Verificando...</div>
+        </div>
+        
+        <div class="section">
+            <h3>📁 Status dos Arquivos JSON</h3>
+            <div id="status-arquivos">Verificando...</div>
+        </div>
+        
+        <div class="section">
+            <h3>🗺️ Status do Mapa</h3>
+            <div id="status-mapa">Verificando...</div>
+        </div>
+        
+        <div class="section">
+            <h3>📝 Log de Atividades</h3>
+            <div id="log-container" class="log">Aguardando ações...\n</div>
+            <button onclick="limparLog()">🗑️ Limpar Log</button>
+        </div>
+        
+        <div class="section">
+            <h3>🌐 Aplicação Principal (iFrame)</h3>
+            <div class="iframe-container">
+                <iframe src="index.html" id="app-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logContainer = document.getElementById('log-container');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = {
+                'info': '#00ffff',
+                'success': '#00ff00',
+                'error': '#ff0000',
+                'warning': '#ffff00'
+            }[type] || '#00ffff';
+            
+            logContainer.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function limparLog() {
+            logContainer.innerHTML = 'Log limpo.\n';
+        }
+        
+        async function verificarManagers() {
+            log('Verificando managers...', 'info');
+            const iframe = document.getElementById('app-iframe');
+            const iframeWindow = iframe.contentWindow;
+            
+            try {
+                const managers = {
+                    'databaseManager': iframeWindow.databaseManager,
+                    'mapManager': iframeWindow.mapManager,
+                    'authManager': iframeWindow.authManager
+                };
+                
+                let html = '';
+                for (const [name, manager] of Object.entries(managers)) {
+                    if (manager) {
+                        html += `<span class="status-ok">✅ ${name}: Disponível</span><br>`;
+                        log(`✅ ${name}: Disponível`, 'success');
+                    } else {
+                        html += `<span class="status-error">❌ ${name}: Não disponível</span><br>`;
+                        log(`❌ ${name}: Não disponível`, 'error');
+                    }
+                }
+                
+                document.getElementById('status-managers').innerHTML = html;
+                return managers;
+            } catch (error) {
+                log(`❌ Erro ao verificar managers: ${error.message}`, 'error');
+                document.getElementById('status-managers').innerHTML = 
+                    '<span class="status-error">❌ Erro ao acessar iframe</span>';
+                return {};
+            }
+        }
+        
+        async function verificarArquivos() {
+            log('Verificando arquivos JSON...', 'info');
+            
+            const arquivos = [
+                'database/pontos_confirmados.json',
+                'database/categorias.json',
+                'database/pontos_pendentes.json',
+                'database/usuarios.json'
+            ];
+            
+            let html = '';
+            
+            for (const arquivo of arquivos) {
+                try {
+                    const response = await fetch(arquivo);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const count = Array.isArray(data) ? data.length : Object.keys(data).length;
+                        html += `<span class="status-ok">✅ ${arquivo}: ${count} itens</span><br>`;
+                        log(`✅ ${arquivo}: ${count} itens`, 'success');
+                    } else {
+                        html += `<span class="status-error">❌ ${arquivo}: HTTP ${response.status}</span><br>`;
+                        log(`❌ ${arquivo}: HTTP ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    html += `<span class="status-error">❌ ${arquivo}: ${error.message}</span><br>`;
+                    log(`❌ ${arquivo}: ${error.message}`, 'error');
+                }
+            }
+            
+            document.getElementById('status-arquivos').innerHTML = html;
+        }
+        
+        async function verificarMapa() {
+            log('Verificando status do mapa...', 'info');
+            const iframe = document.getElementById('app-iframe');
+            const iframeWindow = iframe.contentWindow;
+            
+            try {
+                const mapManager = iframeWindow.mapManager;
+                let html = '';
+                
+                if (mapManager) {
+                    const mapaInit = mapManager.map ? true : false;
+                    const marcadores = mapManager.marcadores ? mapManager.marcadores.size : 0;
+                    const grupos = mapManager.gruposPorCategoria ? mapManager.gruposPorCategoria.size : 0;
+                    const categoriaAtiva = mapManager.activeCategory || 'nenhuma';
+                    
+                    html += `<span class="status-${mapaInit ? 'ok' : 'error'}">${mapaInit ? '✅' : '❌'} Mapa inicializado: ${mapaInit}</span><br>`;
+                    html += `<span class="status-info">📍 Marcadores ativos: ${marcadores}</span><br>`;
+                    html += `<span class="status-info">📁 Grupos por categoria: ${grupos}</span><br>`;
+                    html += `<span class="status-info">🏷️ Categoria ativa: ${categoriaAtiva}</span><br>`;
+                    
+                    if (mapManager.gruposPorCategoria) {
+                        html += '<br><strong>Detalhes dos grupos:</strong><br>';
+                        mapManager.gruposPorCategoria.forEach((grupo, categoria) => {
+                            const pontos = grupo.getLayers().length;
+                            html += `<span class="status-info">  • ${categoria}: ${pontos} pontos</span><br>`;
+                        });
+                    }
+                    
+                    log(`✅ Mapa verificado: ${marcadores} marcadores, ${grupos} grupos`, 'success');
+                } else {
+                    html = '<span class="status-error">❌ MapManager não disponível</span>';
+                    log('❌ MapManager não disponível', 'error');
+                }
+                
+                document.getElementById('status-mapa').innerHTML = html;
+            } catch (error) {
+                log(`❌ Erro ao verificar mapa: ${error.message}`, 'error');
+                document.getElementById('status-mapa').innerHTML = 
+                    '<span class="status-error">❌ Erro ao acessar iframe</span>';
+            }
+        }
+        
+        async function executarDebugCompleto() {
+            log('🔍 Iniciando debug completo...', 'info');
+            await verificarManagers();
+            await verificarArquivos();
+            await verificarMapa();
+            log('✅ Debug completo finalizado', 'success');
+        }
+        
+        async function testarCarregamentoPontos() {
+            log('📍 Testando carregamento de pontos...', 'info');
+            try {
+                const response = await fetch('database/pontos_confirmados.json');
+                if (response.ok) {
+                    const pontos = await response.json();
+                    log(`✅ ${pontos.length} pontos carregados do JSON`, 'success');
+                    
+                    // Mostrar exemplos
+                    pontos.slice(0, 3).forEach(ponto => {
+                        log(`  • ${ponto.nome} (${ponto.categoria})`, 'info');
+                    });
+                } else {
+                    log(`❌ Erro HTTP: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro ao testar pontos: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testarCategorias() {
+            log('📋 Testando carregamento de categorias...', 'info');
+            try {
+                const response = await fetch('database/categorias.json');
+                if (response.ok) {
+                    const categorias = await response.json();
+                    log(`✅ ${categorias.length} categorias carregadas`, 'success');
+                    
+                    categorias.forEach(cat => {
+                        log(`  • ${cat.nome} (${cat.id}): ${cat.cor}`, 'info');
+                    });
+                } else {
+                    log(`❌ Erro HTTP: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro ao testar categorias: ${error.message}`, 'error');
+            }
+        }
+        
+        function forcarRecarregamento() {
+            log('🔄 Forçando recarregamento de pontos...', 'info');
+            const iframe = document.getElementById('app-iframe');
+            const iframeWindow = iframe.contentWindow;
+            
+            try {
+                if (iframeWindow.mapManager && iframeWindow.mapManager.reloadPoints) {
+                    iframeWindow.mapManager.reloadPoints('visitor', null);
+                    log('✅ Recarregamento solicitado', 'success');
+                } else {
+                    log('❌ MapManager ou reloadPoints não disponível', 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro ao forçar recarregamento: ${error.message}`, 'error');
+            }
+        }
+        
+        function limparCache() {
+            log('🗑️ Limpando cache...', 'info');
+            const iframe = document.getElementById('app-iframe');
+            const iframeWindow = iframe.contentWindow;
+            
+            try {
+                if (iframeWindow.mapManager) {
+                    iframeWindow.mapManager.clearMarkers();
+                    if (iframeWindow.mapManager.limparCacheIcones) {
+                        iframeWindow.mapManager.limparCacheIcones();
+                    }
+                    log('✅ Cache limpo', 'success');
+                } else {
+                    log('❌ MapManager não disponível', 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro ao limpar cache: ${error.message}`, 'error');
+            }
+        }
+        
+        function mostrarTodosPontos() {
+            log('👁️ Forçando exibição de todos os pontos...', 'info');
+            const iframe = document.getElementById('app-iframe');
+            const iframeWindow = iframe.contentWindow;
+            
+            try {
+                if (iframeWindow.mapManager && iframeWindow.mapManager.filterByCategory) {
+                    iframeWindow.mapManager.filterByCategory('todos');
+                    log('✅ Filtro "todos" aplicado', 'success');
+                } else {
+                    log('❌ MapManager ou filterByCategory não disponível', 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro ao mostrar pontos: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-executar debug quando iframe carregar
+        document.getElementById('app-iframe').addEventListener('load', () => {
+            log('🌐 Aplicação carregada no iframe', 'success');
+            setTimeout(executarDebugCompleto, 2000); // Aguardar 2 segundos para inicialização
+        });
+        
+        // Executar verificações iniciais
+        setTimeout(() => {
+            verificarArquivos();
+        }, 1000);
+    </script>
+</body>
+</html>

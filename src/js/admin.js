@@ -27,28 +27,78 @@ class AdminManager {
      * Inicializar o gerenciador administrativo
      */
     async init() {
-        console.log('🛠️ Inicializando AdminManager...');
-        
-        // Verificar permissões
-        if (!window.authManager?.isAdmin()) {
-            console.warn('❌ Usuário não é administrador');
-            this.redirectToLogin();
-            return;
-        }
+        try {
+            console.log('Inicializando AdminManager...');
+            
+            // Debug: verificar estado dos managers
+            console.log('AuthManager disponível:', !!window.authManager);
+            console.log('DatabaseManager disponível:', !!window.databaseManager);
+            console.log('ModalManager disponível:', !!window.modalManager);
+            
+            // Verificar permissões
+            console.log('Verificando permissões de admin...');
+            
+            if (!window.authManager) {
+                console.error('AuthManager não está disponível');
+                throw new Error('AuthManager não inicializado');
+            }
+            
+            const isAuthenticated = window.authManager.isAuthenticated();
+            const currentUser = window.authManager.getCurrentUser();
+            console.log('Usuário autenticado:', isAuthenticated);
+            console.log('Usuário atual:', currentUser);
+            
+            // Se não há usuário logado, fazer login automático como admin para desenvolvimento
+            if (!isAuthenticated) {
+                console.log('Nenhum usuário logado, tentando login automático de admin...');
+                try {
+                    await window.authManager.login('admin', 'admin');
+                    console.log('Login automático de admin realizado');
+                } catch (loginError) {
+                    console.error('Falha no login automático:', loginError);
+                    this.redirectToLogin();
+                    return;
+                }
+            }
+            
+            if (!window.authManager.isAdmin()) {
+                console.warn('Usuário não é administrador');
+                this.redirectToLogin();
+                return;
+            }
+            console.log('Permissões confirmadas - usuário é admin');
 
-        // Configurar interface
-        this.setupInterface();
-        
-        // Carregar dados iniciais
-        await this.loadInitialData();
-        
-        // Configurar event listeners
-        this.setupEventListeners();
-        
-        // Inicializar mapa admin
-        this.initializeAdminMap();
-        
-        console.log('✅ AdminManager inicializado');
+            // Configurar interface
+            console.log('Configurando interface...');
+            this.setupInterface();
+            console.log('Interface configurada');
+            
+            // Carregar dados iniciais
+            console.log('Carregando dados iniciais...');
+            await this.loadInitialData();
+            console.log('Dados iniciais carregados');
+            
+            // Configurar event listeners
+            console.log('Configurando event listeners...');
+            this.setupEventListeners();
+            console.log('Event listeners configurados');
+            
+            // Inicializar mapa admin
+            console.log('Inicializando mapa admin...');
+            this.initializeAdminMap();
+            console.log('Mapa admin inicializado');
+            
+            // Remover tela de loading
+            console.log('Removendo tela de loading...');
+            this.hideLoadingScreen();
+            
+            console.log('AdminManager inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro crítico durante inicialização do AdminManager:', error);
+            this.showNotification('Erro ao inicializar painel administrativo', 'error');
+            // Tentar remover loading mesmo com erro
+            this.hideLoadingScreen();
+        }
     }
 
     /**
@@ -70,18 +120,27 @@ class AdminManager {
      */
     async loadInitialData() {
         try {
+            console.log('Iniciando carregamento de dados...');
+            
             // Carregar estatísticas
+            console.log('Carregando estatísticas...');
             await this.loadStatistics();
+            console.log('Estatísticas carregadas');
             
             // Carregar dados das tabs
+            console.log('Carregando dados das tabs...');
             await this.loadTabData();
+            console.log('Dados das tabs carregados');
             
             // Inicializar gráficos
+            console.log('Inicializando gráficos...');
             this.initializeCharts();
+            console.log('Gráficos inicializados');
             
         } catch (error) {
-            console.error('❌ Erro ao carregar dados:', error);
+            console.error('Erro ao carregar dados:', error);
             this.showNotification('Erro ao carregar dados', 'error');
+            throw error; // Re-throw para ser capturado pelo init()
         }
     }
 
@@ -225,14 +284,24 @@ class AdminManager {
      * Carregar dados das tabs
      */
     async loadTabData() {
-        // Carregar dados da tab de pontos
-        this.loadPointsData();
-        
-        // Carregar dados da tab de categorias
-        this.loadCategoriesData();
-        
-        // Carregar dados da tab de usuários
-        this.loadUsersData();
+        try {
+            console.log('Carregando dados de pontos...');
+            // Carregar dados da tab de pontos
+            this.loadPointsData();
+            
+            console.log('Carregando dados de categorias...');
+            // Carregar dados da tab de categorias
+            this.loadCategoriesData();
+            
+            console.log('Carregando dados de usuários...');
+            // Carregar dados da tab de usuários
+            this.loadUsersData();
+            
+            console.log('Todos os dados das tabs carregados');
+        } catch (error) {
+            console.error('Erro ao carregar dados das tabs:', error);
+            throw error;
+        }
     }
 
     /**
@@ -301,7 +370,7 @@ class AdminManager {
                 <div class="category-card">
                     <div class="category-header">
                         <div class="category-icon" style="background: ${categoria.cor}20; color: ${categoria.cor};">
-                            ${categoria.icone}
+                            <i class="${categoria.icon}"></i>
                         </div>
                         <div class="category-actions">
                             <button class="action-btn action-btn-edit" onclick="adminManager.editCategory('${categoria.id}')">
@@ -699,6 +768,23 @@ class AdminManager {
     }
 
     /**
+     * Ocultar tela de loading
+     */
+    hideLoadingScreen() {
+        try {
+            const loadingScreen = document.querySelector('.loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+                console.log('Tela de loading removida');
+            } else {
+                console.warn('Elemento .loading-screen não encontrado');
+            }
+        } catch (error) {
+            console.error('Erro ao remover tela de loading:', error);
+        }
+    }
+
+    /**
      * Configurar tooltips
      */
     setupTooltips() {
@@ -720,7 +806,7 @@ class AdminManager {
     showNotification(mensagem, tipo = 'info') {
         // Usar o sistema de notificações do app principal
         if (window.app) {
-            window.app.mostrarNotificacao(mensagem, tipo);
+            window.app.showNotification(mensagem, tipo);
         } else {
             console.log(`${tipo.toUpperCase()}: ${mensagem}`);
         }

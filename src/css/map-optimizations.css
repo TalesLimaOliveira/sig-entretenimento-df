@@ -7,21 +7,23 @@
 }
 
 /* Otimização para marcadores */
-.marcador-personalizado,
 .marcador-otimizado {
     contain: layout style paint;
     will-change: transform;
+    /* Garantir que os ícones não sejam cortados */
+    overflow: visible !important;
+    z-index: 1000 !important;
 }
 
 /* Garantir tamanho adequado dos ícones FontAwesome em todos os marcadores */
 .leaflet-marker-icon i,
-.marcador-personalizado i,
 .marcador-otimizado i {
-    font-size: 22px !important; /* Tamanho padrão aumentado */
+    font-size: 20px !important; /* Tamanho padrão adequado */
     line-height: 1 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    text-align: center !important;
 }
 
 /* Suavização de animações */
@@ -38,19 +40,70 @@
     transform: translate3d(0,0,0);
 }
 
-/* Otimização para dispositivos touch */
-@media (pointer: coarse) {
-    .marcador-personalizado div,
-    .marcador-otimizado .marker-icon {
-        /* Área de toque maior para dispositivos móveis */
-        min-width: 44px;
-        min-height: 44px;
+/* Correções específicas para evitar corte de ícones em dispositivos móveis */
+.leaflet-marker-icon {
+    overflow: visible !important;
+    z-index: 1000 !important;
+}
+
+.leaflet-marker-pane {
+    overflow: visible !important;
+}
+
+.leaflet-map-pane {
+    overflow: visible !important;
+}
+
+.leaflet-container {
+    overflow: visible !important;
+}
+
+/* Garantir que marcadores tenham espaço suficiente */
+.leaflet-marker-icon.marcador-otimizado {
+    transform-origin: center center !important;
+    margin: 0 !important; /* Removida margem desnecessária */
+    overflow: visible !important;
+    z-index: 1000 !important;
+}
+
+/* Correções específicas para mobile/tablet */
+@media (max-width: 1024px) {
+    .leaflet-marker-icon {
+        margin: 0 !important; /* Removida margem desnecessária */
+        z-index: 1000 !important;
+        overflow: visible !important;
     }
     
-    /* Ícones ainda maiores em dispositivos touch */
+    /* Garantir que o container do mapa tenha overflow visível */
+    .leaflet-container,
+    .leaflet-map-pane,
+    .leaflet-marker-pane,
+    .leaflet-overlay-pane {
+        overflow: visible !important;
+    }
+    
+    /* Evitar qualquer clipping */
+    .map-container,
+    #map {
+        clip: unset !important;
+        clip-path: none !important;
+        overflow: visible !important;
+    }
+}
+
+/* Otimização para dispositivos touch */
+@media (pointer: coarse) {
+    .marcador-otimizado .marker-icon {
+        /* Área de toque adequada para dispositivos móveis */
+        min-width: 44px !important;
+        min-height: 44px !important;
+        /* Garantir que não seja cortado */
+        overflow: visible !important;
+    }
+    
+    /* Ícones proporcionais em dispositivos touch */
     .leaflet-marker-icon i,
-    .marcador-personalizado i,
     .marcador-otimizado i {
-        font-size: 28px !important; /* Ainda maior para touch */
+        font-size: 24px !important; /* Tamanho adequado para touch */
     }
 }

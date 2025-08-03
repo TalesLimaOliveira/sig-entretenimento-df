@@ -95,7 +95,7 @@ class InfoPanelManager {
         document.addEventListener('click', (e) => {
             if (this.isVisible && 
                 !this.panel.contains(e.target) && 
-                !e.target.closest('.marcador-personalizado') &&
+                !e.target.closest('.marcador-otimizado') &&
                 !e.target.closest('.modal-backdrop') &&
                 !e.target.closest('.login-modal') &&
                 !e.target.closest('.leaflet-popup') &&

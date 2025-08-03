@@ -42,7 +42,7 @@ Success: AuthManager.setCurrentUser()
      ↓
 Dispatch 'authStateChanged' Event
      ↓
-App.configurarUsuarioLogado()
+App.configureLoggedUser()
      ↓
 Update Interface Based on User Role
      ↓

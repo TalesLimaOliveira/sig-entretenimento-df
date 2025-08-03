@@ -404,17 +404,23 @@
         // Inicializar app admin
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                console.log('DOM carregado, iniciando painel admin...');
+                
+                // Aguardar um pouco para garantir que todos os scripts carregaram
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 // Verificar se usuário tem permissão de admin
+                console.log('Verificando permissões de administrador...');
                 if (!authManager.isAdmin()) {
+                    console.log('Usuário não é administrador, redirecionando...');
                     window.location.href = 'index.html';
                     return;
                 }
                 
+                console.log('Usuário é administrador, inicializando painel...');
+                
                 // Inicializar funcionalidades administrativas
                 window.adminManager = new AdminManager();
-                
-                // Aguardar inicialização completa
-                await window.adminManager.init();
                 
                 console.log('Admin panel totalmente carregado');
             } catch (error) {
