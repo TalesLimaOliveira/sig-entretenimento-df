@@ -607,6 +607,58 @@ body {
     font-weight: 600;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
     transform: translateY(-1px);
+    position: relative;
+    z-index: 2;
+}
+
+/* Estado ativo para categorias específicas */
+.nav-btn.active[data-categoria]:not([data-categoria="todos"]):not([data-categoria="favoritos"]) {
+    background: var(--category-color, var(--theme-gradient-button));
+    border-color: var(--category-color, var(--theme-primary));
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    animation: activePulse 2s ease-in-out infinite;
+}
+
+@keyframes activePulse {
+    0%, 100% {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--category-color, var(--theme-primary));
+    }
+}
+
+.nav-btn.active::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #10b981;
+    color: white;
+    font-size: 0.7rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 3;
+    animation: checkmark 0.3s ease-out;
+}
+
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Estado ativo com cor da categoria - FUNDO BRANCO, TEXTO PRETO */

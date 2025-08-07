@@ -1140,6 +1140,47 @@ class MapManager {
             }
         });
         console.log(`Total de pontos visíveis: ${pontosVisiveis}`);
+        
+        // Notificar sobre o resultado do filtro
+        this.showFilterNotification(categoria, pontosVisiveis);
+    }
+
+    /**
+     * Mostrar notificação sobre o resultado do filtro
+     * @param {string} categoria - Categoria filtrada
+     * @param {number} quantidade - Quantidade de pontos visíveis
+     */
+    showFilterNotification(categoria, quantidade) {
+        try {
+            let message = '';
+            
+            if (categoria === 'todos') {
+                message = `Exibindo todos os pontos (${quantidade} locais)`;
+            } else if (categoria === 'favoritos') {
+                message = quantidade > 0 ? 
+                    `Seus favoritos (${quantidade} locais)` : 
+                    'Você ainda não possui favoritos';
+            } else {
+                // Obter nome da categoria do banco de dados
+                const categoriaInfo = window.databaseManager?.obterCategoria(categoria);
+                const nomeCategoria = categoriaInfo ? categoriaInfo.nome : categoria;
+                
+                message = quantidade > 0 ? 
+                    `${nomeCategoria}: ${quantidade} ${quantidade === 1 ? 'local' : 'locais'}` :
+                    `Nenhum local encontrado em ${nomeCategoria}`;
+            }
+
+            // Usar sistema de notificação se disponível
+            if (window.infoPanelManager && typeof window.infoPanelManager.showNotification === 'function') {
+                const type = quantidade > 0 ? 'info' : 'warning';
+                window.infoPanelManager.showNotification(message, type);
+            } else {
+                console.log(`📊 ${message}`);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao exibir notificação de filtro:', error);
+        }
     }
 
     /**
