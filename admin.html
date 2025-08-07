@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="src/css/main.css">
     <link rel="stylesheet" href="src/css/components.css">
     <link rel="stylesheet" href="src/css/admin.css">
-    <link rel="stylesheet" href="src/css/responsive.css">
     
     <!-- Meta Tags -->
     <meta name="description" content="Painel administrativo para gerenciar pontos de entretenimento no Distrito Federal">
@@ -79,28 +78,21 @@
             <!-- Admin Navigation -->
             <nav class="admin-nav">
                 <div class="nav-tabs">
-                    <button class="nav-tab active" data-tab="dashboard" onclick="app.mostrarTab('dashboard')">
+                    <button class="nav-tab active" data-tab="dashboard" onclick="window.adminManager?.showTab('dashboard')">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </button>
-                    <button class="nav-tab" data-tab="pontos" onclick="app.mostrarTab('pontos')">
+                    <button class="nav-tab" data-tab="pontos" onclick="window.adminManager?.showTab('pontos')">
                         <i class="fas fa-map-marker-alt"></i> Pontos
                     </button>
-                    <button class="nav-tab" data-tab="pendentes" onclick="app.mostrarTab('pendentes')">
+                    <button class="nav-tab" data-tab="pendentes" onclick="window.adminManager?.showTab('pendentes')">
                         <i class="fas fa-clock"></i> Pendentes
                         <span class="badge" id="pendentes-count">0</span>
                     </button>
-                    <button class="nav-tab" data-tab="ocultos" onclick="app.mostrarTab('ocultos')">
+                    <button class="nav-tab" data-tab="ocultos" onclick="window.adminManager?.showTab('ocultos')">
                         <i class="fas fa-eye-slash"></i> Ocultos
                     </button>
-                    <button class="nav-tab" data-tab="sugestoes" onclick="app.mostrarTab('sugestoes')">
-                        <i class="fas fa-edit"></i> Sugestões
-                        <span class="badge" id="sugestoes-count">0</span>
-                    </button>
-                    <button class="nav-tab" data-tab="usuarios" onclick="app.mostrarTab('usuarios')">
+                    <button class="nav-tab" data-tab="usuarios" onclick="window.adminManager?.showTab('usuarios')">
                         <i class="fas fa-users"></i> Usuários
-                    </button>
-                    <button class="nav-tab" data-tab="relatorios" onclick="app.mostrarTab('relatorios')">
-                        <i class="fas fa-chart-bar"></i> Relatórios
                     </button>
                 </div>
             </nav>
@@ -255,6 +247,32 @@
                     </div>
                 </div>
 
+                <!-- Pendentes Tab -->
+                <div class="tab-content" id="tab-pendentes">
+                    <div class="tab-header">
+                        <h2>⏳ Pontos Pendentes de Aprovação</h2>
+                        <p>Gerencie pontos enviados por usuários que aguardam aprovação.</p>
+                    </div>
+                    
+                    <!-- Pending Points Content -->
+                    <div id="pendentes-content">
+                        <!-- Conteúdo será gerado dinamicamente pelo AdminManager -->
+                    </div>
+                </div>
+
+                <!-- Ocultos Tab -->
+                <div class="tab-content" id="tab-ocultos">
+                    <div class="tab-header">
+                        <h2>👁️‍🗨️ Pontos Ocultos</h2>
+                        <p>Gerencie pontos que foram ocultados do mapa público.</p>
+                    </div>
+                    
+                    <!-- Hidden Points Content -->
+                    <div id="ocultos-content">
+                        <!-- Conteúdo será gerado dinamicamente pelo AdminManager -->
+                    </div>
+                </div>
+
                 <!-- Categorias Tab -->
                 <div class="tab-content" id="tab-categorias">
                     <div class="tab-header">
@@ -300,50 +318,6 @@
                     </div>
                 </div>
 
-                <!-- Relatórios Tab -->
-                <div class="tab-content" id="tab-relatorios">
-                    <div class="tab-header">
-                        <h2>📊 Relatórios</h2>
-                        <button class="btn btn-primary" onclick="app.exportarRelatorio()">
-                            <i class="fas fa-download"></i> Exportar
-                        </button>
-                    </div>
-                    
-                    <!-- Report Filters -->
-                    <div class="report-filters">
-                        <div class="filter-group">
-                            <label>Período:</label>
-                            <select id="report-period">
-                                <option value="7">Últimos 7 dias</option>
-                                <option value="30">Últimos 30 dias</option>
-                                <option value="90">Últimos 90 dias</option>
-                                <option value="365">Último ano</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label>Tipo:</label>
-                            <select id="report-type">
-                                <option value="pontos">Pontos</option>
-                                <option value="categorias">Categorias</option>
-                                <option value="usuarios">Usuários</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn btn-secondary" onclick="app.gerarRelatorio()">
-                            <i class="fas fa-chart-line"></i> Gerar Relatório
-                        </button>
-                    </div>
-                    
-                    <!-- Report Content -->
-                    <div class="report-content" id="report-content">
-                        <div class="report-placeholder">
-                            <i class="fas fa-chart-bar"></i>
-                            <p>Selecione um período e tipo para gerar o relatório</p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </main>
@@ -357,16 +331,70 @@
                 </div>
                 
                 <div class="footer-actions">
-                    <button class="btn btn-outline btn-sm" onclick="app.mostrarAjuda()">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminManager?.showHelp()">
                         <i class="fas fa-question-circle"></i> Ajuda
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="app.mostrarLogs()">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminManager?.showLogs()">
                         <i class="fas fa-list"></i> Logs
                     </button>
                 </div>
             </div>
         </div>
     </footer>
+
+    <!-- Info Panel (mesmo estilo do index.html) -->
+    <div id="info-panel" class="info-panel hidden">
+        <!-- Header do Painel com Imagem e Nome -->
+        <div class="info-panel-header">
+            <div class="info-panel-image-container">
+                <img id="info-panel-image" class="info-panel-image" src="" alt="Imagem do local">
+                <div class="info-panel-image-placeholder">
+                    <i class="fas fa-image"></i>
+                    <span>Sem imagem disponível</span>
+                </div>
+            </div>
+            <div class="info-panel-title-container">
+                <h2 id="info-panel-title">Nome do Local</h2>
+            </div>
+            <button id="info-panel-close" class="info-panel-close" aria-label="Fechar painel">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Abas do Painel -->
+        <div class="info-panel-tabs">
+            <button class="info-panel-tab active" data-tab="overview">
+                <i class="fas fa-info-circle"></i>
+                Visão Geral
+            </button>
+            <button class="info-panel-tab" data-tab="reviews">
+                <i class="fas fa-star"></i>
+                Avaliação
+            </button>
+        </div>
+
+        <!-- Conteúdo das Abas -->
+        <div class="info-panel-content">
+            <!-- Aba: Visão Geral -->
+            <div id="tab-overview" class="info-panel-tab-content active">
+                <!-- Informações do Local -->
+                <div class="info-panel-details">
+                    <div id="info-panel-body">
+                        <!-- Conteúdo será inserido dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba: Avaliação -->
+            <div id="tab-reviews" class="info-panel-tab-content">
+                <div class="info-panel-placeholder">
+                    <i class="fas fa-comments"></i>
+                    <h3>Comentários e Avaliações</h3>
+                    <p>Esta funcionalidade estará disponível em breve.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Container -->
     <div id="modal-container"></div>
@@ -380,12 +408,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Database & Auth -->
-    <script src="src/js/mapColors.js"></script>
     <script src="src/js/database.js"></script>
     <script src="src/js/auth.js"></script>
     
     <!-- Map & Components -->
     <script src="src/js/map.js"></script>
+    <script src="src/js/info-panel.js"></script>
     <script src="src/components/modal.js"></script>
     
     <!-- Admin Scripts -->
@@ -396,37 +424,145 @@
     
     <!-- Initialize -->
     <script>
-        // Inicializar managers globais
-        window.databaseManager = new DatabaseManager();
-        window.authManager = new AuthManager();
-        window.modalManager = new ModalManager();
-        
-        // Inicializar app admin
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                console.log('DOM carregado, iniciando painel admin...');
+        // Sistema de inicialização administrativo
+        class AdminInitializer {
+            constructor() {
+                this.initialized = false;
+            }
+            
+            async init() {
+                console.log('Iniciando sistema administrativo...');
                 
-                // Aguardar um pouco para garantir que todos os scripts carregaram
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Verificar se usuário tem permissão de admin
+                try {
+                    await this.waitForDOM();
+                    await this.checkPermissions();
+                    await this.initializeManagers();
+                    await this.initializeAdminComponents();
+                    
+                    this.removeLoadingScreen();
+                    this.initialized = true;
+                    
+                    console.log('Sistema administrativo inicializado com sucesso');
+                } catch (error) {
+                    console.error('Erro crítico na inicialização admin:', error);
+                    this.showError(error);
+                }
+            }
+            
+            async waitForDOM() {
+                if (document.readyState === 'loading') {
+                    await new Promise(resolve => {
+                        document.addEventListener('DOMContentLoaded', resolve);
+                    });
+                }
+            }
+            
+            async checkPermissions() {
                 console.log('Verificando permissões de administrador...');
-                if (!authManager.isAdmin()) {
+                
+                // Aguardar managers básicos estarem disponíveis
+                await this.waitForBasicManagers();
+                
+                if (!window.authManager || !window.authManager.isAdmin()) {
                     console.log('Usuário não é administrador, redirecionando...');
                     window.location.href = 'index.html';
-                    return;
+                    throw new Error('Acesso negado');
                 }
                 
-                console.log('Usuário é administrador, inicializando painel...');
-                
-                // Inicializar funcionalidades administrativas
-                window.adminManager = new AdminManager();
-                
-                console.log('Admin panel totalmente carregado');
-            } catch (error) {
-                console.error('Erro ao inicializar admin panel:', error);
-                alert('Erro ao carregar painel administrativo. Verifique o console para detalhes.');
+                console.log('Usuário é administrador, continuando...');
             }
+            
+            async waitForBasicManagers() {
+                const maxWait = 10000; // 10 segundos
+                const startTime = Date.now();
+                
+                while (Date.now() - startTime < maxWait) {
+                    if (window.DatabaseManager && window.AuthManager) {
+                        // Criar instâncias se não existirem
+                        if (!window.databaseManager) {
+                            window.databaseManager = new DatabaseManager();
+                        }
+                        if (!window.authManager) {
+                            window.authManager = new AuthManager();
+                        }
+                        return;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                throw new Error('Managers básicos não carregaram a tempo');
+            }
+            
+            async initializeManagers() {
+                console.log('Inicializando managers para admin...');
+                
+                // Inicializar DatabaseManager
+                if (window.databaseManager && typeof window.databaseManager.init === 'function') {
+                    await window.databaseManager.init();
+                    console.log('DatabaseManager inicializado');
+                }
+                
+                // Criar ModalManager se disponível
+                if (typeof ModalManager !== 'undefined' && !window.modalManager) {
+                    window.modalManager = new ModalManager();
+                    console.log('ModalManager criado');
+                }
+            }
+            
+            async initializeAdminComponents() {
+                console.log('Inicializando componentes administrativos...');
+                
+                // Verificar se AdminManager está disponível
+                if (typeof AdminManager !== 'undefined') {
+                    window.adminManager = new AdminManager();
+                    console.log('AdminManager inicializado');
+                } else {
+                    console.warn('AdminManager não encontrado, funcionalidades administrativas limitadas');
+                }
+            }
+            
+            removeLoadingScreen() {
+                const loadingScreen = document.querySelector('.loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.transition = 'opacity 0.5s ease';
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        if (loadingScreen.parentNode) {
+                            loadingScreen.remove();
+                        }
+                    }, 500);
+                }
+            }
+            
+            showError(error) {
+                console.error('Erro na inicialização admin:', error);
+                
+                this.removeLoadingScreen();
+                
+                document.body.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; font-family: Arial, sans-serif;">
+                        <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto;">
+                            <h1 style="color: #dc2626; margin: 0 0 1rem 0;">Erro no Painel Administrativo</h1>
+                            <p style="margin-bottom: 2rem;">${error.message}</p>
+                            
+                            <div style="display: flex; gap: 1rem; justify-content: center;">
+                                <button onclick="location.reload()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
+                                    Recarregar
+                                </button>
+                                <button onclick="location.href='index.html'" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
+                                    Voltar ao Site
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Inicializar painel administrativo
+        const adminInitializer = new AdminInitializer();
+        adminInitializer.init().catch(error => {
+            console.error('Falha crítica na inicialização admin:', error);
         });
     </script>
 
@@ -434,6 +570,7 @@
     <style>
         .admin-page {
             background: #f8f9fa;
+            color: #212529;
         }
         
         .admin-header {
@@ -481,6 +618,7 @@
         .tab-content {
             display: none;
             animation: fadeIn 0.3s ease;
+            color: #212529;
         }
         
         .tab-content.active {
@@ -507,6 +645,7 @@
             align-items: center;
             gap: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #212529;
         }
         
         .stat-icon {
@@ -523,6 +662,110 @@
         .stat-content p {
             margin: 5px 0 0 0;
             color: #6c757d;
+        }
+        
+        /* Garantir que todo texto seja escuro e visível */
+        .admin-page * {
+            color: inherit;
+        }
+        
+        .admin-page h1, .admin-page h2, .admin-page h3, .admin-page h4, .admin-page h5, .admin-page h6 {
+            color: #2c3e50;
+        }
+        
+        .admin-page p, .admin-page span, .admin-page div, .admin-page td, .admin-page th {
+            color: #212529;
+        }
+        
+        .admin-page .text-muted, .admin-page small {
+            color: #6c757d !important;
+        }
+        
+        /* Estilos para tabelas */
+        .admin-page table {
+            color: #212529;
+            background: white;
+        }
+        
+        .admin-page .admin-table th {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+        
+        .admin-page .admin-table td {
+            color: #212529;
+        }
+        
+        /* Badges e status */
+        .admin-page .badge {
+            color: white;
+        }
+        
+        .admin-page .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .admin-page .badge-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .admin-page .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        /* Botões */
+        .admin-page .btn {
+            color: white;
+        }
+        
+        .admin-page .btn-outline {
+            color: #2c3e50;
+            border-color: #2c3e50;
+        }
+        
+        .admin-page .btn-outline:hover {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        /* Seções administrativas */
+        .admin-page .admin-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #212529;
+        }
+        
+        .admin-page .section-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .admin-page .section-header p {
+            color: #6c757d;
+        }
+        
+        /* Estado vazio */
+        .admin-page .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .admin-page .empty-state h3 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .admin-page .empty-state i {
+            font-size: 48px;
+            color: #dee2e6;
+            margin-bottom: 20px;
         }
     </style>
 

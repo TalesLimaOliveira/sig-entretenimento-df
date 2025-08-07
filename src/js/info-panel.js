@@ -85,14 +85,23 @@ class InfoPanelManager {
     }
 }
 
+// Exportar classe globalmente primeiro
+window.InfoPanelManager = InfoPanelManager;
+
 // Simple initialization - works for all environments
 if (typeof window !== 'undefined') {
     // Wait for DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            window.infoPanelManager = new InfoPanelManager();
+            if (!window.infoPanelManager) {
+                window.infoPanelManager = new InfoPanelManager();
+            }
         });
     } else {
-        window.infoPanelManager = new InfoPanelManager();
+        if (!window.infoPanelManager) {
+            window.infoPanelManager = new InfoPanelManager();
+        }
     }
 }
+
+console.log('InfoPanelManager class defined and exported globally');

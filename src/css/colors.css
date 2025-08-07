@@ -15,7 +15,8 @@
 
 :root {
     /* ===== DIMENSÕES LAYOUT ===== */
-    --header-height: 130px;
+    --header-height: 90px; /* Reduzido - apenas logo e botão entrar */
+    --filters-height: 70px; /* Nova altura para container de filtros */
     
     /* ===== SISTEMA DE TEMAS DE CORES ===== */
     /* Estas variáveis são definidas dinamicamente pelo ColorThemeManager */

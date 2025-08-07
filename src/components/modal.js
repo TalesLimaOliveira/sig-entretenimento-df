@@ -272,4 +272,5 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Disponibilizar globalmente
 window.ModalManager = ModalManager;
-window.modalManager = modalManager;
+
+console.log('ModalManager class defined and exported globally');

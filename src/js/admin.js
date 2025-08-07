@@ -23,11 +23,11 @@ class AdminManager {
      */
     async init() {
         try {
-            console.log('🚀 Inicializando AdminManager...');
+            console.log('Inicializando AdminManager...');
 
             // Verificar permissões
             if (!window.authManager) {
-                console.error('❌ AuthManager não está disponível');
+                console.error('AuthManager nao esta disponivel');
                 throw new Error('AuthManager não inicializado');
             }
 
@@ -39,24 +39,24 @@ class AdminManager {
 
             // Se não há usuário logado, fazer login automático como admin para desenvolvimento
             if (!isAuthenticated) {
-                console.log('🔐 Nenhum usuário logado, tentando login automático de admin...');
+                console.log('Nenhum usuario logado, tentando login automatico de admin...');
                 try {
                     await window.authManager.login('admin', 'admin');
-                    console.log('✅ Login automático de admin realizado');
+                    console.log('Login automatico de admin realizado');
                 } catch (loginError) {
-                    console.error('❌ Falha no login automático:', loginError);
+                    console.error('Falha no login automatico:', loginError);
                     this.redirectToLogin();
                     return;
                 }
             }
 
             if (!window.authManager.isAdmin()) {
-                console.warn('⚠️ Usuário não é administrador');
+                console.warn('Usuario nao e administrador');
                 this.redirectToLogin();
                 return;
             }
 
-            console.log('✅ Permissões confirmadas - usuário é admin');
+            console.log('Permissoes confirmadas - usuario e admin');
 
             // Configurar interface
             this.setupInterface();
@@ -73,7 +73,7 @@ class AdminManager {
             // Remover tela de loading
             this.hideLoadingScreen();
             
-            console.log('✅ AdminManager inicializado com sucesso');
+            console.log('AdminManager inicializado com sucesso');
         } catch (error) {
             console.error('💥 Erro crítico durante inicialização do AdminManager:', error);
             this.showNotification('Erro ao inicializar painel administrativo', 'error');
@@ -100,7 +100,7 @@ class AdminManager {
      */
     async loadInitialData() {
         try {
-            console.log('📊 Iniciando carregamento de dados...');
+            console.log('Iniciando carregamento de dados...');
             
             // Carregar estatísticas
             await this.loadStatistics();
@@ -114,9 +114,9 @@ class AdminManager {
             // Atualizar contadores
             this.atualizarContadores();
             
-            console.log('✅ Dados iniciais carregados');
+            console.log('Dados iniciais carregados');
         } catch (error) {
-            console.error('❌ Erro ao carregar dados:', error);
+            console.error('Erro ao carregar dados:', error);
             this.showNotification('Erro ao carregar dados', 'error');
             throw error;
         }
@@ -208,24 +208,20 @@ class AdminManager {
                 this.initializeCharts();
                 break;
             case 'pontos':
-                this.mostrarPontosConfirmados();
+                this.showConfirmedPoints();
                 this.populateFilters();
                 break;
             case 'pendentes':
-                this.mostrarPontosPendentes();
+                this.showPendingPoints();
                 break;
             case 'ocultos':
-                this.mostrarPontosOcultos();
-                break;
-            case 'sugestoes':
-                this.mostrarSugestoes();
+                this.showHiddenPoints();
                 break;
             case 'usuarios':
                 this.loadUsersData();
                 break;
-            case 'relatorios':
-                this.loadReportsData();
-                break;
+            default:
+                console.log(`Aba não implementada: ${tabName}`);
         }
 
         // Atualizar contadores sempre que trocar de aba
@@ -235,7 +231,7 @@ class AdminManager {
     /**
      * Mostrar pontos confirmados (principais)
      */
-    mostrarPontosConfirmados() {
+    showConfirmedPoints() {
         const pontosConfirmados = window.databaseManager?.confirmedPoints || [];
         
         const html = `
@@ -283,16 +279,16 @@ class AdminManager {
                                         <td>${new Date(ponto.dataCriacao || ponto.dataAdicao || Date.now()).toLocaleDateString('pt-BR')}</td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Visualizar">
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto('${ponto.id}')" title="Visualizar">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button class="btn btn-warning btn-sm" onclick="adminManager.editarPonto(${ponto.id})" title="Editar">
+                                                <button class="btn btn-warning btn-sm" onclick="adminManager.editarPonto('${ponto.id}')" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-secondary btn-sm" onclick="adminManager.ocultarPonto(${ponto.id})" title="Ocultar">
+                                                <button class="btn btn-secondary btn-sm" onclick="adminManager.ocultarPonto('${ponto.id}')" title="Ocultar">
                                                     <i class="fas fa-eye-slash"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPonto(${ponto.id})" title="Deletar">
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPonto('${ponto.id}')" title="Deletar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -312,7 +308,7 @@ class AdminManager {
     /**
      * Mostrar pontos pendentes de aprovação
      */
-    mostrarPontosPendentes() {
+    showPendingPoints() {
         const pontosPendentes = window.databaseManager?.pendingPoints || [];
         
         const html = `
@@ -359,13 +355,13 @@ class AdminManager {
                                         </td>
                                         <td>
                                             <div class="btn-group-vertical btn-group-sm">
-                                                <button class="btn btn-success btn-sm" onclick="adminManager.aprovarPonto(${ponto.id})" title="Aprovar">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.aprovarPonto('${ponto.id}')" title="Aprovar">
                                                     <i class="fas fa-check"></i> Aprovar
                                                 </button>
-                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Visualizar">
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto('${ponto.id}')" title="Visualizar">
                                                     <i class="fas fa-eye"></i> Ver Detalhes
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" onclick="adminManager.rejeitarPonto(${ponto.id})" title="Rejeitar">
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.rejeitarPonto('${ponto.id}')" title="Rejeitar">
                                                     <i class="fas fa-times"></i> Rejeitar
                                                 </button>
                                             </div>
@@ -385,7 +381,7 @@ class AdminManager {
     /**
      * Mostrar pontos ocultos
      */
-    mostrarPontosOcultos() {
+    showHiddenPoints() {
         const pontosOcultos = window.databaseManager?.hiddenPoints || [];
         
         const html = `
@@ -425,13 +421,13 @@ class AdminManager {
                                         <td>${ponto.motivoOcultacao || 'Não informado'}</td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-success btn-sm" onclick="adminManager.restaurarPonto(${ponto.id})" title="Restaurar">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.restaurarPonto('${ponto.id}')" title="Restaurar">
                                                     <i class="fas fa-undo"></i> Restaurar
                                                 </button>
-                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Ver">
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto('${ponto.id}')" title="Ver">
                                                     <i class="fas fa-eye"></i> Ver
                                                 </button>
-                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPontoPermanente(${ponto.id})" title="Deletar Permanentemente">
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPontoPermanente('${ponto.id}')" title="Deletar Permanentemente">
                                                     <i class="fas fa-trash-alt"></i> Deletar
                                                 </button>
                                             </div>
@@ -456,12 +452,12 @@ class AdminManager {
             try {
                 const resultado = window.databaseManager.aprovarPonto(pontoId, 'administrator');
                 this.showNotification('Ponto aprovado com sucesso!', 'success');
-                this.mostrarPontosPendentes(); // Recarregar lista
+                this.showPendingPoints(); // Recarregar lista
                 this.atualizarContadores();
                 
-                console.log('✅ Ponto aprovado:', resultado);
+                console.log('Ponto aprovado:', resultado);
             } catch (error) {
-                console.error('❌ Erro ao aprovar ponto:', error);
+                console.error('Erro ao aprovar ponto:', error);
                 this.showNotification('Erro ao aprovar ponto: ' + error.message, 'error');
             }
         }
@@ -484,12 +480,12 @@ class AdminManager {
                 }
                 
                 this.showNotification('Ponto rejeitado e ocultado', 'warning');
-                this.mostrarPontosPendentes(); // Recarregar lista
+                this.showPendingPoints(); // Recarregar lista
                 this.atualizarContadores();
                 
-                console.log('⚠️ Ponto rejeitado:', resultado);
+                console.log('Ponto rejeitado:', resultado);
             } catch (error) {
-                console.error('❌ Erro ao rejeitar ponto:', error);
+                console.error('Erro ao rejeitar ponto:', error);
                 this.showNotification('Erro ao rejeitar ponto: ' + error.message, 'error');
             }
         }
@@ -512,12 +508,12 @@ class AdminManager {
                 }
                 
                 this.showNotification('Ponto ocultado com sucesso', 'warning');
-                this.mostrarPontosConfirmados(); // Recarregar lista
+                this.showConfirmedPoints(); // Recarregar lista
                 this.atualizarContadores();
                 
-                console.log('👁️‍🗨️ Ponto ocultado:', resultado);
+                console.log('Ponto ocultado:', resultado);
             } catch (error) {
-                console.error('❌ Erro ao ocultar ponto:', error);
+                console.error('Erro ao ocultar ponto:', error);
                 this.showNotification('Erro ao ocultar ponto: ' + error.message, 'error');
             }
         }
@@ -531,12 +527,12 @@ class AdminManager {
             try {
                 const resultado = window.databaseManager.restaurarPonto(pontoId, 'administrator');
                 this.showNotification('Ponto restaurado com sucesso!', 'success');
-                this.mostrarPontosOcultos(); // Recarregar lista
+                this.showHiddenPoints(); // Recarregar lista
                 this.atualizarContadores();
                 
-                console.log('🔄 Ponto restaurado:', resultado);
+                console.log('Ponto restaurado:', resultado);
             } catch (error) {
-                console.error('❌ Erro ao restaurar ponto:', error);
+                console.error('Erro ao restaurar ponto:', error);
                 this.showNotification('Erro ao restaurar ponto: ' + error.message, 'error');
             }
         }
@@ -558,16 +554,16 @@ class AdminManager {
                     
                     // Recarregar a lista atual
                     if (this.currentTab === 'pontos') {
-                        this.mostrarPontosConfirmados();
+                        this.showConfirmedPoints();
                     } else if (this.currentTab === 'pendentes') {
-                        this.mostrarPontosPendentes();
+                        this.showPendingPoints();
                     } else if (this.currentTab === 'ocultos') {
-                        this.mostrarPontosOcultos();
+                        this.showHiddenPoints();
                     }
                     
                     this.atualizarContadores();
                     
-                    console.log('🗑️ Ponto deletado permanentemente:', pontoId);
+                    console.log('Ponto deletado permanentemente:', pontoId);
                 } else {
                     this.showNotification('Erro ao deletar ponto', 'error');
                 }
@@ -595,6 +591,26 @@ class AdminManager {
             return;
         }
 
+        console.log('Info Panel Manager disponível:', !!window.infoPanelManager);
+        console.log('Map Manager disponível:', !!window.mapManager);
+
+        // Usar o info-panel do index.html para manter consistência visual
+        if (window.infoPanelManager) {
+            window.infoPanelManager.show(ponto);
+        } else if (window.mapManager && window.mapManager.renderInfoPanelDirect) {
+            // Tentar usar o método direto do MapManager
+            window.mapManager.renderInfoPanelDirect(ponto);
+        } else {
+            // Fallback para modal se info-panel não estiver disponível
+            console.log('Usando modal como fallback');
+            this.showPointInModal(ponto);
+        }
+    }
+
+    /**
+     * Mostrar ponto em modal (fallback)
+     */
+    showPointInModal(ponto) {
         const statusInfo = this.getStatusInfo(ponto);
         
         const conteudo = `
@@ -743,9 +759,33 @@ class AdminManager {
      * Renderizar conteúdo da tab
      */
     renderTabContent(html) {
-        const tabContent = document.getElementById(`tab-${this.currentTab}`);
-        if (tabContent) {
-            tabContent.innerHTML = html;
+        let targetElement = null;
+        
+        // Identificar elemento de destino baseado na aba atual
+        switch(this.currentTab) {
+            case 'pendentes':
+                targetElement = document.getElementById('pendentes-content');
+                break;
+            case 'ocultos':
+                targetElement = document.getElementById('ocultos-content');
+                break;
+            case 'pontos':
+                targetElement = document.getElementById('pontos-tbody');
+                break;
+            default:
+                targetElement = document.getElementById(`tab-${this.currentTab}`);
+        }
+        
+        if (targetElement) {
+            if (this.currentTab === 'pontos') {
+                // Para a aba pontos, usar apenas tbody
+                targetElement.innerHTML = html;
+            } else {
+                // Para outras abas, renderizar conteúdo completo
+                targetElement.innerHTML = html;
+            }
+        } else {
+            console.warn(`Elemento de destino não encontrado para a aba: ${this.currentTab}`);
         }
     }
 
@@ -1036,12 +1076,26 @@ class AdminManager {
 
     // Métodos placeholder para funcionalidades futuras
     mostrarSugestoes() { this.showNotification('Funcionalidade de sugestões em desenvolvimento', 'info'); }
-    loadUsersData() { console.log('👥 Carregar dados de usuários - em desenvolvimento'); }
-    loadReportsData() { console.log('📊 Carregar relatórios - em desenvolvimento'); }
-    populateFilters() { console.log('🔍 Popular filtros - em desenvolvimento'); }
-    applyFilters() { console.log('🔍 Aplicar filtros - em desenvolvimento'); }
-    previousPage() { console.log('◀️ Página anterior - em desenvolvimento'); }
-    nextPage() { console.log('▶️ Próxima página - em desenvolvimento'); }
+    loadUsersData() { console.log('Carregar dados de usuários - em desenvolvimento'); }
+    loadReportsData() { console.log('Carregar relatórios - em desenvolvimento'); }
+    populateFilters() { console.log('Popular filtros - em desenvolvimento'); }
+    applyFilters() { console.log('Aplicar filtros - em desenvolvimento'); }
+    previousPage() { console.log('Página anterior - em desenvolvimento'); }
+    nextPage() { console.log('Próxima página - em desenvolvimento'); }
+    
+    /**
+     * Mostrar ajuda do sistema
+     */
+    showHelp() {
+        this.showNotification('Sistema de ajuda em desenvolvimento', 'info');
+    }
+    
+    /**
+     * Mostrar logs do sistema
+     */
+    showLogs() {
+        this.showNotification('Visualização de logs em desenvolvimento', 'info');
+    }
 }
 
 // Disponibilizar globalmente

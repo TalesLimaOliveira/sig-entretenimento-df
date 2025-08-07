@@ -248,39 +248,39 @@ class PontosEntretenimentoApp {
     }
 
     verifyAuthentication() {
-        console.log('🔐 Verificando autenticação...');
+        console.log('Verificando autenticacao...');
         
         try {
             if (window.authManager && window.authManager.isAuthenticated()) {
                 const user = window.authManager.getCurrentUser();
-                console.log('🔐 Usuário autenticado encontrado:', user);
+                console.log('Usuario autenticado encontrado:', user);
                 this.configureLoggedUser(user);
             } else {
-                console.log('🔐 Nenhum usuário autenticado');
+                console.log('Nenhum usuario autenticado');
                 this.configureVisitorUser();
             }
         } catch (error) {
-            console.error('🔐 Erro ao verificar autenticação:', error);
+            console.error('Erro ao verificar autenticacao:', error);
             this.configureVisitorUser();
         }
         
         // Forçar uma segunda verificação após 500ms para garantir
         setTimeout(() => {
-            console.log('🔐 Segunda verificação de autenticação...');
+            console.log('Segunda verificacao de autenticacao...');
             try {
                 if (window.authManager && window.authManager.isAuthenticated()) {
                     const user = window.authManager.getCurrentUser();
-                    console.log('🔐 Segunda verificação - usuário autenticado:', user.nome);
+                    console.log('Segunda verificacao - usuario autenticado:', user.nome);
                     // Só atualizar se os botões ainda estão como "ENTRAR"
                     const desktopBtn = document.getElementById('desktop-login-btn');
                     const mobileBtn = document.getElementById('mobile-login-btn');
                     if (desktopBtn || mobileBtn) {
-                        console.log('🔐 Botões ainda não foram atualizados, forçando atualização...');
+                        console.log('Botoes ainda nao foram atualizados, forcando atualizacao...');
                         this.configureLoggedUser(user);
                     }
                 }
             } catch (error) {
-                console.error('🔐 Erro na segunda verificação:', error);
+                console.error('Erro na segunda verificacao:', error);
             }
         }, 500);
     }
@@ -289,37 +289,37 @@ class PontosEntretenimentoApp {
      * Configure interface for logged user
      */
     configureLoggedUser(user) {
-        console.log(`🔐 Configurando usuário logado: ${user.nome} (${user.role})`);
+        console.log(`Configurando usuario logado: ${user.nome} (${user.role})`);
         
         // Verificar se os containers existem
         const desktopContainer = document.querySelector('.desktop-actions');
         const mobileContainer = document.querySelector('.mobile-actions');
-        console.log('🔐 Containers encontrados:', {
+        console.log('Containers encontrados:', {
             desktop: !!desktopContainer,
             mobile: !!mobileContainer
         });
         
-        console.log('🔐 Chamando updateLoginButton...');
+        console.log('Chamando updateLoginButton...');
         this.updateLoginButton(user);
         
         if (user.role === 'administrator') {
-            console.log('🔐 Configurando interface de administrador');
+            console.log('Configurando interface de administrador');
             this.isAdmin = true;
             this.configureAdminInterface();
         } else if (user.role === 'user') {
-            console.log('🔐 Configurando interface de usuário');
+            console.log('Configurando interface de usuario');
             this.isAdmin = false;
             this.configureUserInterface();
         }
         
-        console.log('🔐 Atualizando visibilidade de favoritos');
+        console.log('Atualizando visibilidade de favoritos');
         // this.updateFavoritesVisibility(user.role); // Comentado - não implementado ainda
         
         // Verificar se os botões foram criados corretamente
         setTimeout(() => {
             const desktopBtn = document.getElementById('desktop-user-info-btn');
             const mobileBtn = document.getElementById('mobile-user-info-btn');
-            console.log('🔐 Verificação pós-criação dos botões:', {
+            console.log('Verificacao pos-criacao dos botoes:', {
                 desktop: !!desktopBtn,
                 mobile: !!mobileBtn
             });
@@ -492,13 +492,13 @@ class PontosEntretenimentoApp {
      * Update button after login
      */
     updateLoginButton(user) {
-        console.log('🔄 Atualizando botão de login para usuário:', user.nome, 'Role:', user.role);
+        console.log('Atualizando botao de login para usuario:', user.nome, 'Role:', user.role);
         
         // Encontrar containers onde estão os botões
         const desktopContainer = document.querySelector('.desktop-actions');
         const mobileContainer = document.querySelector('.mobile-actions');
         
-        console.log('🔍 Containers encontrados:', {
+        console.log('Containers encontrados:', {
             desktop: !!desktopContainer,
             mobile: !!mobileContainer
         });
@@ -507,13 +507,13 @@ class PontosEntretenimentoApp {
         const isAdmin = user.role === 'administrator';
         const userName = user.nome || user.username || 'Usuário';
         
-        console.log('� Dados do usuário:', { userName, isAdmin });
+        console.log('Dados do usuario:', { userName, isAdmin });
         
         // Substituir botões em ambos os containers
         [desktopContainer, mobileContainer].forEach((container, index) => {
             if (container) {
                 const containerType = index === 0 ? 'desktop' : 'mobile';
-                console.log(`🔧 Processando container ${containerType}:`, container);
+                console.log(`Processando container ${containerType}:`, container);
                 
                 // Remover elementos existentes relacionados ao login/usuário
                 const existingElements = container.querySelectorAll('.header-login-btn, .user-dropdown, .user-info, [id*="login-btn"], [id*="user-info"]');
@@ -545,21 +545,21 @@ class PontosEntretenimentoApp {
                 `;
                 
                 container.insertAdjacentHTML('beforeend', userMenuHTML);
-                console.log(`✅ Menu de usuário criado para ${containerType}`);
+                console.log(`Menu de usuario criado para ${containerType}`);
             }
         });
         
         // Configurar o menu após substituição
-        console.log('🔧 Configurando interações do menu do usuário...');
+        console.log('Configurando interacoes do menu do usuario...');
         this.configureUserMenu();
         
         // Remover botão de favoritos apenas se for administrador
         if (user.role === 'administrator') {
-            console.log('🗑️ Removendo botão de favoritos (usuário admin)...');
+            console.log('Removendo botao de favoritos (usuario admin)...');
             this.removeFavoriteButton();
         }
         
-        console.log('✅ updateLoginButton concluído');
+        console.log('updateLoginButton concluido');
     }
 
     /**
@@ -780,48 +780,48 @@ class PontosEntretenimentoApp {
     }
 
     configureEvents() {
-        console.log('Configurando eventos de autenticação...');
+        console.log('Configurando eventos de autenticacao...');
         
         // Event listener para mudanças de autenticação
         document.addEventListener('authStateChanged', (e) => {
-            console.log('🎯 Event authStateChanged disparado!', e);
-            console.log('🎯 Event detail:', e.detail);
+            console.log('Event authStateChanged disparado!', e);
+            console.log('Event detail:', e.detail);
             
             try {
                 const { type, user } = e.detail;
-                console.log(`🎯 Processando evento de autenticação: ${type}`, user);
+                console.log(`Processando evento de autenticacao: ${type}`, user);
                 
                 if (type === 'login') {
-                    console.log('🎯 Processando login...');
+                    console.log('Processando login...');
                     this.configureLoggedUser(user);
                     this.reloadData();
                 } else if (type === 'logout') {
-                    console.log('🎯 Processando logout...');
+                    console.log('Processando logout...');
                     this.configureVisitorUser();
                     this.reloadData();
                 }
             } catch (error) {
-                console.error('🎯 Erro ao processar evento de autenticação:', error);
+                console.error('Erro ao processar evento de autenticacao:', error);
                 // Try to reconfigure as visitor in case of error
                 try {
                     this.configureVisitorUser();
                 } catch (fallbackError) {
-                    console.error('🎯 Erro no fallback de configuração:', fallbackError);
+                    console.error('Erro no fallback de configuracao:', fallbackError);
                 }
             }
         });
         
         // NOVA FUNCIONALIDADE: Listener adicional para userLoggedIn
         document.addEventListener('userLoggedIn', (e) => {
-            console.log('🎯 Event userLoggedIn recebido:', e.detail);
+            console.log('Event userLoggedIn recebido:', e.detail);
             try {
                 this.configureLoggedUser(e.detail);
             } catch (error) {
-                console.error('🎯 Erro ao processar userLoggedIn:', error);
+                console.error('Erro ao processar userLoggedIn:', error);
             }
         });
         
-        console.log('Event listener de autenticação configurado');
+        console.log('Event listener de autenticacao configurado');
 
         // Event listener for loaded categories
         document.addEventListener('database_categoriasCarregadas', (e) => {
@@ -1113,6 +1113,32 @@ class PontosEntretenimentoApp {
         }
     }
 
+    /**
+     * Load categories directly from JSON file as fallback
+     */
+    async loadCategoriesDirectly() {
+        try {
+            const response = await fetch('./database/categorias.json', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const categories = await response.json();
+            console.log('Categories loaded directly from JSON:', categories);
+            return categories;
+        } catch (error) {
+            console.warn('Failed to load categories directly from JSON:', error);
+            return null;
+        }
+    }
+
     configureCategoryMenu() {
         console.log('Starting category menu configuration...');
         
@@ -1122,51 +1148,36 @@ class PontosEntretenimentoApp {
             return;
         }
 
-        // Immediate render with hardcoded categories for faster loading
-        const defaultCategories = [
-            { id: 'geral', nome: 'Geral', icon: 'fas fa-theater-masks', cor: '#6c757d' },
-            { id: 'esportes-lazer', nome: 'Esportes', icon: 'fas fa-running', cor: '#28a745' },
-            { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#dc3545' },
-            { id: 'geek-nerd', nome: 'Geek', icon: 'fas fa-gamepad', cor: '#6f42c1' },
-            { id: 'casas-noturnas', nome: 'Casas Noturnas', icon: 'fas fa-glass-cheers', cor: '#6610f2' }
-        ];
-
-        // Render immediately for fast user experience
-        this.renderCategoryButtons(defaultCategories);
-
-        // Try to get from DatabaseManager in background
+        // Tentar carregar do DatabaseManager primeiro
         if (window.databaseManager && window.databaseManager.getCategorias) {
             const categories = window.databaseManager.getCategorias() || [];
             if (categories.length > 0) {
-                console.log('DatabaseManager categories available, updating:', categories.length);
+                console.log('Using DatabaseManager categories:', categories.length);
                 this.renderCategoryButtons(categories);
+                return;
             }
         }
 
-        // Load from JSON as fallback (async, non-blocking)
+        // Carregar diretamente do JSON como prioridade
         this.loadCategoriesDirectly().then(cats => {
             if (cats && cats.length > 0) {
-                console.log('Categories loaded from JSON, final update:', cats.length);
+                console.log('Categories loaded from JSON:', cats.length);
                 this.renderCategoryButtons(cats);
+            } else {
+                // Fallback para categorias padrão APENAS se JSON falhar
+                console.log('Using fallback categories with updated colors');
+                const fallbackCategories = [
+                    { id: 'geral', nome: 'Geral', icon: 'fas fa-theater-masks', cor: '#b8860b' },
+                    { id: 'esportes-lazer', nome: 'Esportes', icon: 'fas fa-running', cor: '#28a745' },
+                    { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#dc3545' },
+                    { id: 'geek-nerd', nome: 'Geek', icon: 'fas fa-gamepad', cor: '#6f42c1' },
+                    { id: 'casas-noturnas', nome: 'Casas Noturnas', icon: 'fas fa-glass-cheers', cor: '#6610f2' }
+                ];
+                this.renderCategoryButtons(fallbackCategories);
             }
         }).catch(error => {
             console.error('Error loading categories from JSON:', error);
         });
-    }
-
-    async loadCategoriesDirectly() {
-        try {
-            const response = await fetch('./database/categorias.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const categories = await response.json();
-            console.log('Categories loaded directly from JSON:', categories);
-            return categories;
-        } catch (error) {
-            console.error('Error loading categories directly:', error);
-            return [];
-        }
     }
 
     renderCategoryButtons(categories) {
@@ -1184,14 +1195,16 @@ class PontosEntretenimentoApp {
             </button>
         `;
 
-        // Generate buttons for categories
+        // Generate buttons for categories with explicit color styling
         categories.forEach(categoria => {
             const iconClass = categoria.icon || 'fas fa-map-marker-alt';
             const corCategoria = categoria.cor || '#6c757d';
             
             buttonsHtml += `
                 <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
-                        data-color="${corCategoria}" title="${categoria.nome}">
+                        data-color="${corCategoria}" 
+                        style="--category-color: ${corCategoria}; background: ${corCategoria}; border-color: ${corCategoria}; color: white;"
+                        title="${categoria.nome}">
                     <i class="${iconClass}"></i>
                     <span class="nav-btn-text">${categoria.nome}</span>
                 </button>
@@ -1200,6 +1213,9 @@ class PontosEntretenimentoApp {
         
         // Insert HTML into container
         container.innerHTML = buttonsHtml;
+        
+        // Force immediate color application
+        this.applyCategoryColors(categories);
         
         // Configure event listeners (only once)
         if (!container.hasAttribute('data-listeners-configured')) {
@@ -1217,6 +1233,25 @@ class PontosEntretenimentoApp {
         
         // Set initial active state
         this.updateCategoryButtons(this.activeCategory);
+        
+        console.log('Category buttons rendered with updated colors');
+    }
+
+    /**
+     * Aplicar cores das categorias imediatamente após renderização
+     */
+    applyCategoryColors(categories) {
+        categories.forEach(categoria => {
+            const button = document.querySelector(`[data-categoria="${categoria.id}"]`);
+            if (button) {
+                const cor = categoria.cor || '#6c757d';
+                button.style.setProperty('--category-color', cor);
+                button.style.background = cor;
+                button.style.borderColor = cor;
+                button.style.color = 'white';
+                console.log(`Applied color ${cor} to category ${categoria.id}`);
+            }
+        });
     }
 
     /**
@@ -1310,10 +1345,10 @@ class PontosEntretenimentoApp {
     /**
      * Atualizar estado visual dos botões de categoria
      */
-    updateCategoryButtons(categoriaAtiva) {
+    updateCategoryButtons(activeCategory) {
         const buttons = document.querySelectorAll('.nav-btn[data-categoria]');
         buttons.forEach(btn => {
-            const isActive = btn.dataset.categoria === categoriaAtiva;
+            const isActive = btn.dataset.categoria === activeCategory;
             
             if (isActive) {
                 // Active button styling
@@ -1355,10 +1390,10 @@ class PontosEntretenimentoApp {
             
             // Verificar se há pontos no DatabaseManager
             const pontosDisponiveis = window.databaseManager.getPontos();
-            console.log(`Points available in DatabaseManager:`, pontosDisponiveis.length);
+            console.log(`Points available in DatabaseManager: ${pontosDisponiveis.length}`);
             
             if (pontosDisponiveis.length === 0) {
-                console.warn('No points found in DatabaseManager');
+                console.warn('No points found in DatabaseManager, attempting data reload...');
                 
                 // Try to force data reload
                 console.log('Attempting to force data reload...');
@@ -1366,7 +1401,10 @@ class PontosEntretenimentoApp {
                     const novospontos = window.databaseManager.getPontos();
                     console.log(`After reload: ${novospontos.length} points`);
                     if (novospontos.length > 0) {
+                        console.log('Data reloaded successfully, retrying point rendering...');
                         this.renderPoints(); // Try again
+                    } else {
+                        console.error('Still no points after reload');
                     }
                 }).catch(error => {
                     console.error('Error reloading data:', error);
@@ -1685,17 +1723,25 @@ class PontosEntretenimentoApp {
 
     // API pública para admin
     adicionarPonto(dadosPonto) {
-        if (!this.isAdmin) return false;
-        
         // Obter contexto do usuário atual
         const user = window.authManager?.getCurrentUser();
         const userRole = user?.role || 'visitor';
         const username = user?.username || null;
         
-        const ponto = window.databaseManager.adicionarPonto(dadosPonto, userRole, username);
-        window.mapManager.adicionarMarcador(ponto);
-        this.updateStatistics();
-        return true;
+        try {
+            const ponto = window.databaseManager.adicionarPonto(dadosPonto, userRole, username);
+            
+            // Apenas adicionar marcador no mapa se for admin (ponto confirmado)
+            if (userRole === 'administrator') {
+                window.mapManager.adicionarMarcador(ponto);
+            }
+            
+            this.updateStatistics();
+            return true;
+        } catch (error) {
+            console.error('Erro ao adicionar ponto:', error);
+            return false;
+        }
     }
 
     removerPonto(pontoId) {
@@ -1710,78 +1756,23 @@ class PontosEntretenimentoApp {
         this.updateStatistics();
         return true;
     }
-    
-    // FUNÇÕES DE TESTE/DEBUG
-    testLogin(username, password) {
-        console.log('🧪 TESTE: Iniciando login para:', username);
-        if (window.authManager && window.authManager.login) {
-            window.authManager.login(username, password).then(result => {
-                console.log('🧪 TESTE: Resultado do login:', result);
-                if (result.success) {
-                    console.log('🧪 TESTE: Forçando atualização da interface...');
-                    this.configureLoggedUser(result.user);
-                }
-            });
-        }
-    }
-    
-    testLogout() {
-        console.log('🧪 TESTE: Fazendo logout...');
-        if (window.authManager && window.authManager.logout) {
-            window.authManager.logout();
-        }
-    }
-    
-    checkAuthStatus() {
-        const isAuth = window.authManager ? window.authManager.isAuthenticated() : false;
-        const user = isAuth ? window.authManager.getCurrentUser() : null;
-        console.log('🧪 TESTE: Status de autenticação:', {
-            authenticated: isAuth,
-            user: user ? `${user.nome} (${user.role})` : null
-        });
-        return { authenticated: isAuth, user };
-    }
 }
 
-// Não instanciar aqui - será feito no HTML
+// Garantir que a classe está disponível globalmente
+window.PontosEntretenimentoApp = PontosEntretenimentoApp;
 
-// Função global para testes
-window.testLogin = function(username = 'admin', password = 'admin') {
-    console.log('🧪 Função global testLogin chamada');
-    if (window.app && window.app.testLogin) {
-        window.app.testLogin(username, password);
-    } else if (window.authManager) {
-        window.authManager.login(username, password).then(result => {
-            console.log('🧪 Login direto resultado:', result);
-            if (result.success && window.app) {
-                window.app.configureLoggedUser(result.user);
-            }
-        });
-    } else {
-        console.error('🧪 AuthManager não disponível');
-    }
-};
+// Marcar classe como carregada
+if (!window.classesLoaded) {
+    window.classesLoaded = {};
+}
+window.classesLoaded.PontosEntretenimentoApp = true;
 
-window.testLogout = function() {
-    console.log('🧪 Função global testLogout chamada');
-    if (window.app && window.app.testLogout) {
-        window.app.testLogout();
-    } else if (window.authManager) {
-        window.authManager.logout();
-        setTimeout(() => window.location.reload(), 500);
-    } else {
-        console.error('🧪 AuthManager não disponível');
-    }
-};
+console.log('PontosEntretenimentoApp class registered globally');
+console.log('PontosEntretenimentoApp type:', typeof window.PontosEntretenimentoApp);
 
-window.checkAuthStatus = function() {
-    console.log('🧪 Função global checkAuthStatus chamada');
-    if (window.app && window.app.checkAuthStatus) {
-        return window.app.checkAuthStatus();
-    } else {
-        const isAuth = window.authManager ? window.authManager.isAuthenticated() : false;
-        const user = isAuth ? window.authManager.getCurrentUser() : null;
-        console.log('🧪 Status direto:', { authenticated: isAuth, user });
-        return { authenticated: isAuth, user };
-    }
-};
+// Verificação de integridade
+if (typeof window.PontosEntretenimentoApp !== 'function') {
+    console.error('CRITICAL: PontosEntretenimentoApp is not a function after registration!');
+} else {
+    console.log('SUCCESS: PontosEntretenimentoApp is properly registered as a function');
+}

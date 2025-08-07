@@ -1,6 +1,6 @@
 /**
  * Modal para Adicionar Novos Pontos
- * Interface para usuários adicionarem pontos ao mapa
+ * Interface pa                                            <option value="gastronomia">Gastronomia</option>a usuários adicionarem pontos ao mapa
  */
 class AddPointModal {
     constructor() {
@@ -29,17 +29,32 @@ class AddPointModal {
                             <!-- Seleção de Localização -->
                             <div class="form-section">
                                 <h3><i class="fas fa-map-marker-alt"></i> Localização</h3>
-                                <div class="location-selector">
-                                    <div class="location-instructions">
+                                <div class="location-selector" id="location-selector">
+                                    <div class="location-instructions" id="location-instructions">
                                         <p><i class="fas fa-info-circle"></i> Clique no mapa para selecionar a localização do ponto</p>
+                                        <small>O modal se minimizará para facilitar a seleção no mapa</small>
                                     </div>
-                                    <div class="selected-coordinates" style="display:none;">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Localização selecionada:</span>
-                                        <span id="coordinates-display"></span>
-                                        <button type="button" class="btn-link" id="change-location">Alterar</button>
+                                    <div class="selected-coordinates" style="display:none;" id="selected-coordinates">
+                                        <div class="coords-info">
+                                            <div class="coords-label">
+                                                <i class="fas fa-check-circle"></i>
+                                                Localização selecionada:
+                                            </div>
+                                            <div class="coords-value" id="coordinates-display"></div>
+                                        </div>
+                                        <div class="coords-actions">
+                                            <button type="button" class="btn-map-select" id="change-location">
+                                                <i class="fas fa-crosshairs"></i> Alterar
+                                            </button>
+                                            <button type="button" class="btn btn-link btn-sm" id="clear-location">
+                                                <i class="fas fa-times"></i> Limpar
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+                                <button type="button" class="btn btn-secondary" id="select-location-btn" style="margin-top: 1rem;">
+                                    <i class="fas fa-crosshairs"></i> Selecionar no Mapa
+                                </button>
                             </div>
 
                             <!-- Informações Básicas -->
@@ -54,7 +69,7 @@ class AddPointModal {
                                         <label for="point-category" class="required">Categoria</label>
                                         <select id="point-category" class="form-select" required>
                                             <option value="">Selecione uma categoria</option>
-                                            <option value="geral">📍 Geral</option>
+                                            <option value="geral">Geral</option>
                                             <option value="esportes-lazer">� Esportes e Lazer</option>
                                             <option value="gastronomia">�️ Gastronomia</option>
                                             <option value="geek-nerd">🎮 Geek</option>
@@ -160,26 +175,35 @@ class AddPointModal {
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         this.modal = document.getElementById('add-point-modal');
+    }
+
     setupEventListeners() {
-        console.log('⚙️ Configurando event listeners...');
+        console.log('');
         
         // Form submission
         const form = document.getElementById('add-point-form');
         if (!form) {
-            console.error('❌ Formulário add-point-form não encontrado!');
+            console.error('Formulário add-point-form não encontrado!');
             return;
         }
         form.addEventListener('submit', (e) => this.handleSubmit(e));
-        console.log('✅ Event listener do formulário configurado');
+        console.log('');
 
         // Modal controls
         const closeBtn = this.modal.querySelector('.modal-close');
         const cancelBtn = document.getElementById('cancel-add-point');
 
-        // Fechar ao clicar no backdrop (fora do modal)
+        // Fechar ao clicar no backdrop (fora do modal) - apenas se não estiver em modo de seleção
         this.modal.addEventListener('click', (e) => {
+            // Não fechar se estiver em modo de seleção de localização
+            if (this.isLocationSelectionActive) {
+                console.log('');
+                return;
+            }
+            
+            // Só fechar se clicar exatamente no backdrop (modal em si)
             if (e.target === this.modal) {
-                console.log('🚪 Fechando modal via backdrop');
+                console.log('');
                 this.close();
             }
         });
@@ -188,12 +212,12 @@ class AddPointModal {
         [closeBtn, cancelBtn].forEach((element, index) => {
             if (element) {
                 element.addEventListener('click', () => {
-                    console.log(`🚪 Fechando modal via botão ${index === 0 ? 'close' : 'cancel'}`);
+                    console.log(`Fechando modal via botao ${index === 0 ? 'close' : 'cancel'}`);
                     this.close();
                 });
-                console.log(`✅ Event listener configurado para botão ${index === 0 ? 'close' : 'cancel'}`);
+                console.log(`Event listener configurado para botao ${index === 0 ? 'close' : 'cancel'}`);
             } else {
-                console.warn(`⚠️ Botão ${index === 0 ? 'close' : 'cancel'} não encontrado`);
+                console.warn(`Botao ${index === 0 ? 'close' : 'cancel'} nao encontrado`);
             }
         });
 
@@ -204,41 +228,58 @@ class AddPointModal {
 
         if (imageSource) {
             imageSource.addEventListener('change', (e) => this.handleImageSourceChange(e.target.value));
-            console.log('✅ Event listener para fonte de imagem configurado');
+            console.log('');
         }
 
         if (imageUrl) {
             imageUrl.addEventListener('input', (e) => this.handleImageUrlInput(e.target.value));
-            console.log('✅ Event listener para URL de imagem configurado');
+            console.log('');
         }
 
         if (removeImageBtn) {
             removeImageBtn.addEventListener('click', () => this.removeImagePreview());
-            console.log('✅ Event listener para remover imagem configurado');
+            console.log('');
         }
 
         // Change location button
         const changeLocationBtn = document.getElementById('change-location');
         if (changeLocationBtn) {
             changeLocationBtn.addEventListener('click', () => this.enableLocationSelection());
-            console.log('✅ Event listener para mudança de localização configurado');
+            console.log('');
+        }
+
+        // Select location button
+        const selectLocationBtn = document.getElementById('select-location-btn');
+        if (selectLocationBtn) {
+            selectLocationBtn.addEventListener('click', () => this.enableLocationSelection());
+            console.log('');
+        }
+
+        // Location selector click
+        const locationSelector = document.getElementById('location-selector');
+        if (locationSelector) {
+            locationSelector.addEventListener('click', () => {
+                if (!this.selectedPosition) {
+                    this.enableLocationSelection();
+                }
+            });
         }
 
         // ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isVisible()) {
-                console.log('🚪 Fechando modal via ESC');
+                console.log('');
                 this.close();
             }
         });
 
-        console.log('✅ Todos os event listeners configurados!');
+        console.log('');
     }
 
     open(options = {}) {
         if (!this.modal) return;
 
-        console.log('🚀 Abrindo modal de adicionar ponto');
+        console.log('');
 
         // Reset form
         this.resetForm();
@@ -249,9 +290,15 @@ class AddPointModal {
 
         // Get map reference
         this.map = window.mapManager?.map;
+        
+        if (!this.map) {
+            console.warn('⚠️ Mapa não disponível para seleção de localização');
+        } else {
+            console.log('');
+        }
 
-        // Enable location selection
-        this.enableLocationSelection();
+        // Update location display to show instructions
+        this.updateLocationDisplay();
 
         // Focus first input
         setTimeout(() => {
@@ -263,7 +310,7 @@ class AddPointModal {
     close() {
         if (!this.modal) return;
 
-        console.log('🚪 Fechando modal de adicionar ponto');
+        console.log('');
         this.modal.style.display = 'none';
         document.body.classList.remove('modal-open');
 
@@ -289,35 +336,191 @@ class AddPointModal {
 
     enableLocationSelection() {
         if (!this.map) {
-            console.warn('⚠️ Mapa não disponível para seleção de localização');
+            console.warn('Mapa não disponível para seleção de localização');
+            this.showError('Mapa não disponível. Recarregue a página.');
             return;
         }
 
-        this.showLocationInstructions();
+        console.log('');
         
-        // Add click handler to map
-        this.map.on('click', this.onMapClick.bind(this));
+        // Marcar que está em modo de seleção
+        this.isLocationSelectionActive = true;
+        
+        // Minimizar modal temporariamente
+        this.minimizeModal();
+        
+        // Mostrar instruções
+        this.showMapInstructions();
+        
+        // Configurar cursor e eventos do mapa
+        this.mapClickHandler = this.onMapClick.bind(this);
+        this.map.on('click', this.mapClickHandler);
         this.map.getContainer().style.cursor = 'crosshair';
         
-        console.log('🎯 Modo de seleção de localização ativado');
+        // Adicionar classe para indicar modo de seleção
+        this.map.getContainer().classList.add('location-selection-mode');
+        
+        console.log('');
     }
 
     disableLocationSelection() {
         if (!this.map) return;
 
-        this.map.off('click', this.onMapClick.bind(this));
-        this.map.getContainer().style.cursor = '';
+        console.log('');
         
-        console.log('🎯 Modo de seleção de localização desativado');
+        // Marcar que não está mais em modo de seleção
+        this.isLocationSelectionActive = false;
+        
+        // Remover eventos e cursor
+        if (this.mapClickHandler) {
+            this.map.off('click', this.mapClickHandler);
+            this.mapClickHandler = null;
+        }
+        this.map.getContainer().style.cursor = '';
+        this.map.getContainer().classList.remove('location-selection-mode');
+        
+        // Restaurar modal
+        this.restoreModal();
+        
+        // Remover instruções do mapa
+        this.hideMapInstructions();
+        
+        console.log('');
+    }
+
+    minimizeModal() {
+        console.log('');
+        
+        if (this.modal) {
+            // Salvar estados originais
+            this.originalModalState = {
+                opacity: this.modal.style.opacity || '1',
+                pointerEvents: this.modal.style.pointerEvents || 'auto',
+                zIndex: this.modal.style.zIndex || '9998',
+                transform: this.modal.style.transform || 'none',
+                transition: this.modal.style.transition || 'none'
+            };
+            
+            // Aplicar estilo minimizado com animação
+            this.modal.style.transition = 'all 0.3s ease';
+            this.modal.style.opacity = '0.1';
+            this.modal.style.pointerEvents = 'none';
+            this.modal.style.zIndex = '9990'; // Bem abaixo do mapa
+            this.modal.style.transform = 'scale(0.7) translateY(-20px)';
+            
+            // Adicionar classe para CSS adicional
+            this.modal.classList.add('modal-minimized');
+            
+            console.log('');
+        } else {
+            console.error('❌ Modal não encontrado para minimizar');
+        }
+    }
+
+    restoreModal() {
+        console.log('');
+        
+        if (this.modal && this.originalModalState) {
+            // Restaurar estados originais
+            this.modal.style.transition = 'all 0.3s ease';
+            this.modal.style.opacity = this.originalModalState.opacity;
+            this.modal.style.pointerEvents = this.originalModalState.pointerEvents;
+            this.modal.style.zIndex = this.originalModalState.zIndex;
+            this.modal.style.transform = this.originalModalState.transform;
+            
+            // Remover classe de minimização
+            this.modal.classList.remove('modal-minimized');
+            
+            // Limpar transição após animação
+            setTimeout(() => {
+                if (this.modal) {
+                    this.modal.style.transition = this.originalModalState.transition;
+                }
+            }, 300);
+            
+            // Limpar estados salvos
+            this.originalModalState = null;
+            
+            console.log('');
+        } else {
+            console.error('❌ Modal não encontrado para restaurar ou estado não salvo');
+        }
+    }
+
+    showMapInstructions() {
+        // Remover instruções anteriores se existirem
+        this.hideMapInstructions();
+        
+        // Criar elemento de instruções no mapa
+        const instructionsElement = document.createElement('div');
+        instructionsElement.id = 'map-location-instructions';
+        instructionsElement.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                text-align: center;
+                backdrop-filter: blur(10px);
+                border: 2px solid var(--theme-primary);
+            ">
+                <i class="fas fa-crosshairs" style="margin-right: 0.5rem; color: var(--theme-primary);"></i>
+                <strong>Clique no mapa para selecionar a localização</strong>
+                <br>
+                <small style="opacity: 0.8;">Pressione ESC para cancelar</small>
+            </div>
+        `;
+        
+        document.body.appendChild(instructionsElement);
+        
+        // Adicionar listener para ESC
+        this.escListener = (e) => {
+            if (e.key === 'Escape') {
+                this.disableLocationSelection();
+            }
+        };
+        document.addEventListener('keydown', this.escListener);
+    }
+
+    hideMapInstructions() {
+        const existing = document.getElementById('map-location-instructions');
+        if (existing) {
+            existing.remove();
+        }
+        
+        // Remover listener do ESC
+        if (this.escListener) {
+            document.removeEventListener('keydown', this.escListener);
+            this.escListener = null;
+        }
     }
 
     onMapClick(e) {
-        console.log('📍 Localização selecionada:', e.latlng);
+        // Prevenir que o evento se propague
+        e.originalEvent.stopPropagation();
         
+        const { lat, lng } = e.latlng;
+        console.log(`📍 Localização selecionada: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        
+        // Salvar posição selecionada
         this.selectedPosition = e.latlng;
-        this.updateLocationDisplay();
+        
+        // Adicionar marcador no local exato clicado
         this.addTemporaryMarker(e.latlng);
-        this.disableLocationSelection();
+        
+        // Atualizar display e campos
+        this.updateLocationDisplay();
+        
+        // Desativar modo de seleção após um pequeno delay para mostrar o feedback
+        setTimeout(() => {
+            this.disableLocationSelection();
+        }, 1000); // 1 segundo para ver o marcador e popup
     }
 
     addTemporaryMarker(latlng) {
@@ -327,21 +530,55 @@ class AddPointModal {
             this.temporaryMarker = L.marker(latlng, {
                 icon: L.divIcon({
                     className: 'temporary-marker',
-                    html: '<i class="fas fa-map-marker-alt"></i>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30]
+                    html: '<i class="fas fa-map-pin" style="color: var(--theme-primary); font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"></i>',
+                    iconSize: [24, 32],
+                    iconAnchor: [12, 32], // Ponto inferior do PIN
+                    popupAnchor: [0, -32] // Popup acima do PIN
                 })
             }).addTo(this.map);
             
-            console.log('📌 Marcador temporário adicionado');
+            // Popup com informações da localização
+            this.temporaryMarker.bindPopup(`
+                <div style="text-align: center; font-size: 12px;">
+                    <strong>📍 Nova Localização</strong><br>
+                    <small>Lat: ${latlng.lat.toFixed(6)}<br>Lng: ${latlng.lng.toFixed(6)}</small>
+                </div>
+            `).openPopup();
+            
+            console.log('');
         }
+    }
+
+    clearLocationSelection() {
+        this.selectedPosition = null;
+        this.clearTemporaryMarker();
+        
+        // Limpar campos do formulário
+        const latInput = document.getElementById('lat');
+        const lngInput = document.getElementById('lng');
+        
+        if (latInput) {
+            latInput.value = '';
+            latInput.style.borderColor = '';
+            latInput.style.backgroundColor = '';
+        }
+        if (lngInput) {
+            lngInput.value = '';
+            lngInput.style.borderColor = '';
+            lngInput.style.backgroundColor = '';
+        }
+        
+        // Atualizar display
+        this.updateLocationDisplay();
+        
+        console.log('');
     }
 
     clearTemporaryMarker() {
         if (this.temporaryMarker && this.map) {
             this.map.removeLayer(this.temporaryMarker);
             this.temporaryMarker = null;
-            console.log('🗑️ Marcador temporário removido');
+            console.log('');
         }
     }
 
@@ -349,14 +586,45 @@ class AddPointModal {
         const instructions = document.querySelector('.location-instructions');
         const coordinates = document.querySelector('.selected-coordinates');
         const coordsDisplay = document.getElementById('coordinates-display');
+        const latInput = document.getElementById('lat');
+        const lngInput = document.getElementById('lng');
 
         if (this.selectedPosition) {
-            instructions.style.display = 'none';
-            coordinates.style.display = 'flex';
-            coordsDisplay.textContent = `${this.selectedPosition.lat.toFixed(6)}, ${this.selectedPosition.lng.toFixed(6)}`;
+            // Atualizar display visual
+            if (instructions) instructions.style.display = 'none';
+            if (coordinates) coordinates.style.display = 'flex';
+            if (coordsDisplay) {
+                coordsDisplay.textContent = `${this.selectedPosition.lat.toFixed(6)}, ${this.selectedPosition.lng.toFixed(6)}`;
+            }
+            
+            // Preencher campos do formulário
+            if (latInput) {
+                latInput.value = this.selectedPosition.lat.toFixed(6);
+                latInput.style.borderColor = 'var(--success)';
+                latInput.style.backgroundColor = 'rgba(46, 160, 67, 0.1)';
+            }
+            if (lngInput) {
+                lngInput.value = this.selectedPosition.lng.toFixed(6);
+                lngInput.style.borderColor = 'var(--success)';
+                lngInput.style.backgroundColor = 'rgba(46, 160, 67, 0.1)';
+            }
+            
+            // Remover feedback visual após alguns segundos
+            setTimeout(() => {
+                if (latInput) {
+                    latInput.style.borderColor = '';
+                    latInput.style.backgroundColor = '';
+                }
+                if (lngInput) {
+                    lngInput.style.borderColor = '';
+                    lngInput.style.backgroundColor = '';
+                }
+            }, 3000);
+            
+            console.log('');
         } else {
-            instructions.style.display = 'block';
-            coordinates.style.display = 'none';
+            if (instructions) instructions.style.display = 'block';
+            if (coordinates) coordinates.style.display = 'none';
         }
     }
 
@@ -456,7 +724,7 @@ class AddPointModal {
             
             // Tratamento de erro de carregamento
             img.onerror = () => {
-                console.warn(`⚠️ Erro ao carregar imagem: ${url}`);
+                console.warn(`Erro ao carregar imagem: ${url}`);
                 this.clearImagePreview();
             };
         }
@@ -479,16 +747,16 @@ class AddPointModal {
 
     async handleSubmit(e) {
         e.preventDefault();
-        console.log('🚀 Iniciando submissão do formulário...');
+        console.log('');
 
         if (!this.validateForm()) {
-            console.error('❌ Validação do formulário falhou');
+            console.error('Validacao do formulario falhou');
             return;
         }
 
-        console.log('✅ Formulário validado com sucesso');
+        console.log('');
         const pointData = this.collectFormData();
-        console.log('📊 Dados coletados:', pointData);
+        console.log('Dados coletados:', pointData);
 
         try {
             const submitBtn = document.getElementById('submit-add-point');
@@ -499,16 +767,16 @@ class AddPointModal {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adicionando...';
 
-            console.log('💾 Tentando salvar ponto...');
+            console.log('');
             await this.submitPoint(pointData);
-            console.log('✅ Ponto salvo com sucesso');
+            console.log('');
 
             this.showSuccess('Ponto adicionado com sucesso!');
             this.close();
 
             // Refresh map if available
             if (window.mapManager) {
-                console.log('🔄 Recarregando mapa...');
+                console.log('');
                 setTimeout(() => window.mapManager.carregarPontos(), 500);
             }
 
@@ -528,40 +796,65 @@ class AddPointModal {
     }
 
     validateForm() {
-        console.log('🔍 Validando formulário...');
+        console.log('');
 
         if (!this.selectedPosition) {
-            console.error('❌ Localização não selecionada');
+            console.error('Localizacao nao selecionada');
             this.showError('Por favor, selecione uma localização no mapa');
             return false;
         }
-        console.log('✅ Localização válida:', this.selectedPosition);
+        console.log('Localizacao valida:', this.selectedPosition);
 
         const required = ['point-name', 'point-category'];
         for (const fieldId of required) {
             const field = document.getElementById(fieldId);
             if (!field) {
-                console.error(`❌ Campo ${fieldId} não encontrado no DOM`);
+                console.error(`Campo ${fieldId} nao encontrado no DOM`);
                 this.showError(`Erro interno: Campo ${fieldId} não encontrado`);
                 return false;
             }
 
             if (!field.value.trim()) {
-                console.error(`❌ Campo obrigatório vazio: ${fieldId}`);
+                console.error(`Campo obrigatorio vazio: ${fieldId}`);
                 field.focus();
                 const label = field.previousElementSibling?.textContent || fieldId;
                 this.showError(`Campo obrigatório: ${label}`);
                 return false;
             }
-            console.log(`✅ Campo ${fieldId} válido:`, field.value.trim());
+            console.log(`Campo ${fieldId} valido:`, field.value.trim());
         }
 
-        console.log('✅ Formulário válido!');
+        console.log('');
         return true;
     }
 
     collectFormData() {
+        console.log('');
+        
         const user = window.authManager?.getCurrentUser();
+        console.log('👤 Usuário atual:', user);
+
+        // Verificar se uma localização foi selecionada
+        if (!this.selectedPosition) {
+            console.error('❌ Nenhuma localização selecionada');
+            throw new Error('Localização não selecionada');
+        }
+        console.log('📍 Localização selecionada:', this.selectedPosition);
+
+        // Coletar dados básicos
+        const nome = document.getElementById('point-name')?.value?.trim();
+        const categoria = document.getElementById('point-category')?.value;
+        const descricao = document.getElementById('point-description')?.value?.trim();
+        
+        console.log('📝 Dados básicos:', { nome, categoria, descricao });
+
+        // Coletar dados opcionais
+        const endereco = document.getElementById('point-address')?.value?.trim() || '';
+        const telefone = document.getElementById('point-phone')?.value?.trim() || '';
+        const website = document.getElementById('point-website')?.value?.trim() || '';
+        const horario = document.getElementById('point-hours')?.value?.trim() || 'Não informado';
+        const preco = document.getElementById('point-price')?.value?.trim() || 'Não informado';
+        const tags = document.getElementById('point-tags')?.value || '';
 
         // Coletar dados da imagem
         const imageSource = document.getElementById('point-image-source')?.value;
@@ -576,37 +869,42 @@ class AddPointModal {
                 source: imageSource,
                 description: imageDescription || null
             };
+            console.log('🖼️ Dados da imagem:', imageData);
         }
+
+        // Processar tags
+        const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        console.log('🏷️ Tags processadas:', tagsArray);
 
         // Gerar ID único baseado no timestamp
         const id = Date.now();
 
-        return {
+        const pointData = {
             id: id,
-            nome: document.getElementById('point-name').value.trim(),
-            categoria: document.getElementById('point-category').value,
+            nome: nome,
+            categoria: categoria,
             coordenadas: [this.selectedPosition.lat, this.selectedPosition.lng],
-            descricao: document.getElementById('point-description').value.trim() || 'Sem descrição',
-            endereco: document.getElementById('point-address').value.trim() || '',
-            telefone: document.getElementById('point-phone').value.trim() || '',
-            website: document.getElementById('point-website').value.trim() || '',
-            horario: document.getElementById('point-hours').value.trim() || 'Não informado',
-            preco: document.getElementById('point-price').value.trim() || 'Não informado',
+            descricao: descricao || 'Sem descrição',
+            endereco: endereco,
+            telefone: telefone,
+            website: website,
+            horario: horario,
+            preco: preco,
             avaliacao: 0,
-            tags: document.getElementById('point-tags').value
-                .split(',')
-                .map(tag => tag.trim())
-                .filter(tag => tag),
+            tags: tagsArray,
             ativo: true,
             dataCriacao: new Date().toISOString(),
             imagem: imageData,
             adicionadoPor: user?.username || user?.name || 'Usuário Anônimo',
             userRole: user?.role || 'user'
         };
+
+        console.log('✅ Dados coletados com sucesso:', pointData);
+        return pointData;
     }
 
     async submitPoint(pointData) {
-        console.log('💾 Salvando ponto no banco de dados...');
+        console.log('📤 Salvando ponto no banco de dados...', pointData);
         
         if (!window.databaseManager?.adicionarPonto) {
             throw new Error('Database manager não disponível');
@@ -614,18 +912,55 @@ class AddPointModal {
 
         const user = window.authManager?.getCurrentUser();
         const userRole = user?.role || 'user';
-        const username = user?.username || null;
+        const username = user?.username || user?.name || null;
 
-        console.log('👤 Usuário:', { userRole, username });
+        console.log('👤 Contexto do usuário:', { userRole, username });
 
-        const novoPonto = await window.databaseManager.adicionarPonto(pointData, userRole, username);
-        
-        console.log('✅ Ponto adicionado:', novoPonto);
-        return novoPonto;
+        try {
+            const novoPonto = await window.databaseManager.adicionarPonto(pointData, userRole, username);
+            console.log('✅ Ponto adicionado com sucesso:', novoPonto);
+            
+            // Força refresh dos dados para garantir sincronização
+            await this.forceDataRefresh();
+            
+            return novoPonto;
+        } catch (error) {
+            console.error('❌ Erro ao adicionar ponto:', error);
+            throw error;
+        }
+    }
+
+    async forceDataRefresh() {
+        try {
+            console.log('');
+            
+            // Recarregar dados do localStorage
+            const pendingData = localStorage.getItem('sig_entretenimento_pontosPendentes');
+            const confirmedData = localStorage.getItem('sig_entretenimento_pontosConfirmados');
+            
+            if (pendingData) {
+                console.log('📊 Pontos pendentes no localStorage:', JSON.parse(pendingData).length);
+            }
+            
+            if (confirmedData) {
+                console.log('📊 Pontos confirmados no localStorage:', JSON.parse(confirmedData).length);
+            }
+            
+            // Trigger refresh do mapa se disponível
+            if (window.mapManager?.carregarPontos) {
+                setTimeout(() => {
+                    window.mapManager.carregarPontos();
+                    console.log('');
+                }, 500);
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Erro ao fazer refresh dos dados:', error);
+        }
     }
 
     showSuccess(message) {
-        console.log('✅', message);
+        console.log(message);
         
         if (window.infoPanelManager?.showNotification) {
             window.infoPanelManager.showNotification(message, 'success');
@@ -635,7 +970,7 @@ class AddPointModal {
     }
 
     showError(message) {
-        console.error('❌', message);
+        console.error(message);
         
         if (window.infoPanelManager?.showNotification) {
             window.infoPanelManager.showNotification(message, 'error');

@@ -26,6 +26,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    color: #212529; /* Garantir texto escuro */
 }
 
 .admin-header {
@@ -40,6 +41,7 @@
 .admin-main {
     flex: 1;
     padding: 0;
+    color: #212529; /* Garantir texto escuro */
 }
 
 /* ===== USER MENU ===== */
@@ -170,11 +172,13 @@
     padding: 0 var(--spacing-lg);
     max-width: 1400px;
     margin: 0 auto;
+    color: #212529; /* Garantir texto escuro */
 }
 
 .tab-content {
     display: none;
     animation: fadeIn 0.3s ease;
+    color: #212529; /* Garantir texto escuro */
 }
 
 .tab-content.active {
@@ -196,6 +200,11 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+}
+
+.tab-header p {
+    color: #6c757d; /* Texto secundário mais claro mas ainda legível */
+    margin: 0;
 }
 
 /* ===== DASHBOARD ===== */
@@ -389,6 +398,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
+    color: #212529; /* Garantir texto escuro na tabela */
 }
 
 .admin-table th {
@@ -405,6 +415,7 @@
     padding: var(--spacing-md) var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
+    color: #212529; /* Garantir texto escuro nas células */
 }
 
 .admin-table tbody tr:hover {
@@ -791,6 +802,58 @@
 .admin-bg-warning { background-color: var(--admin-warning) !important; }
 .admin-bg-danger { background-color: var(--admin-danger) !important; }
 
+/* ===== CORREÇÕES DE LEGIBILIDADE ===== */
+.admin-page * {
+    color: inherit;
+}
+
+.admin-page h1, .admin-page h2, .admin-page h3, .admin-page h4, .admin-page h5, .admin-page h6 {
+    color: #2c3e50 !important;
+}
+
+.admin-page p, .admin-page span, .admin-page div, .admin-page li {
+    color: #212529 !important;
+}
+
+.admin-page .text-muted, .admin-page small {
+    color: #6c757d !important;
+}
+
+.admin-page strong {
+    color: #2c3e50 !important;
+}
+
+/* Seções administrativas */
+.admin-page .admin-section {
+    background: white;
+    color: #212529 !important;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-page .section-header h2 {
+    color: #2c3e50 !important;
+}
+
+.admin-page .section-header p {
+    color: #6c757d !important;
+}
+
+/* Estado vazio */
+.admin-page .empty-state {
+    color: #6c757d !important;
+}
+
+.admin-page .empty-state h3 {
+    color: #495057 !important;
+}
+
+.admin-page .empty-state i {
+    color: #dee2e6 !important;
+}
+
 /* ===== BADGES ===== */
 .badge {
     display: inline-block;
@@ -833,4 +896,40 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
+}
+
+/* ============================================
+   Info Panel Específico para Admin
+   ============================================ */
+
+/* Garantir que o info-panel apareça sobre o conteúdo admin */
+.admin-page .info-panel {
+    z-index: 10000 !important;
+}
+
+/* Ajustar posição para não conflitar com header admin */
+.admin-page .info-panel {
+    top: 0;
+    margin-top: 0;
+}
+
+/* Garantir que funcione bem com o layout admin */
+.admin-page.body-with-info-panel .admin-main {
+    margin-right: 400px;
+    transition: margin-right 0.3s ease;
+}
+
+/* Responsividade específica para admin */
+@media (max-width: 768px) {
+    .admin-page.body-with-info-panel .admin-main {
+        margin-right: 0;
+    }
+    
+    .admin-page .info-panel {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        right: 0;
+    }
 }

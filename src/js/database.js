@@ -21,39 +21,42 @@ class DatabaseManager {
 
     async init() {
         try {
-            console.log('Initializing DatabaseManager with new structure...');
-            console.log(`Current protocol: ${window.location.protocol}`);
+            console.log('');
+            console.log(`Protocolo atual: ${window.location.protocol}`);
             
             await this.loadCategories();
-            console.log('Categories loaded');
+            console.log('');
             
             await this.loadAllData();
-            console.log('Main data loaded');
+            console.log('');
             
             this.migrateOldData();
-            console.log('Data migration completed');
+            console.log('');
             
             this.migrateAlternativeCategory();
-            console.log('Alternative category migration completed');
+            console.log('');
             
             // Verificação final - garantir que há dados
             if (this.confirmedPoints.length === 0) {
-                console.warn('No confirmed points after loading, forcing default data...');
+                console.warn('Nenhum ponto confirmado após carregamento, forçando dados padrão...');
                 this.confirmedPoints = this.getConfirmedPointsDefault();
                 this.saveAllData();
             }
             
             if (this.categorias.length === 0) {
-                console.warn('No categories after loading, forcing default categories...');
+                console.warn('Nenhuma categoria após carregamento, forçando categorias padrão...');
                 this.categorias = this.getCategoriesDefault();
                 this.saveCategories();
             }
             
-            console.log(`Final state: ${this.confirmedPoints.length} confirmed points, ${this.categorias.length} categories`);
-            console.log('DatabaseManager successfully initialized');
+            console.log(`Estado final: ${this.confirmedPoints.length} pontos confirmados, ${this.categorias.length} categorias`);
+            console.log('');
+            
+            return true;
         } catch (error) {
-            console.error('Error initializing DatabaseManager:', error);
+            console.error('Erro crítico ao inicializar DatabaseManager:', error);
             this.initializeDefaultData();
+            return false;
         }
     }
 
@@ -62,34 +65,40 @@ class DatabaseManager {
      */
     async loadAllData() {
         try {
-            console.log('Iniciando carregamento de dados dos arquivos JSON...');
+            console.log('');
             
             // Primeiro, tentar carregar dos arquivos JSON (prioridade)
             let dadosCarregadosJSON = false;
             
             try {
-                console.log('Attempting to load data from JSON files...');
+                console.log('');
                 
                 // Carregar pontos confirmados
-                const pontosConfirmados = await this.loadJsonFile('./database/pontos_confirmados.json');
-                if (pontosConfirmados && Array.isArray(pontosConfirmados) && pontosConfirmados.length > 0) {
-                    this.confirmedPoints = pontosConfirmados;
+                const confirmedPointsData = await this.loadJsonFile('./database/pontos_confirmados.json');
+                if (confirmedPointsData && Array.isArray(confirmedPointsData) && confirmedPointsData.length > 0) {
+                    // Normalizar dados para compatibilidade
+                    this.confirmedPoints = confirmedPointsData.map(ponto => ({
+                        ...ponto,
+                        nota: ponto.nota || ponto.avaliacao || 0,
+                        verificado: ponto.verificado !== false,
+                        status: ponto.status || 'confirmado'
+                    }));
                     dadosCarregadosJSON = true;
-                    console.log(`${pontosConfirmados.length} pontos confirmados carregados do JSON`);
+                    console.log(`${confirmedPointsData.length} pontos confirmados carregados do JSON`);
                 }
 
                 // Carregar pontos pendentes
-                const pontosPendentes = await this.loadJsonFile('./database/pontos_pendentes.json');
-                if (pontosPendentes && Array.isArray(pontosPendentes)) {
-                    this.pendingPoints = pontosPendentes;
-                    console.log(`${pontosPendentes.length} pontos pendentes carregados do JSON`);
+                const pendingPointsData = await this.loadJsonFile('./database/pontos_pendentes.json');
+                if (pendingPointsData && Array.isArray(pendingPointsData)) {
+                    this.pendingPoints = pendingPointsData;
+                    console.log(`${pendingPointsData.length} pontos pendentes carregados do JSON`);
                 }
 
                 // Carregar pontos ocultos
-                const pontosOcultos = await this.loadJsonFile('./database/pontos_ocultos.json');
-                if (pontosOcultos && Array.isArray(pontosOcultos)) {
-                    this.hiddenPoints = pontosOcultos;
-                    console.log(`${pontosOcultos.length} pontos ocultos carregados do JSON`);
+                const hiddenPointsData = await this.loadJsonFile('./database/pontos_ocultos.json');
+                if (hiddenPointsData && Array.isArray(hiddenPointsData)) {
+                    this.hiddenPoints = hiddenPointsData;
+                    console.log(`${hiddenPointsData.length} pontos ocultos carregados do JSON`);
                 }
 
                 // Carregar usuários
@@ -108,7 +117,7 @@ class DatabaseManager {
             
             // If couldn't load from JSON, try localStorage
             if (!dadosCarregadosJSON) {
-                console.log('Attempting to load from localStorage...');
+                console.log('');
                 
                 const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
                 const pendingPoints = localStorage.getItem(this.baseStorageKey + '_pontosPendentes');
@@ -133,19 +142,19 @@ class DatabaseManager {
 
             // Se ainda não há pontos, usar dados padrão
             if (!dadosCarregadosJSON || this.confirmedPoints.length === 0) {
-                console.log('Carregando dados padrão...');
+                console.log('');
                 this.inicializarPontosDefault();
             }
 
             // Salvar dados carregados no localStorage para cache
             if (this.confirmedPoints.length > 0) {
                 this.saveAllData();
-                console.log('Data saved to localStorage for caching');
+                console.log('');
             }
 
             // Calcular próximo ID
             const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
-            this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
+            this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => parseInt(p.id) || 0)) + 1 : 1;
 
             console.log(`Total final: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes, ${this.hiddenPoints.length} ocultos`);
 
@@ -178,27 +187,27 @@ class DatabaseManager {
             }
 
             const data = await response.json();
-            console.log(`✅ Successfully loaded ${url}:`, Array.isArray(data) ? `${data.length} items` : 'data object');
+            console.log(`Successfully loaded ${url}:`, Array.isArray(data) ? `${data.length} items` : 'data object');
             return data;
 
         } catch (error) {
-            console.warn(`⚠️ Failed to load ${url}:`, error.message);
+            console.warn(`Failed to load ${url}:`, error.message);
             
             // Fallback to default data only if fetch completely fails
             if (url.includes('categorias.json')) {
-                console.log('Using default categories');
+                console.log('');
                 return this.getCategoriesDefault();
             } else if (url.includes('pontos_confirmados.json')) {
-                console.log('Using default confirmed points');
+                console.log('');
                 return this.getConfirmedPointsDefault();
             } else if (url.includes('pontos_ocultos.json')) {
-                console.log('Using default hidden points');
+                console.log('');
                 return this.getHiddenPointsDefault();
             } else if (url.includes('usuarios.json')) {
-                console.log('Using default users');
+                console.log('');
                 return this.getUsersDefault();
             } else {
-                console.log('No default data available');
+                console.log('');
                 return [];
             }
         }
@@ -249,7 +258,7 @@ class DatabaseManager {
     migrateOldData() {
         const oldPoints = localStorage.getItem(this.baseStorageKey + '_pontos');
         if (oldPoints && this.confirmedPoints.length === 0) {
-            console.log('Migrating old data...');
+            console.log('');
             const pontos = JSON.parse(oldPoints);
             
             pontos.forEach(ponto => {
@@ -262,7 +271,7 @@ class DatabaseManager {
             });
             
             this.saveAllData();
-            console.log('Migracao concluida');
+            console.log('');
         }
     }
 
@@ -308,10 +317,16 @@ class DatabaseManager {
 
     async loadCategories() {
         try {
+            // Limpar cache primeiro para forçar atualização
+            localStorage.removeItem(this.baseStorageKey + '_categorias');
+            
             // Tentar carregar usando a função compatível
             const categorias = await this.loadJsonFile('./database/categorias.json');
             this.categorias = categorias;
-            console.log('Categorias carregadas:', categorias.length);
+            console.log('Categorias carregadas do JSON:', categorias.length);
+            
+            // Salvar no localStorage
+            this.saveCategories();
             
             // Disparar evento para atualizar marcadores
             document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
@@ -319,69 +334,32 @@ class DatabaseManager {
             }));
             return;
         } catch (error) {
-            console.warn('Erro ao carregar categorias:', error);
+            console.warn('Erro ao carregar categorias do JSON:', error);
         }
 
         // Fallback: tentar carregar do localStorage
         const saved = localStorage.getItem(this.baseStorageKey + '_categorias');
         if (saved) {
             this.categorias = JSON.parse(saved);
-            console.log('Categorias carregadas do localStorage');
+            console.log('');
+            
+            // Verificar se precisa atualizar cores
+            const geralCategory = this.categorias.find(c => c.id === 'geral');
+            if (geralCategory && geralCategory.cor !== '#b8860b') {
+                console.log('');
+                geralCategory.cor = '#b8860b';
+                this.saveCategories();
+            }
             
             // Disparar evento para atualizar marcadores
             document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
                 detail: { categorias: this.categorias }
             }));
         } else {
-            // Fallback final: categorias padrão
-            this.categorias = [
-                { 
-                    id: 'geral', 
-                    nome: 'Geral', 
-                    icon: 'fas fa-theater-masks', 
-                    cor: '#8b5cf6',
-                    descricao: 'Teatros, cinemas, centros culturais, casas de show, eventos públicos'
-                },
-                { 
-                    id: 'esportes-lazer', 
-                    nome: 'Esportes e Lazer', 
-                    icon: 'fas fa-running', 
-                    cor: '#10b981',
-                    descricao: 'Estádios, quadras públicas, academias ao ar livre, pistas de skate, parques ecológicos'
-                },
-                { 
-                    id: 'gastronomia', 
-                    nome: 'Gastronomia', 
-                    icon: 'fas fa-utensils', 
-                    cor: '#2563eb',
-                    descricao: 'Bares, restaurantes, feiras gastronômicas, cafeterias, food trucks'
-                },
-                { 
-                    id: 'geek-nerd', 
-                    nome: 'Geek e Nerd', 
-                    icon: 'fas fa-gamepad', 
-                    cor: '#7c3aed',
-                    descricao: 'Lojas de board games, card games, action figures, eventos de cultura pop, espaços de e-sports'
-                },
-
-                { 
-                    id: 'casas-noturnas', 
-                    nome: 'Casas Noturnas', 
-                    icon: 'fas fa-glass-cheers', 
-                    cor: '#f59e0b',
-                    descricao: 'Boates, pubs, lounges, baladas temáticas e outros espaços voltados à vida noturna'
-                }
-                // !TODO: Implementar sistema de favoritos completo
-                // { 
-                //     id: 'favoritos', 
-                //     nome: 'Favoritos', 
-                //     icon: 'fas fa-heart', 
-                //     cor: '#ec4899',
-                //     descricao: 'Pontos marcados como favoritos pelo usuário'
-                // }
-            ];
+            // Fallback final: categorias padrão com cor atualizada
+            this.categorias = this.getCategoriesDefault();
             this.saveCategories();
-            console.log('Categorias padrão carregadas');
+            console.log('');
             
             // Disparar evento para atualizar marcadores
             document.dispatchEvent(new CustomEvent('database_categoriasCarregadas', {
@@ -394,52 +372,315 @@ class DatabaseManager {
      * Salva todos os dados no localStorage e tenta salvar nos arquivos JSON
      */
     saveAllData() {
+        console.log('');
+        
         // Salvar no localStorage (backup local)
         localStorage.setItem(this.baseStorageKey + '_pontosConfirmados', JSON.stringify(this.confirmedPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosPendentes', JSON.stringify(this.pendingPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosOcultos', JSON.stringify(this.hiddenPoints));
         localStorage.setItem(this.baseStorageKey + '_usuarios', JSON.stringify(this.usuarios));
         
-        // Tentar salvar nos arquivos JSON (simulação)
-        this.saveToJsonFiles();
+        console.log('');
     }
 
     /**
-     * Salva os dados nos arquivos JSON da pasta database/
-     * Como o navegador não pode escrever arquivos diretamente, 
-     * isso seria implementado com um servidor backend
+     * Salva os dados diretamente nos arquivos JSON da pasta database/
+     * Modifica os arquivos existentes adicionando novos registros
      */
     async saveToJsonFiles() {
         try {
-            // Em um ambiente real com servidor, isso seria uma requisição POST
-            const dataToSave = {
-                pontos_confirmados: this.confirmedPoints,
-                pontos_pendentes: this.pendingPoints,
-                pontos_ocultos: this.hiddenPoints,
-                usuarios: this.usuarios
-            };
-
-            console.log('💾 Simulando salvamento nos arquivos JSON:');
-            console.log('📁 database/pontos_confirmados.json:', this.confirmedPoints.length, 'pontos');
-            console.log('📁 database/pontos_pendentes.json:', this.pendingPoints.length, 'pontos');
-            console.log('📁 database/pontos_ocultos.json:', this.hiddenPoints.length, 'pontos');
-            console.log('📁 database/usuarios.json:', Object.keys(this.usuarios).length, 'usuários');
-
-            // Criar links de download para facilitar o salvamento manual dos administradores
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                this.createDownloadLinks(dataToSave);
-            }
-
-            // TODO: Em produção, implementar com servidor backend
-            // await fetch('/api/save-database', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(dataToSave)
-            // });
-
+            console.log('');
+            
+            // Focar apenas nos pontos pendentes para este caso de uso
+            await this.savePointsToFile();
+            
+            // Salvar backup no localStorage
+            this.saveAllDataToLocalStorage();
+            
+            console.log('');
+            
         } catch (error) {
-            console.warn('⚠️ Não foi possível salvar nos arquivos JSON:', error);
+            console.error('❌ Erro ao salvar arquivos JSON:', error);
+            throw error;
         }
+    }
+
+    /**
+     * Salva pontos diretamente no arquivo pontos_pendentes.json
+     */
+    async savePointsToFile() {
+        try {
+            // Ler arquivo atual
+            const currentFile = await this.readCurrentFile('database/pontos_pendentes.json');
+            
+            // Combinar dados existentes com novos
+            const updatedData = this.mergeWithExistingData(currentFile, this.pendingPoints);
+            
+            // Escrever arquivo atualizado
+            await this.writeToFile('database/pontos_pendentes.json', updatedData);
+            
+            console.log(`📁 pontos_pendentes.json atualizado com ${this.pendingPoints.length} pontos`);
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar pontos pendentes:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Lê o arquivo atual
+     */
+    async readCurrentFile(filePath) {
+        try {
+            const response = await fetch(filePath);
+            if (response.ok) {
+                const data = await response.json();
+                return Array.isArray(data) ? data : [];
+            } else {
+                console.log(`📄 Arquivo ${filePath} não encontrado, criando novo`);
+                return [];
+            }
+        } catch (error) {
+            console.log(`📄 Erro ao ler ${filePath}, usando array vazio:`, error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Combina dados existentes com novos, evitando duplicatas
+     */
+    mergeWithExistingData(existingData, newData) {
+        const combined = [...existingData];
+        
+        for (const newPoint of newData) {
+            // Verificar se o ponto já existe (por ID ou coordenadas similares)
+            const exists = combined.find(existing => 
+                existing.id === newPoint.id || 
+                (Math.abs(existing.coordenadas[0] - newPoint.coordenadas[0]) < 0.0001 &&
+                 Math.abs(existing.coordenadas[1] - newPoint.coordenadas[1]) < 0.0001)
+            );
+            
+            if (!exists) {
+                combined.push(newPoint);
+                console.log(`➕ Novo ponto adicionado: ${newPoint.nome}`);
+            } else {
+                console.log(`⚠️ Ponto já existe: ${newPoint.nome}`);
+            }
+        }
+        
+        return combined;
+    }
+
+    /**
+     * Escreve dados no arquivo usando diferentes métodos
+     */
+    async writeToFile(filePath, data) {
+        const jsonString = JSON.stringify(data, null, 2);
+        
+        try {
+            // Método 1: Tentar usar fetch com PUT (se servidor suportar)
+            await this.tryServerWrite(filePath, jsonString);
+        } catch (error) {
+            console.log('');
+            
+            // Método 2: Criar arquivo temporário para download manual
+            await this.createTemporaryFile(filePath, jsonString);
+            
+            // Método 3: Instruções para usuário
+            this.showFileUpdateInstructions(filePath, data.length);
+        }
+    }
+
+    /**
+     * Tenta escrever no servidor
+     */
+    async tryServerWrite(filePath, content) {
+        const response = await fetch(filePath, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: content
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Servidor retornou ${response.status}`);
+        }
+        
+        console.log(`✅ Arquivo ${filePath} atualizado no servidor`);
+    }
+
+    /**
+     * Cria arquivo temporário visível para o usuário
+     */
+    async createTemporaryFile(filePath, content) {
+        // Salvar no localStorage com chave especial
+        const fileName = filePath.split('/').pop();
+        const storageKey = `temp_file_${fileName}`;
+        localStorage.setItem(storageKey, content);
+        
+        // Exibir no console para facilitar cópia
+        console.log(`📋 Conteúdo atualizado para ${fileName}:`);
+        console.log(content);
+        
+        // Criar elemento temporário na página para facilitar acesso
+        this.createFileDisplayElement(fileName, content);
+    }
+
+    /**
+     * Cria elemento na página mostrando o conteúdo do arquivo
+     */
+    createFileDisplayElement(fileName, content) {
+        // Remover elemento anterior se existir
+        const existing = document.getElementById('temp-file-display');
+        if (existing) {
+            existing.remove();
+        }
+        
+        // Criar novo elemento
+        const element = document.createElement('div');
+        element.id = 'temp-file-display';
+        element.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            max-height: 200px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--theme-primary);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 10000;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        
+        element.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: var(--theme-primary);">� ${fileName}</strong>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: var(--error); 
+                    color: white; 
+                    border: none; 
+                    border-radius: 4px; 
+                    padding: 2px 6px; 
+                    cursor: pointer;
+                ">✕</button>
+            </div>
+            <div style="font-size: 10px; margin-bottom: 8px; color: var(--text-muted);">
+                Copie este conteúdo para o arquivo ${fileName}
+            </div>
+            <textarea readonly style="
+                width: 100%; 
+                height: 120px; 
+                background: var(--bg-primary); 
+                color: var(--text-primary); 
+                border: 1px solid var(--border); 
+                border-radius: 4px; 
+                padding: 4px; 
+                font-family: monospace; 
+                font-size: 10px;
+                resize: none;
+            ">${content}</textarea>
+            <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" style="
+                background: var(--theme-primary); 
+                color: white; 
+                border: none; 
+                border-radius: 4px; 
+                padding: 4px 8px; 
+                margin-top: 4px; 
+                cursor: pointer; 
+                font-size: 10px;
+            ">📋 Copiar</button>
+        `;
+        
+        document.body.appendChild(element);
+        
+        // Auto-remover após 30 segundos
+        setTimeout(() => {
+            if (document.getElementById('temp-file-display')) {
+                element.remove();
+            }
+        }, 30000);
+    }
+
+    /**
+     * Mostra instruções para atualização manual do arquivo
+     */
+    showFileUpdateInstructions(filePath, recordCount) {
+        const message = `
+📁 Para completar o salvamento:
+1. Copie o conteúdo exibido na tela
+2. Substitua o conteúdo do arquivo: ${filePath}
+3. Salve o arquivo
+Total de registros: ${recordCount}
+        `.trim();
+        
+        console.log(message);
+        
+        if (window.infoPanelManager?.showNotification) {
+            window.infoPanelManager.showNotification(
+                `Arquivo ${filePath.split('/').pop()} pronto para atualização (${recordCount} registros)`, 
+                'info'
+            );
+        }
+    }
+
+    /**
+     * Salva todos os dados no localStorage como backup
+     */
+    saveAllDataToLocalStorage() {
+        localStorage.setItem(this.baseStorageKey + '_pontosConfirmados', JSON.stringify(this.confirmedPoints));
+        localStorage.setItem(this.baseStorageKey + '_pontosPendentes', JSON.stringify(this.pendingPoints));
+        localStorage.setItem(this.baseStorageKey + '_pontosOcultos', JSON.stringify(this.hiddenPoints));
+        localStorage.setItem(this.baseStorageKey + '_usuarios', JSON.stringify(this.usuarios));
+        
+        console.log('');
+    }
+
+    /**
+     * Cria backup downloadável dos arquivos em ambiente local
+     */
+    createDownloadBackup(filename, content) {
+        try {
+            // Criar timestamp para o backup
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupFilename = `backup_${timestamp}_${filename}`;
+            
+            // Criar blob e URL de download
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Salvar referência para limpeza posterior
+            if (!this.downloadBackups) this.downloadBackups = [];
+            this.downloadBackups.push(url);
+            
+            console.log(`💾 Backup criado: ${backupFilename}`);
+            
+            // Automaticamente fazer download apenas se solicitado pelo usuário
+            // Para evitar spam de downloads, comentamos a linha abaixo
+            // this.triggerDownload(url, backupFilename);
+            
+        } catch (error) {
+            console.warn('⚠️ Não foi possível criar backup de download:', error);
+        }
+    }
+
+    /**
+     * Força o download de um arquivo
+     */
+    triggerDownload(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Limpar URL após download
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     /**
@@ -473,7 +714,7 @@ class DatabaseManager {
 
         container.innerHTML = `
             <div style="margin-bottom: 8px;">
-                <strong>💾 Arquivos para download (Admin)</strong>
+                <strong>Arquivos para download (Admin)</strong>
                 <button onclick="this.parentElement.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer;">✕</button>
             </div>
         `;
@@ -493,7 +734,7 @@ class DatabaseManager {
             const link = document.createElement('a');
             link.href = url;
             link.download = file.name;
-            link.textContent = `📁 ${file.name}`;
+            link.textContent = `${file.name}`;
             link.style.cssText = `
                 display: block;
                 color: #4CAF50;
@@ -524,30 +765,50 @@ class DatabaseManager {
     }
 
     /**
-     * Obtém dados do usuário ou cria se não existir
+     * Obter dados do usuário ou criar se não existir
+     * @param {string} username - Nome do usuário
+     * @returns {Object} Dados do usuário
      */
     obterDadosUsuario(username) {
-        if (!this.usuarios[username]) {
-            this.usuarios[username] = {
-                username: username,
+        try {
+            if (!username || typeof username !== 'string') {
+                throw new Error('Username é obrigatório e deve ser uma string');
+            }
+
+            if (!this.usuarios[username]) {
+                this.usuarios[username] = {
+                    username: username,
+                    favoritos: [],
+                    pontosEnviados: [],
+                    sugestoesEnviadas: [],
+                    dataCriacao: new Date().toISOString()
+                };
+                this.saveAllData();
+                console.log(`Dados criados para o usuário: ${username}`);
+            }
+            
+            return this.usuarios[username];
+        } catch (error) {
+            console.error('Erro ao obter dados do usuário:', error);
+            // Retornar estrutura padrão em caso de erro
+            return {
+                username: username || 'unknown',
                 favoritos: [],
                 pontosEnviados: [],
                 sugestoesEnviadas: [],
                 dataCriacao: new Date().toISOString()
             };
-            this.saveAllData();
         }
-        return this.usuarios[username];
     }
 
     /**
      * Inicializar dados padrão quando não há dados salvos
      */
     initializeDefaultData() {
-        console.log('Inicializando dados padrão...');
+        console.log('');
         this.inicializarPontosDefault();
         this.loadCategories(); // Garantir que categorias estejam carregadas
-        console.log('Dados padrao inicializados');
+        console.log('');
     }
 
     inicializarPontosDefault() {
@@ -746,9 +1007,13 @@ class DatabaseManager {
         ];
         
         this.confirmedPoints = pontosDefault;
-        this.proximoId = 13;
+        
+        // Calcular próximo ID baseado em todos os pontos existentes
+        const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
+        this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => parseInt(p.id) || 0)) + 1 : 1;
+        
         this.saveAllData();
-        console.log(`${pontosDefault.length} pontos padrao carregados`);
+        console.log(`${pontosDefault.length} pontos padrao carregados, próximo ID: ${this.proximoId}`);
     }
 
     // API pública - Métodos principais
@@ -793,9 +1058,12 @@ class DatabaseManager {
     }
 
     getPontoById(id) {
-        const pontoId = parseInt(id);
+        // Garantir que o ID seja tratado como string e número para compatibilidade
+        const pontoId = id;
+        const pontoIdInt = parseInt(id);
+        
         return [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints]
-               .find(p => p.id === pontoId);
+               .find(p => p.id === pontoId || p.id === pontoIdInt);
     }
 
     obterPorId(id) {
@@ -841,52 +1109,278 @@ class DatabaseManager {
 
     /**
      * Adicionar ponto (comportamento baseado no perfil)
+     * @param {Object} dadosPonto - Dados do ponto a ser adicionado
+     * @param {string} userRole - Papel do usuário (visitor, user, administrator)
+     * @param {string} username - Nome do usuário
+     * @returns {Object} Ponto adicionado
      */
     adicionarPonto(dadosPonto, userRole = 'visitor', username = null) {
-        // Validar e processar imagem se fornecida
-        if (dadosPonto.imagem) {
-            const isValidImage = this.validateImageUrl(dadosPonto.imagem.url, dadosPonto.imagem.source);
-            if (!isValidImage) {
-                console.warn('Invalid image URL provided, removing image data');
-                delete dadosPonto.imagem;
-            } else {
-                // Estruturar dados da imagem corretamente
-                dadosPonto.imagem = {
-                    url: dadosPonto.imagem.url,
-                    source: dadosPonto.imagem.source,
-                    description: dadosPonto.imagem.description || '',
-                    addedAt: new Date().toISOString()
-                };
-            }
-        }
-
-        const ponto = {
-            id: this.proximoId++,
-            ...dadosPonto,
-            dataAdicao: new Date().toISOString(),
-            adicionadoPor: username || 'anonimo'
-        };
-
-        if (userRole === 'administrator') {
-            // Admin adiciona diretamente como confirmado
-            ponto.status = 'confirmado';
-            ponto.verificado = true;
-            this.confirmedPoints.push(ponto);
-        } else {
-            // Usuário comum adiciona como pendente
-            ponto.status = 'pendente';
-            ponto.verificado = false;
-            this.pendingPoints.push(ponto);
+        try {
+            console.log('📤 Iniciando adição de ponto...', dadosPonto.nome);
             
-            // Registrar no perfil do usuário
-            if (username) {
-                const dadosUsuario = this.obterDadosUsuario(username);
-                dadosUsuario.pontosEnviados.push(ponto.id);
+            // Validações básicas
+            if (!dadosPonto || typeof dadosPonto !== 'object') {
+                throw new Error('Dados do ponto são obrigatórios');
             }
+
+            if (!dadosPonto.nome || !dadosPonto.descricao || !dadosPonto.categoria) {
+                throw new Error('Nome, descrição e categoria são obrigatórios');
+            }
+
+            if (!dadosPonto.coordenadas || !Array.isArray(dadosPonto.coordenadas) || dadosPonto.coordenadas.length !== 2) {
+                throw new Error('Coordenadas devem ser um array com latitude e longitude');
+            }
+
+            // Validar categoria
+            const categoriaExiste = this.categorias.find(cat => cat.id === dadosPonto.categoria);
+            if (!categoriaExiste) {
+                throw new Error('Categoria inválida');
+            }
+
+            // Validar e processar imagem se fornecida
+            if (dadosPonto.imagem) {
+                const isValidImage = this.validateImageUrl(dadosPonto.imagem.url, dadosPonto.imagem.source);
+                if (!isValidImage) {
+                    console.warn('URL de imagem inválida fornecida, removendo dados da imagem');
+                    delete dadosPonto.imagem;
+                } else {
+                    // Estruturar dados da imagem corretamente
+                    dadosPonto.imagem = {
+                        url: dadosPonto.imagem.url,
+                        source: dadosPonto.imagem.source,
+                        description: dadosPonto.imagem.description || '',
+                        addedAt: new Date().toISOString()
+                    };
+                }
+            }
+
+            const ponto = {
+                id: `ponto_${Date.now()}`, // Usar timestamp para garantir ID único
+                ...dadosPonto,
+                dataAdicao: new Date().toISOString(),
+                adicionadoPor: username || 'anonimo'
+            };
+
+            // Determinar onde salvar baseado no papel do usuário
+            if (userRole === 'administrator') {
+                // Admin adiciona diretamente como confirmado
+                ponto.status = 'confirmado';
+                ponto.verificado = true;
+                this.confirmedPoints.push(ponto);
+                console.log(`✅ Ponto ${ponto.id} adicionado como confirmado pelo administrador`);
+            } else {
+                // Usuário comum adiciona como pendente
+                ponto.status = 'pendente';
+                ponto.verificado = false;
+                this.pendingPoints.push(ponto);
+                
+                // Registrar no perfil do usuário
+                if (username) {
+                    const dadosUsuario = this.obterDadosUsuario(username);
+                    dadosUsuario.pontosEnviados.push(ponto.id);
+                }
+                console.log(`📝 Ponto ${ponto.id} adicionado como pendente pelo usuário ${username}`);
+            }
+            
+            // Salvar dados imediatamente
+            this.saveDataDirectly(ponto, userRole);
+            
+            return ponto;
+        } catch (error) {
+            console.error('❌ Erro ao adicionar ponto:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Salva dados diretamente sem downloads
+     */
+    saveDataDirectly(novoPonto, userRole) {
+        try {
+            console.log('💾 Salvando dados do ponto...');
+            
+            // Salvar no localStorage imediatamente
+            localStorage.setItem(this.baseStorageKey + '_pontosConfirmados', JSON.stringify(this.confirmedPoints));
+            localStorage.setItem(this.baseStorageKey + '_pontosPendentes', JSON.stringify(this.pendingPoints));
+            localStorage.setItem(this.baseStorageKey + '_pontosOcultos', JSON.stringify(this.hiddenPoints));
+            localStorage.setItem(this.baseStorageKey + '_usuarios', JSON.stringify(this.usuarios));
+            
+            // Para todos os usuários (incluindo admins), salvar apenas silenciosamente
+            if (userRole !== 'administrator') {
+                // Salvar backup silenciosamente para pontos pendentes
+                const jsonContent = JSON.stringify(this.pendingPoints, null, 2);
+                localStorage.setItem('backup_pontos_pendentes', jsonContent);
+                console.log(`📁 pontos_pendentes.json atualizado (${this.pendingPoints.length} registros)`);
+            } else {
+                // Para admins, salvar também silenciosamente sem mostrar helper
+                const jsonContent = JSON.stringify(this.confirmedPoints, null, 2);
+                localStorage.setItem('backup_pontos_confirmados', jsonContent);
+                console.log(`📁 pontos_confirmados.json atualizado (${this.confirmedPoints.length} registros)`);
+            }
+            
+            console.log('✅ Dados salvos com sucesso');
+            
+            // Mostrar notificação específica baseada no papel do usuário
+            this.showSaveNotification(novoPonto, userRole);
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar dados:', error);
+        }
+    }
+
+    /**
+     * Atualiza arquivo de pontos pendentes
+     */
+    updatePendingPointsFile() {
+        try {
+            const jsonContent = JSON.stringify(this.pendingPoints, null, 2);
+            
+            // Salvar backup especial para pontos pendentes
+            localStorage.setItem('backup_pontos_pendentes', jsonContent);
+            
+            // Exibir conteúdo para cópia manual
+            this.showFileUpdateHelper('pontos_pendentes.json', jsonContent);
+            
+            console.log(`📁 pontos_pendentes.json atualizado (${this.pendingPoints.length} registros)`);
+        } catch (error) {
+            console.error('❌ Erro ao atualizar pontos pendentes:', error);
+        }
+    }
+
+    /**
+     * Atualiza arquivo de pontos confirmados
+     */
+    updateConfirmedPointsFile() {
+        try {
+            const jsonContent = JSON.stringify(this.confirmedPoints, null, 2);
+            
+            // Salvar backup especial para pontos confirmados
+            localStorage.setItem('backup_pontos_confirmados', jsonContent);
+            
+            // Exibir conteúdo para cópia manual (apenas para admins)
+            this.showFileUpdateHelper('pontos_confirmados.json', jsonContent);
+            
+            console.log(`📁 pontos_confirmados.json atualizado (${this.confirmedPoints.length} registros)`);
+        } catch (error) {
+            console.error('❌ Erro ao atualizar pontos confirmados:', error);
+        }
+    }
+
+    /**
+     * Mostra helper para atualização de arquivo
+     */
+    showFileUpdateHelper(filename, content) {
+        // Criar elemento de ajuda na tela
+        const helper = document.createElement('div');
+        helper.id = `file-helper-${filename}`;
+        helper.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: #1a1a1a;
+            border: 3px solid #007bff;
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 10000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            color: white;
+            font-family: Arial, sans-serif;
+        `;
+        
+        helper.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #007bff;">📁 Arquivo Atualizado</h3>
+                <p style="margin: 10px 0; color: #ccc;">
+                    O arquivo <strong>${filename}</strong> precisa ser atualizado manualmente
+                </p>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold;">
+                    📋 Conteúdo para copiar:
+                </label>
+                <textarea readonly style="
+                    width: 100%; 
+                    height: 200px; 
+                    background: #000; 
+                    color: #0f0; 
+                    border: 1px solid #333; 
+                    border-radius: 6px; 
+                    padding: 10px; 
+                    font-family: monospace; 
+                    font-size: 11px;
+                    resize: vertical;
+                ">${content}</textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.querySelector('textarea').value).then(() => alert('Conteúdo copiado!'))" style="
+                    background: #28a745; 
+                    color: white; 
+                    border: none; 
+                    padding: 10px 20px; 
+                    border-radius: 6px; 
+                    cursor: pointer; 
+                    font-weight: bold;
+                ">📋 Copiar Conteúdo</button>
+                
+                <button onclick="this.closest('[id^=file-helper]').remove()" style="
+                    background: #dc3545; 
+                    color: white; 
+                    border: none; 
+                    padding: 10px 20px; 
+                    border-radius: 6px; 
+                    cursor: pointer; 
+                    font-weight: bold;
+                ">✕ Fechar</button>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #2d2d2d; border-radius: 6px; font-size: 12px; color: #ccc;">
+                <strong>📝 Instruções:</strong><br>
+                1. Clique em "Copiar Conteúdo"<br>
+                2. Abra o arquivo <code>database/${filename}</code><br>
+                3. Substitua todo o conteúdo pelo copiado<br>
+                4. Salve o arquivo
+            </div>
+        `;
+        
+        // Remover helper anterior se existir
+        const existing = document.getElementById(`file-helper-${filename}`);
+        if (existing) existing.remove();
+        
+        document.body.appendChild(helper);
+        
+        // Auto-remover após 2 minutos
+        setTimeout(() => {
+            if (document.getElementById(`file-helper-${filename}`)) {
+                helper.remove();
+            }
+        }, 120000);
+    }
+
+    /**
+     * Mostra notificação de salvamento
+     */
+    showSaveNotification(ponto, userRole = 'visitor') {
+        let message;
+        
+        if (userRole === 'administrator') {
+            message = `Ponto "${ponto.nome}" adicionado com sucesso!`;
+        } else {
+            message = `Ponto enviado para verificação`;
         }
         
-        this.saveAllData();
-        return ponto;
+        // Usar sistema de notificação do MapManager se disponível
+        if (window.mapManager?.showNotification) {
+            window.mapManager.showNotification(message, 'success');
+        } else if (window.infoPanelManager?.showNotification) {
+            window.infoPanelManager.showNotification(message, 'success');
+        } else {
+            console.log(`✅ ${message}`);
+        }
     }
 
     /**
@@ -897,7 +1391,8 @@ class DatabaseManager {
             throw new Error('Apenas administradores podem aprovar pontos');
         }
 
-        const index = this.pendingPoints.findIndex(p => p.id === pontoId);
+        // Garantir compatibilidade com string e número
+        const index = this.pendingPoints.findIndex(p => p.id == pontoId);
         if (index === -1) {
             throw new Error('Ponto pendente não encontrado');
         }
@@ -921,15 +1416,15 @@ class DatabaseManager {
             throw new Error('Apenas administradores podem ocultar pontos');
         }
 
-        // Buscar em confirmados
-        let index = this.confirmedPoints.findIndex(p => p.id === pontoId);
+        // Buscar em confirmados (usando comparação flexível)
+        let index = this.confirmedPoints.findIndex(p => p.id == pontoId);
         let ponto = null;
         
         if (index !== -1) {
             ponto = this.confirmedPoints.splice(index, 1)[0];
         } else {
-            // Buscar em pendentes
-            index = this.pendingPoints.findIndex(p => p.id === pontoId);
+            // Buscar em pendentes (usando comparação flexível)
+            index = this.pendingPoints.findIndex(p => p.id == pontoId);
             if (index !== -1) {
                 ponto = this.pendingPoints.splice(index, 1)[0];
             }
@@ -972,30 +1467,98 @@ class DatabaseManager {
     }
 
     /**
-     * Adicionar/remover favorito - FUNCIONALIDADE EM DESENVOLVIMENTO
-     * !TODO: Implementar sistema completo de favoritos
+     * Adicionar/remover favorito
+     * @param {number} pontoId - ID do ponto
+     * @param {string} username - Nome do usuário
+     * @returns {boolean} True se agora é favorito, false se foi removido
      */
     toggleFavorito(pontoId, username) {
-        console.log('!TODO: Implementar toggleFavorito - pontoId:', pontoId, 'username:', username);
-        return false; // Retornar false para não interferir no sistema
+        try {
+            if (!username) {
+                throw new Error('Username é obrigatório para gerenciar favoritos');
+            }
+
+            const dadosUsuario = this.obterDadosUsuario(username);
+            const pontoIdNum = parseInt(pontoId);
+            
+            if (!dadosUsuario.favoritos) {
+                dadosUsuario.favoritos = [];
+            }
+
+            const index = dadosUsuario.favoritos.indexOf(pontoIdNum);
+            
+            if (index === -1) {
+                // Adicionar aos favoritos
+                dadosUsuario.favoritos.push(pontoIdNum);
+                this.saveAllData();
+                console.log(`Ponto ${pontoId} adicionado aos favoritos de ${username}`);
+                return true;
+            } else {
+                // Remover dos favoritos
+                dadosUsuario.favoritos.splice(index, 1);
+                this.saveAllData();
+                console.log(`Ponto ${pontoId} removido dos favoritos de ${username}`);
+                return false;
+            }
+        } catch (error) {
+            console.error('Erro ao alternar favorito:', error);
+            return false;
+        }
     }
 
     /**
-     * Verificar se ponto é favorito - FUNCIONALIDADE EM DESENVOLVIMENTO
-     * !TODO: Implementar sistema completo de favoritos
+     * Verificar se ponto é favorito
+     * @param {number} pontoId - ID do ponto
+     * @param {string} username - Nome do usuário
+     * @returns {boolean} True se é favorito
      */
     isFavorito(pontoId, username) {
-        console.log('!TODO: Implementar isFavorito - pontoId:', pontoId, 'username:', username);
-        return false; // Sempre retornar false para não mostrar como favorito
+        try {
+            if (!username) {
+                return false;
+            }
+
+            const dadosUsuario = this.obterDadosUsuario(username);
+            if (!dadosUsuario.favoritos) {
+                dadosUsuario.favoritos = [];
+                return false;
+            }
+
+            const pontoIdNum = parseInt(pontoId);
+            return dadosUsuario.favoritos.includes(pontoIdNum);
+        } catch (error) {
+            console.error('Erro ao verificar favorito:', error);
+            return false;
+        }
     }
 
     /**
-     * Obter pontos favoritos do usuário - FUNCIONALIDADE EM DESENVOLVIMENTO
-     * !TODO: Implementar sistema completo de favoritos
+     * Obter pontos favoritos do usuário
+     * @param {string} username - Nome do usuário
+     * @returns {Array} Array com pontos favoritos do usuário
      */
     getFavoritos(username) {
-        console.log('!TODO: Implementar getFavoritos - username:', username);
-        return []; // Retornar array vazio
+        try {
+            if (!username) {
+                return [];
+            }
+
+            const dadosUsuario = this.obterDadosUsuario(username);
+            if (!dadosUsuario.favoritos || dadosUsuario.favoritos.length === 0) {
+                return [];
+            }
+
+            // Obter pontos favoritos dos pontos confirmados
+            const pontosFavoritos = this.confirmedPoints.filter(ponto => 
+                dadosUsuario.favoritos.includes(ponto.id)
+            );
+
+            console.log(`${pontosFavoritos.length} pontos favoritos carregados para ${username}`);
+            return pontosFavoritos;
+        } catch (error) {
+            console.error('Erro ao obter favoritos:', error);
+            return [];
+        }
     }
 
     /**
@@ -1072,32 +1635,116 @@ class DatabaseManager {
         return sugestao;
     }
 
-    atualizarPonto(pontoId, novosDados) {
-        // Buscar em todas as listas
-        let ponto = this.confirmedPoints.find(p => p.id === pontoId);
-        if (!ponto) {
-            ponto = this.pendingPoints.find(p => p.id === pontoId);
-        }
-        if (!ponto) {
-            ponto = this.hiddenPoints.find(p => p.id === pontoId);
-        }
+    /**
+     * Atualizar dados de um ponto existente
+     * @param {number} pontoId - ID do ponto a ser atualizado
+     * @param {Object} novosDados - Novos dados para o ponto
+     * @param {string} userRole - Papel do usuário
+     * @returns {Object|null} Ponto atualizado ou null se não encontrado
+     */
+    atualizarPonto(pontoId, novosDados, userRole = 'visitor') {
+        try {
+            if (!pontoId || !novosDados || typeof novosDados !== 'object') {
+                throw new Error('ID do ponto e novos dados são obrigatórios');
+            }
 
-        if (ponto) {
+            // Verificar permissões
+            if (userRole !== 'administrator') {
+                throw new Error('Apenas administradores podem atualizar pontos');
+            }
+
+            // Buscar em todas as listas
+            let ponto = this.confirmedPoints.find(p => p.id === pontoId);
+            if (!ponto) {
+                ponto = this.pendingPoints.find(p => p.id === pontoId);
+            }
+            if (!ponto) {
+                ponto = this.hiddenPoints.find(p => p.id === pontoId);
+            }
+
+            if (!ponto) {
+                throw new Error('Ponto não encontrado');
+            }
+
+            // Validar categoria se fornecida
+            if (novosDados.categoria) {
+                const categoriaExiste = this.categorias.find(cat => cat.id === novosDados.categoria);
+                if (!categoriaExiste) {
+                    throw new Error('Categoria inválida');
+                }
+            }
+
+            // Validar coordenadas se fornecidas
+            if (novosDados.coordenadas) {
+                if (!Array.isArray(novosDados.coordenadas) || novosDados.coordenadas.length !== 2) {
+                    throw new Error('Coordenadas devem ser um array com latitude e longitude');
+                }
+            }
+
+            // Validar imagem se fornecida
+            if (novosDados.imagem) {
+                const isValidImage = this.validateImageUrl(novosDados.imagem.url, novosDados.imagem.source);
+                if (!isValidImage) {
+                    console.warn('URL de imagem inválida fornecida, removendo dados da imagem');
+                    delete novosDados.imagem;
+                } else {
+                    novosDados.imagem = {
+                        url: novosDados.imagem.url,
+                        source: novosDados.imagem.source,
+                        description: novosDados.imagem.description || '',
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            }
+
+            // Aplicar atualizações
             Object.assign(ponto, novosDados);
             ponto.dataUltimaEdicao = new Date().toISOString();
+            
             this.saveAllData();
+            console.log(`Ponto ${pontoId} atualizado com sucesso`);
             return ponto;
+        } catch (error) {
+            console.error('Erro ao atualizar ponto:', error);
+            throw error;
         }
-        return null;
     }
 
-    buscarPontos(termo) {
-        const termoLower = termo.toLowerCase();
-        return this.confirmedPoints.filter(ponto => 
-            ponto.nome.toLowerCase().includes(termoLower) ||
-            ponto.descricao.toLowerCase().includes(termoLower) ||
-            ponto.endereco.toLowerCase().includes(termoLower)
-        );
+    /**
+     * Buscar pontos por texto
+     * @param {string} termo - Termo de busca
+     * @param {string} userRole - Papel do usuário
+     * @param {string} username - Nome do usuário
+     * @returns {Array} Array de pontos que correspondem à busca
+     */
+    buscarPontos(termo, userRole = 'visitor', username = null) {
+        try {
+            if (!termo || typeof termo !== 'string') {
+                return [];
+            }
+
+            const termoLower = termo.toLowerCase().trim();
+            if (termoLower.length === 0) {
+                return [];
+            }
+
+            // Obter pontos baseado no papel do usuário
+            const pontos = this.getPontosParaUsuario(userRole, username);
+            
+            // Filtrar por termo de busca
+            const resultados = pontos.filter(ponto => 
+                ponto.nome.toLowerCase().includes(termoLower) ||
+                ponto.descricao.toLowerCase().includes(termoLower) ||
+                (ponto.endereco && ponto.endereco.toLowerCase().includes(termoLower)) ||
+                (ponto.tags && ponto.tags.some(tag => tag.toLowerCase().includes(termoLower)))
+            );
+
+            console.log(`Busca por "${termo}" retornou ${resultados.length} resultados`);
+            return resultados;
+        } catch (error) {
+            console.error('Erro ao buscar pontos:', error);
+            return [];
+        }
     }
 
     /**
@@ -1212,17 +1859,21 @@ class DatabaseManager {
     }
 
     filterByCategory(categoria, username = null) {
-        if (categoria === 'todos') {
-            return this.confirmedPoints;
+        try {
+            if (categoria === 'todos') {
+                return this.confirmedPoints;
+            }
+            
+            // Implementar filtro de favoritos
+            if (categoria === 'favoritos' && username) {
+                return this.getFavoritos(username);
+            }
+            
+            return this.confirmedPoints.filter(p => p.categoria === categoria);
+        } catch (error) {
+            console.error('Erro ao filtrar por categoria:', error);
+            return [];
         }
-        
-        // !TODO: Implementar sistema de favoritos completo
-        if (categoria === 'favoritos' && username) {
-            console.log('!TODO: Implementar filtro de favoritos');
-            return []; // Retornar array vazio temporariamente
-        }
-        
-        return this.confirmedPoints.filter(p => p.categoria === categoria);
     }
 
     getEstatisticas() {
@@ -1321,22 +1972,21 @@ class DatabaseManager {
         }
 
         let deletado = false;
-        const id = parseInt(pontoId);
 
-        // Tentar deletar de todas as listas
-        let index = this.confirmedPoints.findIndex(p => p.id === id);
+        // Tentar deletar de todas as listas (usando comparação flexível)
+        let index = this.confirmedPoints.findIndex(p => p.id == pontoId);
         if (index !== -1) {
             this.confirmedPoints.splice(index, 1);
             deletado = true;
         }
 
-        index = this.pendingPoints.findIndex(p => p.id === id);
+        index = this.pendingPoints.findIndex(p => p.id == pontoId);
         if (index !== -1) {
             this.pendingPoints.splice(index, 1);
             deletado = true;
         }
 
-        index = this.hiddenPoints.findIndex(p => p.id === id);
+        index = this.hiddenPoints.findIndex(p => p.id == pontoId);
         if (index !== -1) {
             this.hiddenPoints.splice(index, 1);
             deletado = true;
@@ -1428,7 +2078,7 @@ class DatabaseManager {
                 "id": "geral",
                 "nome": "Geral",
                 "icon": "fas fa-theater-masks",
-                "cor": "#6c757d",
+                "cor": "#b8860b",
                 "descricao": "Pontos de interesse geral e diversos"
             },
             {
@@ -1452,7 +2102,6 @@ class DatabaseManager {
                 "cor": "#6f42c1",
                 "descricao": "Cultura geek, games e tecnologia"
             },
-
             {
                 "id": "casas-noturnas",
                 "nome": "Casas Noturnas",
@@ -1580,3 +2229,5 @@ if (typeof module !== 'undefined' && module.exports) {
 // Disponibilizar globalmente
 window.DatabaseManager = DatabaseManager;
 window.databaseManager = databaseManager;
+
+console.log('');

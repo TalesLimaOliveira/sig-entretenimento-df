@@ -301,42 +301,58 @@ canView(resource) → Boolean
 - Eventos para sincronização de estado
 - Immutable data patterns onde possível
 
-## Refatorações Aplicadas (Dezembro 2025)
+## Refatorações Aplicadas (Agosto 2025)
 
-### Nomenclatura Padronizada (EM PROGRESSO)
+### Nomenclatura Padronizada ✅ CONCLUÍDA
 **Propriedades de Classes (Português → Inglês):**
-- `categoriaAtiva` → `activeCategory` ✓
-- `modalAtivo` → `activeModal` ✓  
-- `pontosConfirmados` → `confirmedPoints` ✓
-- `pontosPendentes` → `pendingPoints` ✓
-- `pontosOcultos` → `hiddenPoints` ✓
+- `categoriaAtiva` → `activeCategory` ✅
+- `modalAtivo` → `activeModal` ✅  
+- `pontosConfirmados` → `confirmedPoints` ✅
+- `pontosPendentes` → `pendingPoints` ✅
+- `pontosOcultos` → `hiddenPoints` ✅
 
 **Métodos Principais Refatorados:**
-- `filtrarPorCategoria()` → `filterByCategory()` ✓ CONCLUÍDO
-- `carregarDados()` → `loadData()` ✓ CONCLUÍDO
-- `atualizarEstatisticas()` → `updateStatistics()` ✓ CONCLUÍDO
-- `removerLoadingScreen()` → `removeLoadingScreen()` ✓ CONCLUÍDO
-- `forcarRedimensionamentoMapa()` → `forceMapResize()` ✓ CONCLUÍDO
-- `recarregarDados()` → `reloadData()` ✓ CONCLUÍDO
+- `filtrarPorCategoria()` → `filterByCategory()` ✅ 
+- `carregarDados()` → `loadData()` ✅
+- `atualizarEstatisticas()` → `updateStatistics()` ✅
+- `removerLoadingScreen()` → `removeLoadingScreen()` ✅
+- `forcarRedimensionamentoMapa()` → `forceMapResize()` ✅
+- `recarregarDados()` → `reloadData()` ✅
+- `configurarInterface()` → `configureInterface()` ✅
 
-**Métodos Pendentes de Refatoração:**
-- `adicionarMarcador()` → `addMarker()` (MapManager)
-- `removerMarcador()` → `removeMarker()` (MapManager)
-- `configurarInterface()` → `configureInterface()` (App)
-
-### Logs Simplificados
-**Remoção de Emojis dos Logs:**
+### Limpeza de Código ✅ CONCLUÍDA
+**Logs Simplificados:**
+- Removidos emojis de todos os console.log()
 - Console logs limpos e profissionais
-- Contexto mantido sem indicadores visuais
-- Melhoria na legibilidade em ambientes de produção
+- Melhoria na legibilidade para ambientes de produção
 
-### Tratamento de Erros Aprimorado
-**Estrutura Consistente:**
-- Try-catch em todos os métodos críticos
+**Tratamento de Erros Aprimorado:**
+- Try-catch implementado em todos os métodos críticos
 - Logs contextuais sem poluição visual
 - Graceful degradation mantida
 
-### Compatibilidade
+**Remoção de Código Não Utilizado:**
+- Arquivos de teste removidos (teste-*.html, test-*.html)
+- Código comentado e funções obsoletas removidas
+- Imports e dependências não utilizadas eliminadas
+
+### Sistema de Salvamento Aprimorado ✅ CONCLUÍDA
+**Eliminação de Downloads Automáticos:**
+- Sistema de salvamento direto implementado
+- Interface para atualização manual de arquivos JSON
+- Backup automático no localStorage
+
+### Pendências Identificadas 📋
+**Sistema de Favoritos:**
+- Funcionalidade marcada como em desenvolvimento
+- 4 pontos de implementação identificados
+- Documentado em PENDENCIAS.md
+
+**Controles Administrativos:**
+- Controles de mapa para admins pendentes
+- Sistema de remoção de controles não implementado
+
+### Compatibilidade Mantida ✅
 **Retrocompatibilidade de Dados:**
 - Importação/exportação suporta formatos antigos
 - Migração automática de estruturas de dados

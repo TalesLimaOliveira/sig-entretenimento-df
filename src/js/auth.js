@@ -464,18 +464,18 @@ class AuthManager {
      */
     dispatchAuthEvent(type, user) {
         try {
-            console.log(`🎯 AuthManager: Disparando evento authStateChanged - ${type}`, user);
+            console.log(`AuthManager: Disparando evento authStateChanged - ${type}`, user);
             const event = new CustomEvent('authStateChanged', {
                 detail: { type, user }
             });
             document.dispatchEvent(event);
-            console.log(`🎯 AuthManager: Evento de autenticação disparado com sucesso: ${type}`);
+            console.log(`AuthManager: Evento de autenticacao disparado com sucesso: ${type}`);
             
             // Verificar se há listeners
             const listeners = document._listeners?.authStateChanged?.length || 0;
-            console.log(`🎯 AuthManager: ${listeners} listeners registrados para authStateChanged`);
+            console.log(`AuthManager: ${listeners} listeners registrados para authStateChanged`);
         } catch (error) {
-            console.error('🎯 AuthManager: Erro ao disparar evento de autenticação:', error);
+            console.error('AuthManager: Erro ao disparar evento de autenticacao:', error);
             // Continuar mesmo com erro no evento
         }
     }
@@ -533,6 +533,5 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Disponibilizar globalmente
 window.AuthManager = AuthManager;
-window.authManager = authManager;
 
-console.log('🔐 AuthManager inicializado e disponibilizado globalmente');
+console.log('AuthManager class defined and exported globally');

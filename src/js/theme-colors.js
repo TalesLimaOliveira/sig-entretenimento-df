@@ -202,7 +202,35 @@ class ColorThemeManager {
      */
     init() {
         this.applyTheme(this.currentTheme);
+        
+        // Limpar cache ao inicializar para garantir que mudanças sejam aplicadas
+        this.clearCache();
+        
         console.log(`Theme system initialized: ${this.currentTheme.name}`);
+    }
+
+    /**
+     * Limpar cache do sistema
+     */
+    clearCache() {
+        // Limpar cache de categorias para forçar recarregamento
+        if (typeof localStorage !== 'undefined') {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.includes('categorias') || key.includes('categories')) {
+                    localStorage.removeItem(key);
+                    console.log(`Cache cleared: ${key}`);
+                }
+            });
+        }
+        
+        // Forçar recarregamento de categorias se DatabaseManager estiver disponível
+        if (window.databaseManager && typeof window.databaseManager.loadCategories === 'function') {
+            setTimeout(() => {
+                window.databaseManager.loadCategories();
+                console.log('Categories reloaded from DatabaseManager');
+            }, 100);
+        }
     }
 
     /**
@@ -218,6 +246,14 @@ class ColorThemeManager {
         this.currentTheme = theme;
         this.updateCSSVariables();
         this.notifyThemeChange();
+        
+        // Forçar atualização de categorias após mudança de tema
+        setTimeout(() => {
+            if (window.app && typeof window.app.configureCategoryMenu === 'function') {
+                window.app.configureCategoryMenu();
+            }
+        }, 100);
+        
         console.log(`Theme applied: ${theme.name}`);
     }
 

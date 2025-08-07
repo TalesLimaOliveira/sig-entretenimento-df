@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "id": 201,
+        "nome": "Antigo Bar Central",
+        "categoria": "casas-noturnas",
+        "coordenadas": [-15.792, -47.888],
+        "descricao": "Bar que foi fechado temporariamente",
+        "endereco": "SCS Quadra 1",
+        "status": "oculto",
+        "motivo": "Fechado temporariamente",
+        "dataOcultacao": "2025-01-20T12:00:00.000Z",
+        "administrador": "admin"
+    }
+]

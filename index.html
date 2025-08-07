@@ -32,13 +32,14 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <div class="header-content">
-                <!-- Navigation Buttons -->
-                <nav class="header-navigation">
-                    <div class="nav-buttons-container" id="nav-buttons-container">
-                        <!-- Categorias serão geradas dinamicamente pelo JavaScript -->
+            <!-- Header Superior: Logo + Nome + Botão Entrar -->
+            <div class="header-top">
+                <div class="header-logo">
+                    <div class="logo-emoji">🎭</div>
+                    <div class="logo-text">
+                        <h1>Pontos de Entretenimento DF</h1>
                     </div>
-                </nav>
+                </div>
                 
                 <div class="header-actions">
                     <!-- Desktop Actions -->
@@ -60,8 +61,20 @@
                     </div>
                 </div>
             </div>
+            
         </div>
     </header>
+
+    <!-- Container de Filtros -->
+    <div class="filters-container">
+        <div class="container">
+            <nav class="filters-navigation">
+                <div class="nav-buttons-container" id="nav-buttons-container">
+                    <!-- Categorias serão geradas dinamicamente pelo JavaScript -->
+                </div>
+            </nav>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main class="main">
@@ -129,44 +142,131 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Core Managers - Load First -->
+    <script>
+        // Pre-initialize core global objects to avoid timing issues
+        window.managers = {};
+        window.classesLoaded = {};
+        console.log('Pre-initializing global manager namespace');
+    </script>
+    
     <script src="src/js/database.js"></script>
+    <script>
+        // Mark DatabaseManager as loaded
+        if (typeof DatabaseManager !== 'undefined') {
+            window.classesLoaded.DatabaseManager = true;
+            console.log('DatabaseManager class loaded successfully');
+        }
+    </script>
+    
     <script src="src/js/auth.js"></script>
+    <script>
+        // Mark AuthManager as loaded
+        if (typeof AuthManager !== 'undefined') {
+            window.classesLoaded.AuthManager = true;
+            console.log('AuthManager class loaded successfully');
+        }
+    </script>
+    
     <script src="src/js/info-panel.js"></script>
+    <script>
+        // Mark InfoPanelManager as loaded
+        if (typeof InfoPanelManager !== 'undefined') {
+            window.classesLoaded.InfoPanelManager = true;
+            console.log('InfoPanelManager class loaded successfully');
+        }
+    </script>
+    
     <script src="src/js/map.js"></script>
+    <script>
+        // Mark MapManager as loaded
+        if (typeof MapManager !== 'undefined') {
+            window.classesLoaded.MapManager = true;
+            console.log('MapManager class loaded successfully');
+        }
+    </script>
+    
     <script src="src/js/theme-colors.js"></script>
+    
+    <!-- Components -->
     <script src="src/components/modal.js"></script>
+    <script>
+        // Mark ModalManager as loaded
+        if (typeof ModalManager !== 'undefined') {
+            window.classesLoaded.ModalManager = true;
+            console.log('ModalManager class loaded successfully');
+        }
+    </script>
+    
     <script src="src/components/login-modal.js"></script>
+    <script>
+        // Mark LoginModal as loaded
+        if (typeof LoginModal !== 'undefined') {
+            window.classesLoaded.LoginModal = true;
+            console.log('LoginModal class loaded successfully');
+        }
+    </script>
+    
     <script src="src/components/register-modal.js"></script>
     <script src="src/components/user-menu.js"></script>
     <script src="src/components/dynamic-user-button.js"></script>
     <script src="src/components/add-point-modal.js"></script>
     <script src="src/components/error-handler.js"></script>
+    
+    <!-- Main Application -->
     <script src="src/js/app.js"></script>
+    <script>
+        // Mark PontosEntretenimentoApp as loaded
+        if (typeof PontosEntretenimentoApp !== 'undefined') {
+            window.classesLoaded.PontosEntretenimentoApp = true;
+            console.log('PontosEntretenimentoApp class loaded successfully');
+        } else {
+            console.error('PontosEntretenimentoApp class failed to load!');
+        }
+        
+        // Debug: List all loaded classes
+        console.log('Classes loaded check:', window.classesLoaded);
+    </script>
     
     <!-- Initialize -->
     <script>
-        // Sistema de inicialização robusto
+        // Sistema de inicialização simplificado
         class AppInitializer {
             constructor() {
-                this.managers = {};
-                this.errors = [];
                 this.initialized = false;
             }
             
             async init() {
-                console.log('Iniciando sistema de inicialização...');
+                console.log('Iniciando sistema de inicialização simplificado...');
                 
                 try {
+                    // Aguardar DOM
                     await this.waitForDOM();
-                    await this.checkDependencies();
-                    await this.waitForManagers();
-                    await this.initializeApp();
+                    console.log('DOM ready');
                     
-                    console.log('Sistema inicializado com sucesso!');
-                    this.initialized = true;
+                    // Aguardar Leaflet
+                    await this.waitForLeaflet();
+                    console.log('Leaflet ready');
+                    
+                    // Aguardar classes
+                    await this.waitForClasses();
+                    console.log('Classes ready');
+                    
+                    // Criar managers
+                    await this.createManagers();
+                    console.log('Managers created');
+                    
+                    // Inicializar aplicação
+                    await this.initializeApp();
+                    console.log('App initialized');
+                    
+                    // Remover loading
+                    this.removeLoadingScreen();
+                    console.log('Sistema inicializado com sucesso');
                     
                 } catch (error) {
-                    console.error('Erro crítico na inicialização:', error);
+                    console.error('Erro na inicialização:', error);
                     this.showError(error);
                 }
             }
@@ -177,306 +277,150 @@
                         document.addEventListener('DOMContentLoaded', resolve);
                     });
                 }
-                console.log('DOM ready');
             }
             
-            async checkDependencies() {
-                console.log('� Verificando dependências...');
+            async waitForLeaflet() {
+                const maxWait = 10000;
+                const start = Date.now();
                 
-                // Verificar Leaflet
-                if (typeof L === 'undefined') {
-                    throw new Error('Leaflet não foi carregado');
+                while (Date.now() - start < maxWait) {
+                    if (typeof L !== 'undefined') {
+                        return;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                // Verificar elemento do mapa
-                const mapElement = document.getElementById('map');
-                if (!mapElement) {
-                    throw new Error('Elemento do mapa não encontrado');
-                }
-                
-                console.log('Dependências verificadas');
+                throw new Error('Leaflet não carregou');
             }
             
-            async waitForManagers() {
-                console.log('Aguardando managers serem carregados...');
+            async waitForClasses() {
+                const maxWait = 10000;
+                const start = Date.now();
                 
-                const managersToCheck = [
-                    { name: 'databaseManager', critical: true },
-                    { name: 'authManager', critical: false },
-                    { name: 'loginModal', critical: false },
-                    { name: 'registerModal', critical: false },
-                    { name: 'modalManager', critical: false },
-                    { name: 'themeManager', critical: false },
-                    { name: 'mapManager', critical: true }
-                ];
-                
-                // Aguardar um pouco para os scripts carregarem
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-                for (const manager of managersToCheck) {
-                    const maxAttempts = 50; // 5 segundos máximo
-                    let attempts = 0;
-                    
-                    while (!window[manager.name] && attempts < maxAttempts) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
+                while (Date.now() - start < maxWait) {
+                    if (typeof window.PontosEntretenimentoApp === 'function' &&
+                        typeof window.DatabaseManager === 'function') {
+                        console.log('Classes principais carregadas');
+                        return;
                     }
-                    
-                    if (window[manager.name]) {
-                        console.log(`${manager.name} loaded`);
-                        
-                        // Inicializar o databaseManager se necessário
-                        if (manager.name === 'databaseManager' && window.databaseManager.init) {
-                            console.log('Initializing databaseManager...');
-                            try {
-                                await window.databaseManager.init();
-                                console.log('DatabaseManager initialized successfully');
-                                
-                                // Verificar se pontos foram carregados
-                                const pontos = window.databaseManager.getPontos();
-                                console.log(`Points loaded: ${pontos.length}`);
-                                
-                                if (pontos.length === 0) {
-                                    console.warn('No points loaded, forcing default data...');
-                                    // Forçar uso de dados padrão
-                                    window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
-                                    window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
-                                    
-                                    // Salvar no localStorage para próximas sessões
-                                    window.databaseManager.salvarTodosDados();
-                                    
-                                    console.log(`Default data forced: ${window.databaseManager.confirmedPoints.length} points`);
-                                }
-                                
-                                // Verificar categorias também
-                                const categorias = window.databaseManager.getCategorias();
-                                if (!categorias || categorias.length === 0) {
-                                    console.warn('No categories loaded, forcing default categories...');
-                                    window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
-                                    window.databaseManager.salvarCategorias();
-                                }
-                                
-                            } catch (error) {
-                                console.error('Error initializing DatabaseManager:', error);
-                                
-                                // Para protocolo file://, tentar inicialização com dados padrão
-                                if (window.location.protocol === 'file:') {
-                                    console.log('Attempting initialization with default data for file://...');
-                                    try {
-                                        // Garantir que categorias padrão estejam disponíveis
-                                        window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
-                                        window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
-                                        window.databaseManager.usuarios = window.databaseManager.getUsersDefault().reduce((acc, user) => {
-                                            acc[user.username] = user;
-                                            return acc;
-                                        }, {});
-                                        console.log('Default data loaded for file://');
-                                    } catch (fallbackError) {
-                                        console.error('Fallback failed:', fallbackError);
-                                        if (manager.critical) {
-                                            throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
-                                        }
-                                    }
-                                } else if (manager.critical) {
-                                    throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
-                                }
-                            }
-                        }
-                        
-                        // Inicializar o mapManager se necessário
-                        if (manager.name === 'mapManager' && window.mapManager && window.mapManager.init) {
-                            console.log('Initializing mapManager...');
-                            try {
-                                await window.mapManager.init();
-                                console.log('MapManager initialized successfully');
-                                
-                                // Forçar carregamento dos pontos após inicialização
-                                setTimeout(async () => {
-                                    if (window.databaseManager && window.databaseManager.getPontos) {
-                                        const pontos = window.databaseManager.getPontos();
-                                        console.log(`Forcing load of ${pontos.length} points on map...`);
-                                        
-                                        if (pontos.length > 0) {
-                                            window.mapManager._loadPoints(pontos);
-                                            console.log('Points loaded on map');
-                                        } else {
-                                            console.warn('No points available to load on map');
-                                        }
-                                    }
-                                }, 500);
-                                
-                            } catch (mapError) {
-                                console.error('❌ Erro ao inicializar MapManager:', mapError);
-                                if (manager.critical) {
-                                    throw new Error(`Falha crítica na inicialização do MapManager: ${mapError.message}`);
-                                }
-                            }
-                        }
-                        
-                        this.managers[manager.name] = window[manager.name];
-                    } else {
-                        const error = `${manager.name} não foi carregado`;
-                        console.error(`❌ ${error}`);
-                        
-                        if (manager.critical) {
-                            throw new Error(`Manager crítico falhou: ${error}`);
-                        } else {
-                            this.errors.push(error);
-                        }
-                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                if (this.errors.length > 0) {
-                    console.warn('Alguns managers não críticos falharam:', this.errors);
+                throw new Error('Classes não carregaram: PontosEntretenimentoApp=' + typeof window.PontosEntretenimentoApp + ', DatabaseManager=' + typeof window.DatabaseManager);
+            }
+            
+            async createManagers() {
+                // Criar DatabaseManager
+                if (!window.databaseManager) {
+                    window.databaseManager = new window.DatabaseManager();
+                    console.log('DatabaseManager criado');
                 }
                 
-                console.log('Managers carregados');
+                // Criar AuthManager se disponível
+                if (typeof window.AuthManager === 'function' && !window.authManager) {
+                    window.authManager = new window.AuthManager();
+                    console.log('AuthManager criado');
+                }
+                
+                // Criar MapManager se disponível
+                if (typeof window.MapManager === 'function' && !window.mapManager) {
+                    window.mapManager = new window.MapManager();
+                    console.log('MapManager criado');
+                }
             }
             
             async initializeApp() {
                 console.log('Inicializando aplicação principal...');
                 
-                // Aguardar um pouco mais
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                window.app = new PontosEntretenimentoApp();
-                
-                // CRÍTICO: Chamar o método init() da aplicação
-                await window.app.init();
-                
-                // Verificar se InfoPanelManager está funcionando após inicialização
-                console.log('Verifying InfoPanelManager after initialization...');
-                
-                // Force a complete reinitialization for localhost compatibility
-                if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-                    console.log('Running on HTTP server - forcing InfoPanelManager reinitialization...');
-                    
-                    // Clear any existing instance
-                    window.infoPanelManager = null;
-                    
-                    // Wait for elements and recreate
-                    setTimeout(() => {
-                        try {
-                            if (typeof InfoPanelManager !== 'undefined') {
-                                window.infoPanelManager = new InfoPanelManager();
-                                console.log('InfoPanelManager reinitialized for HTTP server');
-                                
-                                // Double-check it worked
-                                setTimeout(() => {
-                                    if (!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') {
-                                        console.error('InfoPanelManager reinitialization failed, trying again...');
-                                        if (window.InfoPanelInitializer) {
-                                            window.InfoPanelInitializer.forceReinit();
-                                        }
-                                    } else {
-                                        console.log('InfoPanelManager working correctly on HTTP server');
-                                    }
-                                }, 200);
-                            }
-                        } catch (error) {
-                            console.error('Error reinitializing InfoPanelManager for HTTP:', error);
+                // Inicializar DatabaseManager primeiro
+                if (window.databaseManager && typeof window.databaseManager.init === 'function') {
+                    try {
+                        await window.databaseManager.init();
+                        console.log('DatabaseManager inicializado');
+                    } catch (error) {
+                        console.warn('Erro no DatabaseManager, usando fallback:', error);
+                        // Para protocolo file://, usar dados padrão
+                        if (window.location.protocol === 'file:') {
+                            window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
+                            window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
+                            window.databaseManager.pendingPoints = [];
+                            window.databaseManager.hiddenPoints = [];
+                            window.databaseManager.usuarios = {};
+                        } else {
+                            throw error;
                         }
-                    }, 300);
-                }
-                
-                // Original verification logic
-                if (!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') {
-                    console.log('InfoPanelManager needs reinitialization...');
-                    
-                    if (typeof InfoPanelManager !== 'undefined') {
-                        try {
-                            window.infoPanelManager = new InfoPanelManager();
-                            await new Promise(resolve => setTimeout(resolve, 200));
-                            console.log('InfoPanelManager reinitialized successfully');
-                        } catch (error) {
-                            console.error('Error reinitializing InfoPanelManager:', error);
-                        }
-                    } else {
-                        console.error('InfoPanelManager class not available');
                     }
                 }
                 
-                // Debug final do status
-                console.log('📊 Status final dos componentes:', {
-                    infoPanelManager: !!window.infoPanelManager,
-                    hasShow: !!(window.infoPanelManager && window.infoPanelManager.show),
-                    mapManager: !!window.mapManager,
-                    databaseManager: !!window.databaseManager
-                });
+                // Inicializar MapManager
+                if (window.mapManager && typeof window.mapManager.init === 'function') {
+                    try {
+                        await window.mapManager.init();
+                        console.log('MapManager inicializado');
+                    } catch (error) {
+                        console.warn('Erro no MapManager:', error);
+                    }
+                }
                 
-                console.log('Aplicação inicializada e pronta');
+                // Criar e inicializar aplicação principal
+                window.app = new window.PontosEntretenimentoApp();
+                await window.app.init();
+                console.log('PontosEntretenimentoApp inicializado');
+            }
+            
+            removeLoadingScreen() {
+                const loading = document.querySelector('.loading-screen');
+                if (loading) {
+                    loading.style.transition = 'opacity 0.5s ease';
+                    loading.style.opacity = '0';
+                    setTimeout(() => {
+                        if (loading.parentNode) {
+                            loading.remove();
+                        }
+                    }, 500);
+                }
             }
             
             showError(error) {
-                console.error('Stack trace:', error.stack);
+                console.error('Erro de inicialização:', error);
+                this.removeLoadingScreen();
                 
-                // Remove loading screen
-                const loadingScreen = document.querySelector('.loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                }
-                
-                // Mostra erro detalhado
                 document.body.innerHTML = `
                     <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif;">
-                        <div style="text-align: center; color: #ef4444; margin-bottom: 2rem;">
+                        <div style="text-align: center; color: #dc2626; margin-bottom: 2rem;">
                             <h1>Erro ao carregar a aplicação</h1>
                             <p><strong>Detalhes:</strong> ${error.message}</p>
+                            <button onclick="location.reload()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-top: 1rem;">
+                                Recarregar Página
+                            </button>
                         </div>
-                        
-                        ${this.errors.length > 0 ? `
-                            <div style="margin-bottom: 2rem;">
-                                <h3>Warnings:</h3>
-                                <ul style="color: #f59e0b;">
-                                    ${this.errors.map(err => `<li>${err}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                        
-                        <details style="margin: 1rem 0;">
-                            <summary style="cursor: pointer; font-weight: bold;">Informações técnicas</summary>
-                            <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 12px; margin-top: 1rem;">${error.stack || 'Stack trace não disponível'}</pre>
-                        </details>
                     </div>
                 `;
             }
         }
         
-        // Iniciar o sistema
+        // Inicializar
+        console.log('Iniciando inicialização...');
         const initializer = new AppInitializer();
-        initializer.init().catch(error => {
-            console.error('Erro ao inicializar aplicação:', error);
-            // Mostrar erro específico para o usuário
-            const loadingScreen = document.querySelector('.loading-screen');
-            if (loadingScreen) {
-                loadingScreen.innerHTML = `
-                    <div style="text-align: center; color: red;">
-                        <h3>Erro ao carregar aplicação</h3>
-                        <p>Verifique a conexão com a internet e recarregue a página.</p>
-                        <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 10px;">
-                            Recarregar
-                        </button>
-                    </div>
-                `;
-            }
-        });
+        initializer.init();
+    </script>
         
-        // DEBUG: Listener global para detectar cliques
+        // Debug listeners
         document.addEventListener('click', (e) => {
             if (e.target.closest('.header-login-btn')) {
-                console.log('🔔 CLICK DEBUG: Botão de login clicado!', e.target);
+                console.log('Login button clicked:', e.target);
             }
             if (e.target.closest('.nav-btn')) {
-                console.log('🔔 CLICK DEBUG: Botão de categoria clicado!', e.target.dataset.categoria);
+                console.log('Category button clicked:', e.target.dataset.categoria);
             }
         }, true);
         
-        // Forçar configuração adicional após 3 segundos
+        // Configuração adicional após delay
         setTimeout(() => {
-            console.log('🚨 DEBUG: Configuração forçada após 3 segundos');
-            if (window.app) {
+            if (window.app && typeof window.app.configureCategoryMenu === 'function') {
+                console.log('Running delayed configuration...');
                 window.app.configureCategoryMenu();
-                window.app.ensureLoginButtonsWork();
+                window.app.ensureLoginButtonsWork && window.app.ensureLoginButtonsWork();
             }
         }, 3000);
     </script>

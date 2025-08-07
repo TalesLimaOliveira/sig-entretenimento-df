@@ -1,1 +1,47 @@
-[]
+[
+    {
+        "id": "pend_001",
+        "nome": "Bar do João",
+        "categoria": "gastronomia",
+        "coordenadas": [-15.800, -47.890],
+        "descricao": "Bar tradicional com música ao vivo",
+        "endereco": "CLN 306 - Asa Norte",
+        "telefone": "(61) 3333-4444",
+        "horario": "18h às 2h",
+        "preco": "R$ 20-40",
+        "status": "pendente",
+        "dataCriacao": "2025-01-21T15:30:00.000Z",
+        "dataAdicao": "2025-01-21T15:30:00.000Z",
+        "adicionadoPor": "usuario123"
+    },
+    {
+        "id": "pend_002", 
+        "nome": "Loja Geek DF",
+        "categoria": "geek-nerd",
+        "coordenadas": [-15.805, -47.895],
+        "descricao": "Nova loja de produtos geek e colecionáveis",
+        "endereco": "CLS 405 - Asa Sul",
+        "telefone": "(61) 9999-8888",
+        "horario": "9h às 18h",
+        "preco": "Variado",
+        "status": "pendente",
+        "dataCriacao": "2025-01-21T16:00:00.000Z",
+        "dataAdicao": "2025-01-21T16:00:00.000Z",
+        "adicionadoPor": "geeklover"
+    },
+    {
+        "id": "pend_003",
+        "nome": "Parque das Águas",
+        "categoria": "parques-natureza",
+        "coordenadas": [-15.810, -47.885],
+        "descricao": "Parque aquático com várias atrações",
+        "endereco": "Setor de Clubes Sul - Asa Sul",
+        "telefone": "(61) 2222-3333",
+        "horario": "8h às 17h",
+        "preco": "R$ 30",
+        "status": "pendente",
+        "dataCriacao": "2025-01-21T17:00:00.000Z",
+        "dataAdicao": "2025-01-21T17:00:00.000Z",
+        "adicionadoPor": "familiadf"
+    }
+]

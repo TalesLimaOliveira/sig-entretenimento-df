@@ -74,12 +74,12 @@ class MapManager {
             this._validarPreRequisitos();
             
             // Inicializar componentes na ordem correta
-            this._criarMapa();
-            this._configurarCamadas();
-            this._aplicarTemaInicial();
-            this._configurarEventListeners();
-            this._configurarControles();
-            this._configurarResponsividade();
+            this._createMap();
+            this._configureLayers();
+            this._applyInitialTheme();
+            this._configureEventListeners();
+            this._configureControls();
+            this._configureResponsiveness();
             
             console.log('MapManager successfully initialized');
         } catch (error) {
@@ -122,22 +122,22 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _configurarResponsividade() {
+    _configureResponsiveness() {
         // ResizeObserver para mudanças no container
-        this._configurarResizeObserver();
+        this._configureResizeObserver();
         
         // Listeners para mudanças de orientação e janela
-        this._configurarEventListenersResponsivos();
+        this._configureResponsiveEventListeners();
         
         // Aplicar configurações responsivas baseadas no tamanho atual
-        this._aplicarConfiguracoesMobile();
+        this._applyMobileConfigurations();
     }
 
     /**
      * Configura ResizeObserver para o container do mapa
      * @private
      */
-    _configurarResizeObserver() {
+    _configureResizeObserver() {
         if (!ResizeObserver) return;
         
         const resizeObserver = new ResizeObserver(this._debounce(() => {
@@ -159,13 +159,13 @@ class MapManager {
      * Configura event listeners responsivos
      * @private
      */
-    _configurarEventListenersResponsivos() {
+    _configureResponsiveEventListeners() {
         // Mudanças de orientação em dispositivos móveis
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 if (this.map) {
                     this.map.invalidateSize();
-                    this._aplicarConfiguracoesMobile();
+                    this._applyMobileConfigurations();
                 }
             }, 500);
         });
@@ -174,7 +174,7 @@ class MapManager {
         window.addEventListener('resize', this._debounce(() => {
             if (this.map) {
                 this.map.invalidateSize();
-                this._aplicarConfiguracoesMobile();
+                this._applyMobileConfigurations();
             }
         }, 250));
     }
@@ -210,7 +210,7 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _criarMapa() {
+    _createMap() {
         // Verificar se o container tem dimensões válidas
         const container = document.getElementById(this.containerId);
         if (container) {
@@ -220,7 +220,7 @@ class MapManager {
             // Se o container não tem altura, aguardar um pouco
             if (rect.height === 0) {
                 console.log('Container without height, waiting...');
-                setTimeout(() => this._criarMapa(), 100);
+                setTimeout(() => this._createMap(), 100);
                 return;
             }
         }
@@ -247,14 +247,14 @@ class MapManager {
         }, 50); // Reduzido de 100ms para 50ms
         
         // Aplicar configurações responsivas iniciais
-        this._aplicarConfiguracoesMobile();
+        this._applyMobileConfigurations();
     }
 
     /**
      * Aplica configurações específicas para dispositivos móveis
      * @private
      */
-    _aplicarConfiguracoesMobile() {
+    _applyMobileConfigurations() {
         if (!this.map) return;
         
         const isMobile = window.innerWidth <= 768;
@@ -289,7 +289,7 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _configurarCamadas() {
+    _configureLayers() {
         // Criar e adicionar camada de ruas otimizada para carregamento rápido
         this.camadaRuas = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -315,7 +315,7 @@ class MapManager {
      * permitindo filtros eficientes por categoria
      * 
      * @param {Array} pontosCustomizados - Pontos específicos para carregar (opcional)
-     * Usado por: _configurarCamadas(), filterByCategory()
+     * Usado por: _configureLayers(), filterByCategory()
      * @private
      */
     _inicializarGruposCategorias(pontosCustomizados = null) {
@@ -328,7 +328,7 @@ class MapManager {
         this.gruposPorCategoria.clear();
 
         // Criar grupos básicos
-        this._criarGruposBasicos();
+        this._createBasicGroups();
 
         // Aguardar DatabaseManager estar disponível
         if (window.databaseManager) {
@@ -401,7 +401,7 @@ class MapManager {
      */
     _loadPoints(pontos) {
         try {
-            console.log(`📍 Loading ${pontos.length} points on map...`);
+            console.log(`Loading ${pontos.length} points on map...`);
             console.log('Dados dos pontos:', pontos);
             
             // Limpar marcadores existentes
@@ -409,8 +409,8 @@ class MapManager {
             
             // Inicializar grupos primeiro se necessário
             if (this.gruposPorCategoria.size === 0) {
-                console.log('🔧 Criando grupos básicos...');
-                this._criarGruposBasicos();
+                console.log('Criando grupos basicos...');
+                this._createBasicGroups();
             }
             
             // Check if map is ready
@@ -427,7 +427,7 @@ class MapManager {
                     console.log(`Processando ponto ${index + 1}/${pontos.length}: ${ponto.nome} (ID: ${ponto.id})`);
                     this.addMarker(ponto);
                 } catch (error) {
-                    console.error(`❌ Erro ao adicionar ponto ${ponto.id || index}:`, error);
+                    console.error(`Erro ao adicionar ponto ${ponto.id || index}:`, error);
                 }
             });
 
@@ -440,10 +440,10 @@ class MapManager {
             });
             
             console.log(`Total de ${pontos.length} pontos processados`);
-            console.log(`📍 Total de marcadores criados: ${this.marcadores.size}`);
+            console.log(`Total de marcadores criados: ${this.marcadores.size}`);
             
         } catch (error) {
-            console.error('❌ Erro ao carregar pontos:', error);
+            console.error('Erro ao carregar pontos:', error);
         }
     }
     
@@ -451,7 +451,7 @@ class MapManager {
      * Cria grupos básicos necessários
      * @private
      */
-    _criarGruposBasicos() {
+    _createBasicGroups() {
         // !TODO: Implementar sistema de favoritos
         // const gruposNecessarios = ['todos', 'favoritos', 'geral', 'esportes-lazer', 
         //                            'gastronomia', 'geek-nerd', 'casas-noturnas'];
@@ -471,12 +471,12 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _aplicarTemaInicial() {
+    _applyInitialTheme() {
         try {
             // Sempre aplicar tema escuro
-            this._aplicarTemaNoMapa(true);
+            this._applyThemeToMap(true);
         } catch (error) {
-            console.error('❌ Erro ao aplicar tema inicial:', error);
+            console.error('Erro ao aplicar tema inicial:', error);
         }
     }
 
@@ -486,13 +486,13 @@ class MapManager {
      * @param {boolean} temaEscuro - Se deve aplicar tema escuro
      * @private
      */
-    _aplicarTemaNoMapa(temaEscuro = false) {
+    _applyThemeToMap(temaEscuro = false) {
         try {
             // Para manter simplicidade, mantemos sempre a camada de ruas
             // O tema escuro será aplicado via CSS na interface
             console.log(`Tema ${temaEscuro ? 'escuro' : 'claro'} aplicado ao mapa`);
         } catch (error) {
-            console.error('❌ Erro ao aplicar tema no mapa:', error);
+            console.error('Erro ao aplicar tema no mapa:', error);
         }
     }
 
@@ -507,7 +507,7 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _configurarEventListeners() {
+    _configureEventListeners() {
         // Click no mapa para adicionar pontos (apenas admin em modo adição)
         this.map.on('click', (e) => {
             if (this._isAdminEmModoAdicao()) {
@@ -516,17 +516,17 @@ class MapManager {
         });
 
         // Eventos do sistema de dados
-        this._configurarEventosDatabase();
+        this._configureDatabaseEvents();
         
         // Eventos de autenticação
-        this._configurarEventosAuth();
+        this._configureAuthEvents();
     }
 
     /**
      * Configura eventos relacionados ao banco de dados
      * @private
      */
-    _configurarEventosDatabase() {
+    _configureDatabaseEvents() {
         // Ponto adicionado
         document.addEventListener('database_pontoAdicionado', (e) => {
             this.addMarker(e.detail);
@@ -553,7 +553,7 @@ class MapManager {
      * Configura eventos relacionados à autenticação
      * @private
      */
-    _configurarEventosAuth() {
+    _configureAuthEvents() {
         document.addEventListener('authStateChanged', (e) => {
             const isAdmin = e.detail.type === 'login' && 
                            e.detail.user?.role === 'administrator';
@@ -582,7 +582,7 @@ class MapManager {
      * Usado por: init()
      * @private
      */
-    _configurarControles() {
+    _configureControls() {
         try {
             // Remover controles padrão para interface mais limpa
             // Os controles de zoom são removidos intencionalmente
@@ -594,7 +594,7 @@ class MapManager {
             
             console.log('Controles do mapa configurados');
         } catch (error) {
-            console.error('❌ Erro ao configurar controles:', error);
+            console.error('Erro ao configurar controles:', error);
         }
     }
 
@@ -620,7 +620,7 @@ class MapManager {
      * Atualiza controles baseado no status de admin
      * 
      * @param {boolean} isAdmin - Se o usuário é administrador
-     * Usado por: _configurarEventosAuth()
+     * Usado por: _configureAuthEvents()
      * @private
      */
     _atualizarControlesAdmin(isAdmin) {
@@ -631,7 +631,7 @@ class MapManager {
                 this._removerControlesAdmin();
             }
         } catch (error) {
-            console.error('❌ Erro ao atualizar controles admin:', error);
+            console.error('Erro ao atualizar controles admin:', error);
         }
     }
 
@@ -657,10 +657,10 @@ class MapManager {
      */
     alternarTemaMapa(temaEscuro = false) {
         try {
-            this._aplicarTemaNoMapa(temaEscuro);
+            this._applyThemeToMap(temaEscuro);
             console.log(`Tema do mapa alterado para ${temaEscuro ? 'escuro' : 'claro'}`);
         } catch (error) {
-            console.error('❌ Erro ao alterar tema do mapa:', error);
+            console.error('Erro ao alterar tema do mapa:', error);
         }
     }
 
@@ -711,9 +711,9 @@ class MapManager {
                 }
             });
             
-            console.log('📍 Controle de coordenadas adicionado');
+            console.log('Controle de coordenadas adicionado');
         } catch (error) {
-            console.error('❌ Erro ao adicionar controle de coordenadas:', error);
+            console.error('Erro ao adicionar controle de coordenadas:', error);
         }
     }
 
@@ -807,7 +807,7 @@ class MapManager {
         this.limparCacheIcones();
         // Recarregar pontos para aplicar novos ícones
         if (window.databaseManager) {
-            this.carregarPontos();
+            this.reloadPoints();
         }
     }
 
@@ -833,7 +833,7 @@ class MapManager {
             
             console.log('Marcadores limpos');
         } catch (error) {
-            console.error('❌ Erro ao limpar marcadores:', error);
+            console.error('Erro ao limpar marcadores:', error);
         }
     }
 
@@ -854,7 +854,7 @@ class MapManager {
                 return;
             }
 
-            console.log(`📍 Adicionando marcador: ${ponto.nome} (ID: ${ponto.id})`);
+            console.log(`Adicionando marcador: ${ponto.nome} (ID: ${ponto.id})`);
             
             // Verificar coordenadas
             let coordenadas;
@@ -863,7 +863,7 @@ class MapManager {
             } else if (ponto.latitude && ponto.longitude) {
                 coordenadas = [ponto.latitude, ponto.longitude];
             } else {
-                console.warn(`❌ Coordenadas inválidas para ponto: ${ponto.nome}`, ponto.coordenadas);
+                console.warn(`Coordenadas invalidas para ponto: ${ponto.nome}`, ponto.coordenadas);
                 return;
             }
 
@@ -874,7 +874,7 @@ class MapManager {
             }
             
             if (!categoria) {
-                console.warn(`⚠️ Categoria não encontrada: ${ponto.categoria}, usando padrão`);
+                console.warn(`Categoria nao encontrada: ${ponto.categoria}, usando padrao`);
                 categoria = { 
                     id: ponto.categoria || 'geral', 
                     cor: '#3b82f6', 
@@ -886,7 +886,7 @@ class MapManager {
             // Criar ícone
             const isPendente = ponto.status === 'pendente';
             console.log(`Criando ícone para categoria: ${categoria.id} (pendente: ${isPendente})`);
-            const icone = this._criarIconeOtimizado(categoria, isPendente);
+            const icone = this._obterIconeCache(categoria, isPendente);
             
             // Criar marcador
             const marcador = L.marker(coordenadas, {
@@ -925,7 +925,7 @@ class MapManager {
             });
 
             // Garantir que os grupos existam
-            this._criarGruposBasicos();
+            this._createBasicGroups();
 
             // Inicializar Map se necessário
             if (!this.marcadores) {
@@ -964,13 +964,13 @@ class MapManager {
             console.log(`Marcador adicionado: ${ponto.nome} na categoria ${categoriaId}`);
             
             // Debug: Verificar se o marcador foi adicionado corretamente aos grupos
-            console.log(`Debug grupos após adicionar marcador:`);
+            console.log(`Grupos após adicionar marcador:`);
             console.log(`  - Grupo ${categoriaId}: ${grupoCategoriaAtual.getLayers().length} marcadores`);
             console.log(`  - Grupo todos: ${grupoTodos.getLayers().length} marcadores`);
             console.log(`  - Total marcadores salvos: ${this.marcadores.size}`);
 
         } catch (error) {
-            console.error('❌ Erro ao adicionar marcador:', error, ponto);
+            console.error('Erro ao adicionar marcador:', error, ponto);
         }
     }
 
@@ -1095,11 +1095,11 @@ class MapManager {
             ` : ''}
             
             <div class="info-panel-actions">
-                <button class="info-action-btn secondary" onclick="console.log('Route functionality')">
+                <button class="info-action-btn directions-btn" onclick="window.mapManager?.showDirectionsNotification()">
                     <i class="fas fa-route"></i>
                     <span>Como Chegar</span>
                 </button>
-                <button class="info-action-btn primary" onclick="console.log('Favorite functionality')" data-ponto-id="${ponto.id}">
+                <button class="info-action-btn favorite-btn" onclick="window.mapManager?.showFavoriteNotification()" data-ponto-id="${ponto.id}">
                     <i class="fas fa-heart"></i>
                     <span>Favoritar</span>
                 </button>
@@ -1385,7 +1385,7 @@ class MapManager {
                 console.warn('⚠️ Nenhum ponto encontrado no DatabaseManager');
                 
                 // Tentar forçar recarregamento do DatabaseManager
-                if (window.databaseManager.carregarTodosDados) {
+                if (window.databaseManager.loadAllData) {
                     console.log('Tentando recarregar dados do DatabaseManager...');
                     window.databaseManager.loadAllData().then(() => {
                         console.log('Dados recarregados, tentando novamente...');
@@ -1407,8 +1407,8 @@ class MapManager {
             this.limparCacheIcones();
 
             // Recriar grupos básicos
-            console.log('📁 Criando grupos básicos...');
-            this._criarGruposBasicos();
+            console.log('Criando grupos básicos...');
+            this._createBasicGroups();
             
             // Se não há pontos, finalizar aqui
             if (pontos.length === 0) {
@@ -1855,6 +1855,53 @@ class MapManager {
             className: 'marcador-leaflet'
         });
     }
+
+    /**
+     * Mostrar notificação para "Como Chegar"
+     */
+    showDirectionsNotification() {
+        this.showNotification('Função "Como Chegar" em desenvolvimento', 'info');
+    }
+
+    /**
+     * Mostrar notificação para "Favoritar"
+     */
+    showFavoriteNotification() {
+        this.showNotification('Função "Favoritar" em desenvolvimento', 'info');
+    }
+
+    /**
+     * Mostrar notificação personalizada
+     */
+    showNotification(message, type = 'info') {
+        // Criar elemento de notificação
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-info-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        // Adicionar ao body
+        document.body.appendChild(notification);
+
+        // Mostrar com animação
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        // Remover após 3 segundos
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
 }
 
 // Criar instância global sem inicializar automaticamente
@@ -1877,6 +1924,8 @@ if (typeof module !== 'undefined' && module.exports) {
 window.MapManager = MapManager;
 window.mapManager = mapManager;
 window.inicializarMapa = inicializarMapa;
+
+console.log('MapManager class defined and exported globally');
 
 // Adicionar CSS otimizado para marcadores
 if (!document.querySelector('#map-markers-css')) {

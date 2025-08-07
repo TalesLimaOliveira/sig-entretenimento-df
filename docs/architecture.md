@@ -2,9 +2,11 @@
 
 ## Visão Geral da Arquitetura
 
+O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, separando responsabilidades em camadas bem definidas e mantendo baixo acoplamento entre componentes.
+
 ### Estratégia de Error Handling
 1. **Try-Catch**: Em todos os métodos críticos
-2. **Logging Estruturado**: Console logs contextuais sem indicadores visuais (emojis removidos)
+2. **Logging Estruturado**: Console logs contextuais sem emojis (logs limpos para produção)
 3. **Graceful Degradation**: Aplicação continua funcionando mesmo com erros parciais
 4. **User Feedback**: Notificações visuais para o usuário
 
@@ -12,8 +14,6 @@
 - **Críticos**: Falha na inicialização → mostrar erro e parar
 - **Não-críticos**: Funcionalidade específica → log e continuar
 - **Rede**: Fallback para dados locais
-
-O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, separando responsabilidades em camadas bem definidas e mantendo baixo acoplamento entre componentes.
 
 ## Estrutura de Módulos
 
@@ -26,7 +26,8 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
     - `isAdmin`: Estado de administrador do usuário atual
     - `activeCategory`: Categoria atualmente filtrada
     - `isInitialized`: Status de inicialização da aplicação
-  - **Métodos refatorados para inglês**:
+  - **Métodos implementados**:
+    - `init()`: Inicialização principal da aplicação
     - `loadData()`: Carregamento inicial de dados
     - `filterByCategory()`: Filtro por categoria
     - `updateStatistics()`: Atualização de estatísticas
@@ -40,6 +41,10 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
     - `configureTouchBehavior()`: Configuração de comportamento touch
     - `applyResponsiveClasses()`: Aplicação de classes responsivas
     - `adjustLayoutForScreenSize()`: Ajuste de layout por tamanho de tela
+    - `reloadData()`: Recarregamento de dados após mudanças de autenticação
+  - **Métodos pendentes** (ver PENDENCIAS.md):
+    - `toggleFavorito()`: Sistema de favoritos (funcionalidade em desenvolvimento)
+    - `configureStatistics()`: Configuração de estatísticas (não implementada)
 
 - **Classe Administrativa**: `AdminManager`
   - **Propriedades principais**:
@@ -69,13 +74,26 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
 
 ### 2. Camada de Negócio (Domain Layer)
 - **Gerenciador de Dados**: `src/js/database.js` (`DatabaseManager`)
-  - **Propriedades principais**:
+  - **Propriedades principais** (nomenclatura padronizada):
     - `confirmedPoints`: Array de pontos confirmados e visíveis
     - `pendingPoints`: Array de pontos aguardando aprovação
     - `hiddenPoints`: Array de pontos ocultos pelo administrador
     - `usuarios`: Objeto com dados dos usuários registrados
+    - `categorias`: Array de categorias disponíveis
+    - `proximoId`: Contador para geração de IDs únicos
+  - **Métodos principais**:
+    - `init()`: Inicialização e carregamento de dados
+    - `loadAllData()`: Carregamento completo de dados JSON e localStorage
+    - `getPontos()`: Retorna pontos confirmados + ocultos
+    - `getPontosParaUsuario()`: Retorna pontos baseado no papel do usuário
+    - `adicionarPonto()`: Adiciona novo ponto com validações
+    - `saveAllData()`: Salva dados no localStorage
+    - `saveDataDirectly()`: Sistema de salvamento direto sem downloads
+  - **Pendências**: Sistema de persistência no servidor (ver PENDENCIAS.md)
+
 - **Gerenciador de Autenticação**: `src/js/auth.js` (`AuthManager`)
-- **Responsabilidade**: Regras de negócio, validações, lógica de domínio
+  - **Responsabilidades**: Autenticação, autorização, gestão de sessões
+  - **Pendências**: Salvamento real no servidor (atualmente só localStorage)
 
 ### 3. Camada de Apresentação (Presentation Layer)
 - **Gerenciador de Mapas**: `src/js/map.js` (`MapManager`)
@@ -85,13 +103,27 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
     - `openPopup`: ID do popup atualmente aberto
     - `additionMode`: Modo de adição de pontos ativo
     - `activeCategory`: Categoria atualmente filtrada no mapa
+  - **Métodos implementados**:
+    - `init()`: Inicialização do mapa Leaflet
+    - `reloadPoints()`: Carregamento otimizado de pontos em lotes
+    - `addMarker()`: Adição de marcador individual
+    - `removeMarker()`: Remoção de marcador
+    - `clearMarkers()`: Limpeza completa de marcadores
+    - `filterByCategory()`: Filtro por categoria com suporte a favoritos
+  - **Pendências**: Controles administrativos, sistema de favoritos (ver PENDENCIAS.md)
+
 - **Painel de Informações**: `src/js/info-panel.js` (`InfoPanelManager`)
+- **Sistema de Temas**: `src/js/theme-colors.js` (`EnhancedThemeSystem`)
 - **Responsabilidade**: Interface do usuário, interações visuais, controle de aparência
 
 ### 4. Camada de Infraestrutura (Infrastructure Layer)
 - **Componentes de Modal**: `src/components/`
   - **Modal Manager**: Propriedade `activeModal` para controle do modal ativo
+  - **Add Point Modal**: Sistema de seleção de localização com PIN posicionado corretamente
+  - **Login/Register Modals**: Autenticação de usuários
 - **Estilos CSS**: `src/css/`
+  - **Sistema de cores**: CSS Variables para temas dinâmicos
+  - **Responsividade**: Layout fluido para diferentes dispositivos
 - **Responsabilidade**: Recursos externos, persistência, componentes reutilizáveis
 
 ## Fluxo de Inicialização

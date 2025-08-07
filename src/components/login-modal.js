@@ -290,7 +290,7 @@ class LoginModal {
             );
 
             if (result && result.success) {
-                console.log('🎯 Login bem-sucedido no modal:', result.user);
+                console.log('Login bem-sucedido no modal:', result.user);
                 
                 // Login bem-sucedido
                 this.close();
@@ -298,10 +298,10 @@ class LoginModal {
                 
                 // FORÇAR atualização da interface imediatamente
                 if (window.app && typeof window.app.configureLoggedUser === 'function') {
-                    console.log('🎯 Forçando atualização via app.configureLoggedUser...');
+                    console.log('Forcando atualizacao via app.configureLoggedUser...');
                     window.app.configureLoggedUser(result.user);
                 } else {
-                    console.warn('🎯 App não disponível, tentando método alternativo...');
+                    console.warn('App nao disponivel, tentando metodo alternativo...');
                     // Método alternativo direto
                     this.forceButtonUpdate(result.user);
                 }
@@ -321,7 +321,7 @@ class LoginModal {
     }
 
     handleLoginSuccess(user) {
-        console.log('🎯 LoginModal: handleLoginSuccess chamado para:', user.nome);
+        console.log('LoginModal: handleLoginSuccess chamado para:', user.nome);
         
         // Mostrar notificação
         this.showNotification(`Bem-vindo, ${user.nome || user.name}!`, 'success');
@@ -341,17 +341,17 @@ class LoginModal {
 
         // O AuthManager já disparou o evento 'authStateChanged'
         // O app.js vai gerenciar a atualização da interface
-        console.log('🎯 LoginModal: Interface será atualizada via evento authStateChanged');
+        console.log('LoginModal: Interface sera atualizada via evento authStateChanged');
 
         // Admin permanece na página principal - acesso ao painel pelo menu
         if (user.role === 'administrator') {
-            console.log('🎯 Administrator logged in - admin panel available via menu');
+            console.log('Administrator logged in - admin panel available via menu');
         }
         
         // Forçar uma verificação adicional se o app não respondeu
         setTimeout(() => {
             if (window.app && typeof window.app.configureLoggedUser === 'function') {
-                console.log('🎯 LoginModal: Forçando atualização de interface via app...');
+                console.log('LoginModal: Forcando atualizacao de interface via app...');
                 window.app.configureLoggedUser(user);
             }
         }, 1000);
@@ -360,7 +360,7 @@ class LoginModal {
     // updateUIAfterLogin - DESABILITADA para evitar conflitos com app.js
     // O app.js gerencia toda a interface via evento authStateChanged
     updateUIAfterLogin(user) {
-        console.log('🎯 LoginModal: updateUIAfterLogin chamado mas desabilitado');
+        console.log('LoginModal: updateUIAfterLogin chamado mas desabilitado');
         // Esta função foi desabilitada para evitar conflitos
         // A interface é gerenciada pelo app.js via evento authStateChanged
         
@@ -372,7 +372,7 @@ class LoginModal {
      * Método de fallback para forçar atualização dos botões
      */
     forceButtonUpdate(user) {
-        console.log('🎯 LoginModal: Executando forceButtonUpdate para:', user.nome);
+        console.log('LoginModal: Executando forceButtonUpdate para:', user.nome);
         
         const isAdmin = user.role === 'administrator';
         const userName = user.nome || user.username || 'Usuário';
@@ -415,7 +415,7 @@ class LoginModal {
                 `;
                 
                 container.insertAdjacentHTML('beforeend', userMenuHTML);
-                console.log(`🎯 Menu de usuário criado via fallback para ${containerType}`);
+                console.log(`Menu de usuario criado via fallback para ${containerType}`);
                 
                 // Configurar eventos do menu
                 const userBtn = document.getElementById(`${containerType}-user-info-btn`);
@@ -435,7 +435,7 @@ class LoginModal {
                         
                         // Toggle do menu atual
                         menu.style.display = isVisible ? 'none' : 'block';
-                        console.log(`🎯 Menu ${containerType} toggled:`, !isVisible);
+                        console.log(`Menu ${containerType} toggled:`, !isVisible);
                     });
                     
                     // Configurar logout
