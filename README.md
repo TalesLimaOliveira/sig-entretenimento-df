@@ -12,7 +12,9 @@ Sistema de Informações Geográficas interativo para pontos de entretenimento d
 
 ## 📖 Resumo do Projeto
 
-O **SIG Entretenimento DF** é uma aplicação web que apresenta um mapa interativo com pontos de interesse cultural, gastronômico, esportivo e de entretenimento do Distrito Federal. O sistema permite visualização, filtragem por categorias, sistema de favoritos para usuários logados e funcionalidades administrativas para gerenciamento de conteúdo.
+O **SIG Entretenimento DF** é uma aplicação web que apresenta um mapa interativo com pontos de interesse cultural, gastronômico, esportivo e de entretenimento do Distrito Federal. O sistema permite visualização, filtragem por categorias e funcionalidades administrativas para gerenciamento de conteúdo.
+
+> **📝 TODO**: Sistema de favoritos em desenvolvimento
 
 ### Principais Diferenciais
 - **Arquitetura Limpa**: Separação clara de responsabilidades
@@ -111,9 +113,10 @@ npm run api         # Iniciar JSON Server (se necessário)
 - ℹ️ **Painel de Informações**: Detalhes completos de cada ponto
 
 ### Para Usuários Logados
-- ❤️ **Sistema de Favoritos**: Marcar pontos preferidos
 - 💬 **Sugestões de Mudanças**: Propor alterações nos pontos
 - 👤 **Perfil de Usuário**: Gerenciamento da conta
+
+> **📝 TODO**: Sistema de favoritos (❤️) em desenvolvimento
 
 ### Para Administradores
 - ➕ **Adicionar Pontos**: Criar novos pontos de interesse

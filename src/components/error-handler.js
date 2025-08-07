@@ -1,6 +1,5 @@
 /**
- * Enhanced Error Handler
- * Sistema de tratamento de erros com opções de recuperação
+ * Enhanced Error Handler - Sistema de tratamento de erros com opções de recuperação
  */
 class ErrorHandler {
     constructor() {
@@ -19,50 +18,57 @@ class ErrorHandler {
 
     createErrorModal() {
         const modalHTML = `
-            <div id="error-modal" class="modal error-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000;">
-                <div class="modal-backdrop" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; pointer-events: auto;"></div>
-                <div class="modal-content" style="position: relative; background: white; border-radius: 8px; max-width: 600px; width: 90%; max-height: 90vh; overflow: auto; z-index: 10001; pointer-events: auto; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
-                    <div class="modal-header error-header" style="padding: 1rem; border-bottom: 1px solid #ddd; background: rgba(239, 68, 68, 0.1);">
-                        <h2 style="margin: 0; color: #dc2626; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-exclamation-triangle"></i> Ops! Algo deu errado</h2>
-                        <button class="modal-close" type="button" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; padding: 0.25rem;">
+            <div id="error-modal" class="modal error-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;">
+                <div class="modal-backdrop" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;pointer-events:auto;"></div>
+                <div class="modal-content" style="position:relative;background:white;border-radius:8px;max-width:600px;width:90%;max-height:90vh;overflow:auto;z-index:10001;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                    <div class="modal-header error-header" style="padding:1rem;border-bottom:1px solid #ddd;background:rgba(239,68,68,0.1);">
+                        <h2 style="margin:0;color:#dc2626;display:flex;align-items:center;gap:0.5rem;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Ops! Algo deu errado
+                        </h2>
+                        <button class="modal-close" type="button" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#666;padding:0.25rem;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    
-                    <div class="modal-body" style="padding: 1rem;">
-                        <div class="error-message" style="padding: 1rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 6px; margin-bottom: 1.5rem;">
-                            <p id="error-main-message" style="margin: 0; font-weight: 500;">Ocorreu um erro inesperado no sistema.</p>
+                    <div class="modal-body" style="padding:1rem;">
+                        <div class="error-message" style="padding:1rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.1);border-radius:6px;margin-bottom:1.5rem;">
+                            <p id="error-main-message" style="margin:0;font-weight:500;">Ocorreu um erro inesperado no sistema.</p>
                         </div>
-                        
-                        <div class="error-suggestions" style="margin-bottom: 1.5rem;">
-                            <h4 style="color: #f59e0b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-lightbulb"></i> Possíveis soluções:</h4>
-                            <ul id="error-suggestions-list" style="list-style: none; padding: 0; margin: 0;">
-                                <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">Recarregue a página (F5)</li>
-                                <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">Limpe o cache do navegador</li>
-                                <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">Verifique sua conexão com a internet</li>
+                        <div class="error-suggestions" style="margin-bottom:1.5rem;">
+                            <h4 style="color:#f59e0b;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                                <i class="fas fa-lightbulb"></i>
+                                Possíveis soluções:
+                            </h4>
+                            <ul id="error-suggestions-list" style="list-style:none;padding:0;margin:0;">
+                                <li style="padding:0.5rem 0;padding-left:1.5rem;position:relative;">Recarregue a página (F5)</li>
+                                <li style="padding:0.5rem 0;padding-left:1.5rem;position:relative;">Limpe o cache do navegador</li>
+                                <li style="padding:0.5rem 0;padding-left:1.5rem;position:relative;">Verifique sua conexão com a internet</li>
                             </ul>
                         </div>
-                        
-                        <div class="error-details" style="margin-top: 1rem;">
-                            <details style="cursor: pointer;">
-                                <summary style="padding: 0.5rem; background: #f5f5f5; border-radius: 4px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><i class="fas fa-code"></i> Detalhes técnicos</summary>
-                                <pre id="error-technical-details" style="background: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem; line-height: 1.4; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></pre>
+                        <div class="error-details" style="margin-top:1rem;">
+                            <details style="cursor:pointer;">
+                                <summary style="padding:0.5rem;background:#f5f5f5;border-radius:4px;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                                    <i class="fas fa-code"></i>
+                                    Detalhes técnicos
+                                </summary>
+                                <pre id="error-technical-details" style="background:#1f2937;color:#f9fafb;padding:1rem;border-radius:4px;overflow-x:auto;font-size:0.85rem;line-height:1.4;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;"></pre>
                             </details>
                         </div>
                     </div>
-                    
-                    <div class="modal-footer" style="padding: 1rem; border-top: 1px solid #ddd; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                        <button type="button" class="btn btn-secondary" id="error-dismiss" style="padding: 0.5rem 1rem; border: 1px solid #ddd; background: #f9fafb; border-radius: 4px; cursor: pointer;">
-                            <i class="fas fa-times"></i> Fechar
+                    <div class="modal-footer" style="padding:1rem;border-top:1px solid #ddd;display:flex;justify-content:flex-end;gap:0.5rem;">
+                        <button type="button" class="btn btn-secondary" id="error-dismiss" style="padding:0.5rem 1rem;border:1px solid #ddd;background:#f9fafb;border-radius:4px;cursor:pointer;">
+                            <i class="fas fa-times"></i>
+                            Fechar
                         </button>
-                        <button type="button" class="btn btn-primary" id="error-reload" style="padding: 0.5rem 1rem; border: none; background: #3b82f6; color: white; border-radius: 4px; cursor: pointer;">
-                            <i class="fas fa-redo"></i> Recarregar
+                        <button type="button" class="btn btn-primary" id="error-reload" style="padding:0.5rem 1rem;border:none;background:#3b82f6;color:white;border-radius:4px;cursor:pointer;">
+                            <i class="fas fa-redo"></i>
+                            Recarregar
                         </button>
                     </div>
                 </div>
             </div>
         `;
-
+        
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         this.errorModal = document.getElementById('error-modal');
         this.setupEventListeners();
@@ -73,16 +79,16 @@ class ErrorHandler {
         const closeBtn = this.errorModal.querySelector('.modal-close');
         const dismissBtn = document.getElementById('error-dismiss');
         const backdrop = this.errorModal.querySelector('.modal-backdrop');
-
+        
         [closeBtn, dismissBtn, backdrop].forEach(element => {
             element.addEventListener('click', () => this.close());
         });
-
+        
         // Action buttons
         document.getElementById('error-reload').addEventListener('click', () => {
             this.reloadPage();
         });
-
+        
         // ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isVisible()) {
@@ -95,7 +101,6 @@ class ErrorHandler {
         // Capturar erros JavaScript
         window.addEventListener('error', (event) => {
             console.error('JavaScript error:', event);
-            
             this.handleError({
                 message: event.message || 'Erro JavaScript',
                 filename: event.filename,
@@ -106,11 +111,10 @@ class ErrorHandler {
                 event: event
             });
         });
-
+        
         // Capturar promessas rejeitadas
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event);
-            
             let reason = event.reason;
             let details = {};
             
@@ -162,13 +166,12 @@ class ErrorHandler {
         
         this.errorThrottle.set(errorKey, now);
         this.lastErrorTime = now;
-        
         this.errors.push({
             ...errorInfo,
             timestamp: new Date().toISOString()
         });
-
-        // Determinar tipo de erro
+        
+        // Determinar tipo do erro
         const errorType = this.categorizeError(errorInfo);
         this.showError(errorType, errorInfo);
     }
@@ -199,7 +202,7 @@ class ErrorHandler {
     }
 
     /**
-     * Mostra uma notificação simples de erro no topo da tela
+     * Mostrar uma notificação simples de erro no topo da tela
      */
     showSimpleErrorNotification(message) {
         // Usar a função unificada
@@ -214,10 +217,8 @@ class ErrorHandler {
         document.getElementById('error-main-message').textContent = config.message;
         
         const suggestionsList = document.getElementById('error-suggestions-list');
-        suggestionsList.innerHTML = config.suggestions.map(suggestion => 
-            `<li>${suggestion}</li>`
-        ).join('');
-
+        suggestionsList.innerHTML = config.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('');
+        
         // Mostrar detalhes técnicos sempre que disponível
         const errorDetails = this.errorModal.querySelector('.error-details');
         const technicalDetails = document.getElementById('error-technical-details');
@@ -266,7 +267,7 @@ class ErrorHandler {
         } else {
             errorDetails.style.display = 'none';
         }
-
+        
         this.open();
     }
 
@@ -313,7 +314,7 @@ class ErrorHandler {
                 ]
             }
         };
-
+        
         return configs[type] || configs.general;
     }
 
@@ -337,7 +338,6 @@ class ErrorHandler {
         if (!this.errorModal) return;
         
         this.errorModal.classList.remove('open');
-        
         setTimeout(() => {
             this.errorModal.style.display = 'none';
             document.body.classList.remove('modal-open');
@@ -361,7 +361,7 @@ class ErrorHandler {
     }
 
     /**
-     * Mostra uma notificação simples com diferentes tipos
+     * Mostrar uma notificação simples com diferentes tipos
      */
     showSimpleNotification(message, type = 'info') {
         // Remover notificação anterior do mesmo tipo se existir
@@ -369,17 +369,33 @@ class ErrorHandler {
         if (existingNotification) {
             existingNotification.remove();
         }
-
+        
         // Configurações por tipo
         const configs = {
-            error: { color: '#ef4444', icon: 'fas fa-exclamation-triangle', border: '#dc2626' },
-            success: { color: '#10b981', icon: 'fas fa-check-circle', border: '#059669' },
-            warning: { color: '#f59e0b', icon: 'fas fa-exclamation-circle', border: '#d97706' },
-            info: { color: '#3b82f6', icon: 'fas fa-info-circle', border: '#2563eb' }
+            error: {
+                color: '#ef4444',
+                icon: 'fas fa-exclamation-triangle',
+                border: '#dc2626'
+            },
+            success: {
+                color: '#10b981',
+                icon: 'fas fa-check-circle',
+                border: '#059669'
+            },
+            warning: {
+                color: '#f59e0b',
+                icon: 'fas fa-exclamation-circle',
+                border: '#d97706'
+            },
+            info: {
+                color: '#3b82f6',
+                icon: 'fas fa-info-circle',
+                border: '#2563eb'
+            }
         };
-
+        
         const config = configs[type] || configs.info;
-
+        
         // Criar nova notificação
         const notification = document.createElement('div');
         notification.className = `${type}-notification simple-notification`;
@@ -414,7 +430,7 @@ class ErrorHandler {
         });
         
         document.body.appendChild(notification);
-
+        
         // Remover após tempo baseado no tipo
         const duration = type === 'error' ? 6000 : 4000;
         setTimeout(() => {
@@ -423,7 +439,7 @@ class ErrorHandler {
                 setTimeout(() => notification.remove(), 300);
             }
         }, duration);
-
+        
         // Adicionar CSS de animação se não existir
         if (!document.querySelector('#notification-styles')) {
             const style = document.createElement('style');

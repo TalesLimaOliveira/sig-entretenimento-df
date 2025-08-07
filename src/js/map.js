@@ -91,7 +91,7 @@ class MapManager {
     /**
      * Valida pré-requisitos para inicialização
      * @private
-     * @throws {Error} Se requisitos não atendidos
+     * @throws {Error} Se requisitos críticos não atendidos
      */
     _validarPreRequisitos() {
         // Verificar se Leaflet está disponível
@@ -99,16 +99,15 @@ class MapManager {
             throw new Error('Leaflet não está carregado');
         }
         
-        // Verificar se o DOM está pronto
-        if (document.readyState === 'loading') {
-            throw new Error('DOM ainda não está pronto');
-        }
-        
         // Verificar se o container existe
         const container = document.getElementById(this.containerId);
         if (!container) {
             throw new Error(`Container '${this.containerId}' não encontrado`);
         }
+        
+        // Remover verificação rígida do DOM - permitir inicialização mesmo se ainda carregando
+        // A inicialização pode prosseguir desde que o container exista
+        console.log('Pré-requisitos validados - container encontrado e Leaflet disponível');
     }
 
     /**
@@ -316,7 +315,7 @@ class MapManager {
      * permitindo filtros eficientes por categoria
      * 
      * @param {Array} pontosCustomizados - Pontos específicos para carregar (opcional)
-     * Usado por: _configurarCamadas(), filtrarPorCategoria()
+     * Usado por: _configurarCamadas(), filterByCategory()
      * @private
      */
     _inicializarGruposCategorias(pontosCustomizados = null) {
@@ -403,7 +402,7 @@ class MapManager {
     _loadPoints(pontos) {
         try {
             console.log(`📍 Loading ${pontos.length} points on map...`);
-            console.log('📋 Dados dos pontos:', pontos);
+            console.log('Dados dos pontos:', pontos);
             
             // Limpar marcadores existentes
             this.clearMarkers();
@@ -414,18 +413,18 @@ class MapManager {
                 this._criarGruposBasicos();
             }
             
-            // Verificar se o mapa está pronto
+            // Check if map is ready
             if (!this.map) {
-                console.error('❌ Mapa não está inicializado');
+                console.error('Map is not initialized');
                 return;
             }
             
-            console.log(`🗺️ Mapa pronto, processando ${pontos.length} pontos...`);
+            console.log(`Mapa pronto, processando ${pontos.length} pontos...`);
             
             // Adicionar cada ponto
             pontos.forEach((ponto, index) => {
                 try {
-                    console.log(`🔄 Processando ponto ${index + 1}/${pontos.length}: ${ponto.nome} (ID: ${ponto.id})`);
+                    console.log(`Processando ponto ${index + 1}/${pontos.length}: ${ponto.nome} (ID: ${ponto.id})`);
                     this.addMarker(ponto);
                 } catch (error) {
                     console.error(`❌ Erro ao adicionar ponto ${ponto.id || index}:`, error);
@@ -433,14 +432,14 @@ class MapManager {
             });
 
             // Debug: mostrar quantos pontos foram adicionados por categoria
-            console.log(`📊 Pontos carregados por categoria:`);
+            console.log(`Pontos carregados por categoria:`);
             this.gruposPorCategoria.forEach((grupo, categoria) => {
                 if (categoria !== 'todos') {
                     console.log(`  - ${categoria}: ${grupo.getLayers().length} pontos`);
                 }
             });
             
-            console.log(`✅ Total de ${pontos.length} pontos processados`);
+            console.log(`Total de ${pontos.length} pontos processados`);
             console.log(`📍 Total de marcadores criados: ${this.marcadores.size}`);
             
         } catch (error) {
@@ -453,7 +452,10 @@ class MapManager {
      * @private
      */
     _criarGruposBasicos() {
-        const gruposNecessarios = ['todos', 'favoritos', 'geral', 'esportes-lazer', 
+        // !TODO: Implementar sistema de favoritos
+        // const gruposNecessarios = ['todos', 'favoritos', 'geral', 'esportes-lazer', 
+        //                            'gastronomia', 'geek-nerd', 'casas-noturnas'];
+        const gruposNecessarios = ['todos', 'geral', 'esportes-lazer', 
                                    'gastronomia', 'geek-nerd', 'casas-noturnas'];
         
         gruposNecessarios.forEach(categoria => {
@@ -488,7 +490,7 @@ class MapManager {
         try {
             // Para manter simplicidade, mantemos sempre a camada de ruas
             // O tema escuro será aplicado via CSS na interface
-            console.log(`🎨 Tema ${temaEscuro ? 'escuro' : 'claro'} aplicado ao mapa`);
+            console.log(`Tema ${temaEscuro ? 'escuro' : 'claro'} aplicado ao mapa`);
         } catch (error) {
             console.error('❌ Erro ao aplicar tema no mapa:', error);
         }
@@ -590,7 +592,7 @@ class MapManager {
                 this._adicionarControlesAdmin();
             }
             
-            console.log('🎛️ Controles do mapa configurados');
+            console.log('Controles do mapa configurados');
         } catch (error) {
             console.error('❌ Erro ao configurar controles:', error);
         }
@@ -656,7 +658,7 @@ class MapManager {
     alternarTemaMapa(temaEscuro = false) {
         try {
             this._aplicarTemaNoMapa(temaEscuro);
-            console.log(`🎨 Tema do mapa alterado para ${temaEscuro ? 'escuro' : 'claro'}`);
+            console.log(`Tema do mapa alterado para ${temaEscuro ? 'escuro' : 'claro'}`);
         } catch (error) {
             console.error('❌ Erro ao alterar tema do mapa:', error);
         }
@@ -883,7 +885,7 @@ class MapManager {
             
             // Criar ícone
             const isPendente = ponto.status === 'pendente';
-            console.log(`🎨 Criando ícone para categoria: ${categoria.id} (pendente: ${isPendente})`);
+            console.log(`Criando ícone para categoria: ${categoria.id} (pendente: ${isPendente})`);
             const icone = this._criarIconeOtimizado(categoria, isPendente);
             
             // Criar marcador
@@ -948,21 +950,21 @@ class MapManager {
             // *** IMPORTANTE: Adicionar os grupos ao mapa para que os marcadores apareçam ***
             if (!this.map.hasLayer(grupoCategoriaAtual)) {
                 grupoCategoriaAtual.addTo(this.map);
-                console.log(`🗺️ Grupo da categoria ${categoriaId} adicionado ao mapa`);
+                console.log(`Grupo da categoria ${categoriaId} adicionado ao mapa`);
             }
             
             if (!this.map.hasLayer(grupoTodos)) {
                 grupoTodos.addTo(this.map);
-                console.log('🗺️ Grupo "todos" adicionado ao mapa');
+                console.log('Grupo "todos" adicionado ao mapa');
             }
 
             // Salvar referência do marcador
             this.marcadores.set(ponto.id, marcador);
             
-            console.log(`✅ Marcador adicionado: ${ponto.nome} na categoria ${categoriaId}`);
+            console.log(`Marcador adicionado: ${ponto.nome} na categoria ${categoriaId}`);
             
             // Debug: Verificar se o marcador foi adicionado corretamente aos grupos
-            console.log(`📊 Debug grupos após adicionar marcador:`);
+            console.log(`Debug grupos após adicionar marcador:`);
             console.log(`  - Grupo ${categoriaId}: ${grupoCategoriaAtual.getLayers().length} marcadores`);
             console.log(`  - Grupo todos: ${grupoTodos.getLayers().length} marcadores`);
             console.log(`  - Total marcadores salvos: ${this.marcadores.size}`);
@@ -1036,10 +1038,11 @@ class MapManager {
         const mapaIcones = {
             'geral': '🎭',
             'esportes-lazer': '⚽',
-            'gastronomia': '�',
-            'geek-nerd': '�',
-            'casas-noturnas': '�',
-            'favoritos': '❤️'
+            'gastronomia': '🍽️',
+            'geek-nerd': '🎮',
+            'casas-noturnas': '🍻'
+            // !TODO: Implementar sistema de favoritos
+            // 'favoritos': '❤️'
         };
         
         // Tentar encontrar por ID da categoria
@@ -1074,13 +1077,19 @@ class MapManager {
                 console.log(`➖ Removido grupo: ${cat} (${grupo.getLayers().length} pontos)`);
             }
         });
-        console.log(`🗑️ Total de grupos removidos: ${gruposRemovidos}`);
+        console.log(`Total de grupos removidos: ${gruposRemovidos}`);
 
+        // !TODO: Implementar sistema de favoritos
         // Lógica especial para favoritos
-        if (categoria === 'favoritos' && username) {
-            this.filtrarFavoritos(username);
-            this.activeCategory = categoria;
-            console.log(`✅ Filtro de favoritos aplicado para: ${username}`);
+        // if (categoria === 'favoritos' && username) {
+        //     this.filtrarFavoritos(username);
+        //     this.activeCategory = categoria;
+        //     console.log(`Filtro de favoritos aplicado para: ${username}`);
+        //     return;
+        // }
+        
+        if (categoria === 'favoritos') {
+            console.log('Sistema de favoritos em desenvolvimento');
             return;
         }
 
@@ -1098,13 +1107,13 @@ class MapManager {
                 }
             });
             this.activeCategory = 'todos';
-            console.log(`✅ Mostrando todos os pontos (${gruposAdicionados} grupos, ${totalPontos} pontos total)`);
+            console.log(`Mostrando todos os pontos (${gruposAdicionados} grupos, ${totalPontos} pontos total)`);
         } else if (this.gruposPorCategoria.has(categoria)) {
             // Mostrar apenas pontos da categoria específica
             const grupo = this.gruposPorCategoria.get(categoria);
             this.map.addLayer(grupo);
             this.activeCategory = categoria;
-            console.log(`✅ Mostrando pontos da categoria: ${categoria} (${grupo.getLayers().length} pontos)`);
+            console.log(`Mostrando pontos da categoria: ${categoria} (${grupo.getLayers().length} pontos)`);
         } else {
             // Categoria não existe, fallback para "todos"
             console.warn(`⚠️ Categoria '${categoria}' não encontrada, mostrando todos`);
@@ -1121,7 +1130,7 @@ class MapManager {
             this.activeCategory = 'todos';
         }
 
-        console.log(`🗺️ Filtro aplicado: ${this.activeCategory}`);
+        console.log(`Filtro aplicado: ${this.activeCategory}`);
         
         // Verificar quantos pontos estão visíveis no mapa
         let pontosVisiveis = 0;
@@ -1130,51 +1139,18 @@ class MapManager {
                 pontosVisiveis += grupo.getLayers().length;
             }
         });
-        console.log(`👁️ Total de pontos visíveis: ${pontosVisiveis}`);
+        console.log(`Total de pontos visíveis: ${pontosVisiveis}`);
     }
 
     /**
-     * Filtrar apenas pontos favoritos do usuário
+     * Filtrar apenas pontos favoritos do usuário - FUNCIONALIDADE EM DESENVOLVIMENTO
+     * !TODO: Implementar sistema completo de favoritos
      */
     filtrarFavoritos(username) {
-        // Remover todos os grupos ativos
-        this.gruposPorCategoria.forEach((grupo, categoria) => {
-            if (this.map.hasLayer(grupo)) {
-                this.map.removeLayer(grupo);
-            }
-        });
-
-        // Criar grupo temporário para favoritos
-        const grupoFavoritos = L.layerGroup();
-        const favoritos = window.databaseManager.getFavoritos(username);
-
-        favoritos.forEach(ponto => {
-            // Criar marcador e adicionar ao grupo de favoritos
-            const categoria = window.databaseManager.obterCategoria(ponto.categoria) || { 
-                id: 'geral', 
-                cor: '#3b82f6', 
-                icon: 'fas fa-map-marker-alt' 
-            };
-            
-            const icone = this._obterIconeCache(categoria, false);
-            const marcador = L.marker(ponto.coordenadas, { icon: icone, title: ponto.nome });
-            
-            // Configurar evento de clique
-            marcador.on('click', () => {
-                this.selecionarPonto(ponto);
-            });
-            
-            grupoFavoritos.addLayer(marcador);
-        });
-
-        // Adicionar ao mapa
-        this.map.addLayer(grupoFavoritos);
-        this.activeCategory = 'favoritos';
-
-        // Armazenar grupo temporariamente
-        this.gruposPorCategoria.set('favoritos', grupoFavoritos);
-
-        console.log(`💕 Exibindo ${favoritos.length} pontos favoritos`);
+        console.log('!TODO: Implementar filtrarFavoritos - username:', username);
+        console.log('Sistema de favoritos em desenvolvimento');
+        // Função temporariamente desabilitada
+        return;
     }
 
     /**
@@ -1183,7 +1159,7 @@ class MapManager {
      */
     reloadPoints(userRole = 'visitor', username = null) {
         try {
-            console.log(`🔄 Recarregando pontos para ${userRole}...`);
+            console.log(`Recarregando pontos para ${userRole}...`);
             
             // Verificar se o mapa foi inicializado
             if (!this.map) {
@@ -1218,7 +1194,7 @@ class MapManager {
 
             // Debug: mostrar alguns pontos de exemplo
             if (pontos.length > 0) {
-                console.log('🔍 Exemplo de pontos:', pontos.slice(0, 3).map(p => ({
+                console.log('Exemplo de pontos:', pontos.slice(0, 3).map(p => ({
                     id: p.id, 
                     nome: p.nome, 
                     categoria: p.categoria,
@@ -1236,9 +1212,9 @@ class MapManager {
                 
                 // Tentar forçar recarregamento do DatabaseManager
                 if (window.databaseManager.carregarTodosDados) {
-                    console.log('🔄 Tentando recarregar dados do DatabaseManager...');
-                    window.databaseManager.carregarTodosDados().then(() => {
-                        console.log('✅ Dados recarregados, tentando novamente...');
+                    console.log('Tentando recarregar dados do DatabaseManager...');
+                    window.databaseManager.loadAllData().then(() => {
+                        console.log('Dados recarregados, tentando novamente...');
                         setTimeout(() => this.reloadPoints(userRole, username), 100);
                     }).catch(error => {
                         console.error('❌ Erro ao recarregar DatabaseManager:', error);
@@ -1252,7 +1228,7 @@ class MapManager {
             }
 
             // Limpar estado anterior completamente
-            console.log('🗑️ Limpando estado anterior...');
+            console.log('Limpando estado anterior...');
             this.clearMarkers();
             this.limparCacheIcones();
 
@@ -1262,7 +1238,7 @@ class MapManager {
             
             // Se não há pontos, finalizar aqui
             if (pontos.length === 0) {
-                console.log('⚠️ Nenhum ponto para carregar');
+                console.log('Nenhum ponto para carregar');
                 this._finalizarCarregamento(0);
                 return;
             }
@@ -1498,7 +1474,7 @@ class MapManager {
      */
     forcarRedimensionamento() {
         if (this.map) {
-            console.log('🗺️ Forçando redimensionamento do mapa...');
+            console.log('Forçando redimensionamento do mapa...');
             this.map.invalidateSize(true);
             
             // Segunda invalidação para garantir
@@ -1605,12 +1581,12 @@ class MapManager {
      * @private
      */
     _finalizarCarregamento(totalPontos) {
-        console.log(`✅ ${totalPontos} pontos carregados com sucesso`);
+        console.log(`${totalPontos} pontos carregados com sucesso`);
         
         // Aplicar filtro para garantir que os marcadores sejam visíveis
         setTimeout(() => {
             const categoriaAtual = this.activeCategory || 'todos';
-            console.log(`🔄 Aplicando filtro final: ${categoriaAtual}`);
+            console.log(`Aplicando filtro final: ${categoriaAtual}`);
             this.filterByCategory(categoriaAtual);
         }, 50);
         

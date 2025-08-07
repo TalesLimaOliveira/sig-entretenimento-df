@@ -11,7 +11,7 @@
  * - secondary: Cor secundária (fundos suaves, elementos neutros)
  * - accent: Cor de destaque/contraste
  * - gradient: Gradiente principal do tema
- * - 
+ * 
  * Cores Fixas (mantidas em todos os temas):
  * - favorite: Rosa para favoritos (#ff4081)
  * - route: Azul para rotas (#2196f3)
@@ -19,7 +19,7 @@
  * - warning: Laranja para avisos (#f59e0b)
  * - error: Vermelho para erros (#ef4444)
  * - admin: Dourado para administradores (#fbbf24)
- *
+ * 
  * @author Tales Oliveira (github.com/TalesLimaOliveira)
  * @version 1.0.0
  * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
@@ -149,19 +149,19 @@ const colorThemes = {
  */
 const fixedColors = {
     // Cores funcionais (mantidas consistentes)
-    favorite: '#ff4081',          // Rosa para favoritos
-    route: '#2196f3',            // Azul para rotas
-    success: '#10b981',          // Verde para sucesso
-    warning: '#f59e0b',          // Laranja para avisos
-    error: '#ef4444',            // Vermelho para erros
-    info: '#3b82f6',             // Azul para informações
-    admin: '#fbbf24',            // Dourado para administradores
-    
+    favorite: '#ff4081',  // Rosa para favoritos
+    route: '#2196f3',     // Azul para rotas
+    success: '#10b981',   // Verde para sucesso
+    warning: '#f59e0b',   // Laranja para avisos
+    error: '#ef4444',     // Vermelho para erros
+    info: '#3b82f6',      // Azul para informações
+    admin: '#fbbf24',     // Dourado para administradores
+
     // Cores neutras (baseadas no tema claro/escuro)
     white: '#ffffff',
     black: '#000000',
     transparent: 'transparent',
-    
+
     // Gradientes funcionais
     gradients: {
         favorite: 'linear-gradient(135deg, #ff4081 0%, #e91e63 100%)',
@@ -194,7 +194,6 @@ class ColorThemeManager {
         this.themes = colorThemes;
         this.fixed = fixedColors;
         this.cssVariables = new Map();
-        
         this.init();
     }
 
@@ -219,7 +218,6 @@ class ColorThemeManager {
         this.currentTheme = theme;
         this.updateCSSVariables();
         this.notifyThemeChange();
-        
         console.log(`Theme applied: ${theme.name}`);
     }
 
@@ -231,7 +229,7 @@ class ColorThemeManager {
         if (this.themes[themeId]) {
             this.applyTheme(this.themes[themeId]);
         } else {
-            console.error(`❌ Tema não encontrado: ${themeId}`);
+            console.error(`Tema não encontrado: ${themeId}`);
         }
     }
 
@@ -250,7 +248,7 @@ class ColorThemeManager {
         root.style.setProperty('--theme-accent', theme.accent);
         root.style.setProperty('--theme-light', theme.light);
         root.style.setProperty('--theme-medium', theme.medium);
-        
+
         // Gradientes
         root.style.setProperty('--theme-gradient-primary', theme.gradient.primary);
         root.style.setProperty('--theme-gradient-secondary', theme.gradient.secondary);
@@ -324,6 +322,8 @@ class ColorThemeManager {
 // Criar instância global
 if (typeof window !== 'undefined') {
     window.colorThemeManager = new ColorThemeManager();
+    window.themeManager = window.colorThemeManager; // Alias para compatibilidade
+    console.log('ColorThemeManager inicializado e disponibilizado globalmente');
 }
 
 // Exportar para uso em módulos

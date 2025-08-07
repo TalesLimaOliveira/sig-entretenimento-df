@@ -26,6 +26,20 @@
     text-align: center !important;
 }
 
+/* Garantir que botões de navegação NUNCA sejam ocultados */
+.nav-buttons-container,
+.nav-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Regra específica para evitar ocultação por JavaScript */
+.nav-buttons-container[style*="none"],
+.nav-btn[style*="none"] {
+    display: flex !important;
+}
+
 /* Suavização de animações */
 .leaflet-zoom-animated {
     -webkit-backface-visibility: hidden;
@@ -89,6 +103,14 @@
         clip-path: none !important;
         overflow: visible !important;
     }
+    
+    /* Garantir visibilidade dos botões em tablets */
+    .nav-buttons-container,
+    .nav-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
 }
 
 /* Otimização para dispositivos touch */
@@ -105,5 +127,14 @@
     .leaflet-marker-icon i,
     .marcador-otimizado i {
         font-size: 24px !important; /* Tamanho adequado para touch */
+    }
+    
+    /* Garantir que botões sejam sempre visíveis em touch devices */
+    .nav-buttons-container,
+    .nav-btn,
+    .nav-btn.category-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 }

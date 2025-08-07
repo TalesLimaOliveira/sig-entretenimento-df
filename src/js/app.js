@@ -119,6 +119,31 @@ class PontosEntretenimentoApp {
             console.log('Finalizing initialization...');
             this.removeLoadingScreen();
             this._markAsInitialized();
+            
+            // Garantir que os botões de categoria estejam visíveis após inicialização
+            setTimeout(() => {
+                console.log('🔄 Verificação final dos botões de categoria...');
+                this.configureCategoryMenu();
+                this.diagnoseCategoryButtons();
+                
+                // Forçar visibilidade do container e botões
+                const container = document.getElementById('nav-buttons-container');
+                if (container) {
+                    container.style.display = 'flex !important';
+                    container.style.visibility = 'visible !important';
+                    container.style.opacity = '1 !important';
+                    
+                    const buttons = container.querySelectorAll('.nav-btn');
+                    buttons.forEach(btn => {
+                        btn.style.display = 'flex !important';
+                        btn.style.visibility = 'visible !important';
+                        btn.style.opacity = '1 !important';
+                    });
+                    
+                    console.log(`✅ Container e ${buttons.length} botões forçados como visíveis`);
+                }
+            }, 200);
+            
             console.log('Application initialized successfully');
             
         } catch (error) {
@@ -237,7 +262,7 @@ class PontosEntretenimentoApp {
      * Configure interface for logged user
      */
     configureLoggedUser(user) {
-        console.log(`Logged user: ${user.name} (${user.role})`);
+        console.log(`Logged user: ${user.nome} (${user.role})`);
         
         this.updateLoginButton(user);
         
@@ -266,34 +291,82 @@ class PontosEntretenimentoApp {
      * Configure login button for visitors
      */
     configureLoginButton() {
-        const loginBtn = document.getElementById('header-login-btn');
-        if (loginBtn) {
-            loginBtn.innerHTML = '<i class="fas fa-user"></i> ENTRAR';
-            loginBtn.onclick = () => {
-                window.loginModal.open();
-            };
+        console.log('Configurando botão de login para visitantes...');
+        
+        // Verificar se existem botões de usuário para substituir
+        const desktopUserBtn = document.getElementById('desktop-user-info-btn');
+        const mobileUserBtn = document.getElementById('mobile-user-info-btn');
+        
+        // Se existem botões de usuário, substitui-los por botões de login
+        if (desktopUserBtn) {
+            desktopUserBtn.outerHTML = `
+                <button class="header-login-btn desktop" id="desktop-login-btn">
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                </button>
+            `;
         }
+        
+        if (mobileUserBtn) {
+            mobileUserBtn.outerHTML = `
+                <button class="header-login-btn mobile" id="mobile-login-btn">
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                </button>
+            `;
+        }
+        
+        // Configurar botões desktop e mobile (se já existem ou foram criados agora)
+        const desktopLoginBtn = document.getElementById('desktop-login-btn');
+        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        
+        [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
+            if (loginBtn) {
+                // Garantir que o conteúdo esteja correto
+                loginBtn.innerHTML = '<i class="fas fa-user"></i> <span class="login-btn-text">ENTRAR</span>';
+                
+                // Remover event listeners antigos e adicionar novos
+                loginBtn.onclick = null;
+                loginBtn.onclick = () => {
+                    if (window.loginModal) {
+                        window.loginModal.open();
+                    } else {
+                        console.error('Login modal não disponível');
+                    }
+                };
+            }
+        });
     }
 
     /**
      * Update button after login
      */
     updateLoginButton(user) {
-        const loginBtn = document.getElementById('header-login-btn');
-        if (loginBtn) {
-            const isAdmin = user.role === 'admin';
-            const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
-            
-            loginBtn.outerHTML = `
-                <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="user-info-btn">
-                    <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
-                    ${adminIcon}
-                    <i class="fas fa-chevron-down dropdown-arrow"></i>
-                </button>
-            `;
-            
-            this.configureUserMenu();
-        }
+        console.log('Atualizando botão de login para usuário:', user.nome, 'Role:', user.role);
+        
+        // Atualizar ambos os botões (desktop e mobile)
+        const desktopLoginBtn = document.getElementById('desktop-login-btn');
+        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        
+        [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
+            if (loginBtn) {
+                const isAdmin = user.role === 'administrator';
+                const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
+                const newId = loginBtn.id.replace('login-btn', 'user-info-btn');
+                
+                // Substituir o botão por um botão de usuário
+                loginBtn.outerHTML = `
+                    <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${newId}">
+                        <div class="user-avatar">${user.nome.charAt(0).toUpperCase()}</div>
+                        <span class="user-name">${user.nome}</span>
+                        ${adminIcon}
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                `;
+            }
+        });
+        
+        this.configureUserMenu();
     }
 
     /**
@@ -309,41 +382,9 @@ class PontosEntretenimentoApp {
      */
     configureUserInterface() {
         console.log('Configuring user interface');
-        this.addFavoritesCategory();
+        // !TODO: Implementar sistema de favoritos
+        // this.addFavoritesCategory();
         this.configureUserActions();
-    }
-
-    /**
-     * Add favorites category
-     */
-    addFavoritesCategory() {
-        const favoritesBtn = document.querySelector('[data-categoria="favoritos"]');
-        if (favoritesBtn) {
-            favoritesBtn.classList.remove('hidden');
-        }
-    }
-
-    /**
-     * Update favorites button visibility based on user role
-     */
-    updateFavoritesVisibility(userRole) {
-        const favoritesBtn = document.querySelector('[data-categoria="favoritos"]');
-        if (favoritesBtn) {
-            if (userRole === 'user') {
-                favoritesBtn.classList.remove('hidden');
-            } else {
-                favoritesBtn.classList.add('hidden');
-                
-                if (favoritesBtn.classList.contains('active')) {
-                    favoritesBtn.classList.remove('active');
-                    const allBtn = document.querySelector('[data-categoria="todos"]');
-                    if (allBtn) {
-                        allBtn.classList.add('active');
-                        this.filterByCategory('todos');
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -361,14 +402,58 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Show user menu
+     * Configure user menu
      */
-    showUserMenu(user) {
+    configureUserMenu() {
+        console.log('Configurando menu do usuário...');
+        
+        // Configurar ambos os botões (desktop e mobile)
+        const desktopUserBtn = document.getElementById('desktop-user-info-btn');
+        const mobileUserBtn = document.getElementById('mobile-user-info-btn');
+        
+        [desktopUserBtn, mobileUserBtn].forEach(userInfoBtn => {
+            if (userInfoBtn) {
+                console.log('Configurando evento de clique para botão:', userInfoBtn.id);
+                
+                userInfoBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('Clique no botão de usuário detectado');
+                    
+                    if (window.userMenu) {
+                        window.userMenu.toggle(userInfoBtn);
+                    } else {
+                        console.error('UserMenu não disponível');
+                        // Fallback para sistema antigo
+                        const user = window.authManager?.getCurrentUser();
+                        if (user) {
+                            this.showUserMenuFallback(user);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Show user menu (fallback method)
+     */
+    showUserMenuFallback(user) {
+        console.log('Usando menu de usuário fallback para:', user.nome);
+        
         if (user.role === 'administrator') {
-            // Admin permanece na página principal e acessa painel pelo menu
-            console.log(`Administrator ${user.name} logged in - access admin panel via menu`);
+            const action = confirm(`Olá ${user.nome}!\n\nEscolha uma opção:\n\nOK - Acessar Painel Administrativo\nCancelar - Fazer Logout`);
+            if (action) {
+                // Ir para admin.html
+                window.location.href = 'admin.html';
+            } else {
+                // Logout
+                if (window.authManager) window.authManager.logout();
+                location.reload();
+            }
         } else {
-            const logout = confirm(`Hello ${user.name}!\n\nDo you want to logout?`);
+            const logout = confirm(`Olá ${user.nome}!\n\nDeseja fazer logout?`);
             if (logout) {
                 if (window.authManager) window.authManager.logout();
                 location.reload();
@@ -380,20 +465,23 @@ class PontosEntretenimentoApp {
         try {
             console.log('Configuring interface...');
             
-            // DatabaseManager já foi inicializado pelo AppInitializer
-            // Verificar se está realmente disponível
-            if (!window.databaseManager) {
-                throw new Error('DatabaseManager não disponível após inicialização');
+            // Configurar menu de categorias SEMPRE, mesmo sem DatabaseManager
+            console.log('Configuring category menu (primary call)');
+            this.configureCategoryMenu();
+            
+            // Tentar configurar estatísticas se DatabaseManager disponível
+            if (window.databaseManager) {
+                console.log('DatabaseManager available - updating statistics');
+                this.updateStatistics();
+            } else {
+                console.log('DatabaseManager not available yet - will update statistics later');
             }
             
-            // Configurar menu de categorias após dados estarem carregados
-            // Será chamado novamente em carregarDados() para garantir que está atualizado
-            this.configureCategoryMenu();
-            this.updateStatistics();
-            console.log('Interface configurada');
+            console.log('Interface configured');
         } catch (error) {
             console.error('Erro ao configurar interface:', error);
-            throw error;
+            // Não fazer throw - continuar com interface básica
+            console.log('Continuing with basic interface configuration');
         }
     }
 
@@ -416,14 +504,20 @@ class PontosEntretenimentoApp {
                     this.reloadData();
                 }
             } catch (error) {
-                console.error('❌ Erro ao processar evento de autenticação:', error);
-                // Tentar reconfigurar como visitante em caso de erro
+                console.error('Error processing authentication event:', error);
+                // Try to reconfigure as visitor in case of error
                 try {
                     this.configureVisitorUser();
                 } catch (fallbackError) {
-                    console.error('❌ Erro no fallback de configuração:', fallbackError);
+                    console.error('Error in configuration fallback:', fallbackError);
                 }
             }
+        });
+
+        // Event listener para categorias carregadas
+        document.addEventListener('database_categoriasCarregadas', (e) => {
+            console.log('📂 Categorias carregadas, atualizando menu de categorias...');
+            this.configureCategoryMenu();
         });
 
         // Configurar botões responsivos
@@ -458,7 +552,7 @@ class PontosEntretenimentoApp {
             // Verificar se loginModal existe
             if (!window.loginModal) {
                 console.error('Modal de login não disponível');
-                this.mostrarNotificacao('Sistema de login não disponível. Recarregue a página.', 'error');
+                this.showNotification('Sistema de login não disponível. Recarregue a página.', 'error');
                 return;
             }
             
@@ -527,43 +621,13 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Toggle favorito
+     * Toggle favorito - FUNCIONALIDADE EM DESENVOLVIMENTO
+     * !TODO: Implementar sistema completo de favoritos
      */
     toggleFavorito(pontoId) {
-        try {
-            const user = window.authManager && window.authManager.getCurrentUser ? 
-                window.authManager.getCurrentUser() : null;
-            if (!user) return;
-            
-            const foiAdicionado = window.databaseManager.toggleFavorito(pontoId, user.username);
-            
-            // Atualizar interface
-            this.updateFavoriteButton(pontoId, foiAdicionado);
-            
-            // Mostrar feedback
-            const mensagem = foiAdicionado ? 'Adicionado aos favoritos!' : 'Removido dos favoritos!';
-            this.showNotification(message, isAdded ? 'success' : 'info');
-            
-        } catch (error) {
-            console.error('Erro ao favoritar:', error);
-            this.showNotification('Erro ao atualizar favoritos', 'error');
-        }
-    }
-
-    /**
-     * Atualizar botão de favorito
-     */
-    updateFavoriteButton(pontoId, isFavorito) {
-        const btn = document.getElementById('btn-favorite');
-        if (btn) {
-            if (isFavorito) {
-                btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
-                btn.classList.add('favorited');
-            } else {
-                btn.innerHTML = '<i class="far fa-heart"></i> Favoritar';
-                btn.classList.remove('favorited');
-            }
-        }
+        // Mostrar notificação de funcionalidade em desenvolvimento
+        this.showNotification('Funcionalidade em desenvolvimento', 'info');
+        console.log('!TODO: Implementar sistema de favoritos - pontoId:', pontoId);
     }
 
     /**
@@ -726,8 +790,29 @@ class PontosEntretenimentoApp {
             this.updateStatistics();
             
             // Reconfigurar menu de categorias após dados estarem carregados
-            console.log('Reconfigurando menu de categorias...');
+            console.log('Segunda chamada: reconfigurando menu de categorias...');
             this.configureCategoryMenu();
+            
+            // Garantir que os botões são visíveis
+            setTimeout(() => {
+                const container = document.getElementById('nav-buttons-container');
+                const buttons = container ? container.querySelectorAll('.nav-btn') : [];
+                console.log(`Verificação final: container=${!!container}, botões=${buttons.length}`);
+                
+                if (container) {
+                    container.style.display = 'flex';
+                    container.style.visibility = 'visible';
+                    container.style.opacity = '1';
+                    console.log('Forçada visibilidade do container de navegação');
+                }
+                
+                buttons.forEach((btn, index) => {
+                    btn.style.display = 'flex';
+                    btn.style.visibility = 'visible';
+                    btn.style.opacity = '1';
+                    console.log(`Botão ${index + 1} forçado como visível`);
+                });
+            }, 100);
             
             console.log('Dados carregados com sucesso');
         } catch (error) {
@@ -741,54 +826,93 @@ class PontosEntretenimentoApp {
     }
 
     configureCategoryMenu() {
+        console.log('📂 Iniciando configuração do menu de categorias...');
+        
         const container = document.getElementById('nav-buttons-container');
         if (!container) {
-            console.warn('Container de navegação não encontrado');
+            console.error('❌ Container de navegação não encontrado: nav-buttons-container');
             return;
         }
+        console.log('✅ Container encontrado:', container);
+        console.log('📍 HTML atual do container:', container.innerHTML);
 
-        const categorias = window.databaseManager.getCategorias();
-        if (!categorias || categorias.length === 0) {
-            console.warn('Nenhuma categoria encontrada');
-            return;
+        // FORÇAR criação dos botões básicos independente do DatabaseManager
+        let categorias = [
+            { id: 'geral', nome: 'Geral', cor: '#3b82f6', icon: 'fas fa-map-marker-alt' },
+            { id: 'esportes-lazer', nome: 'Esportes e Lazer', cor: '#10b981', icon: 'fas fa-futbol' },
+            { id: 'gastronomia', nome: 'Gastronomia', cor: '#f59e0b', icon: 'fas fa-utensils' },
+            { id: 'geek-nerd', nome: 'Geek/Nerd', cor: '#8b5cf6', icon: 'fas fa-gamepad' },
+            { id: 'casas-noturnas', nome: 'Casas Noturnas', cor: '#ef4444', icon: 'fas fa-glass-cheers' }
+        ];
+
+        // Tentar usar categorias do DatabaseManager se disponível
+        if (window.databaseManager) {
+            const dbCategorias = window.databaseManager.getCategorias();
+            if (dbCategorias && dbCategorias.length > 0) {
+                categorias = dbCategorias;
+                console.log('✅ DatabaseManager disponível - categorias carregadas:', categorias.length);
+            } else {
+                console.log('⚠️ DatabaseManager disponível mas sem categorias - usando padrão');
+            }
+        } else {
+            console.log('⚠️ DatabaseManager não disponível - usando categorias padrão');
         }
 
-        console.log('📋 Categorias carregadas:', categorias);
+        console.log('✅ Configurando menu de categorias com', categorias.length, 'categorias');
+        console.log('📋 Categorias:', categorias);
 
         // Criar botão "Todos" primeiro
         let buttonsHtml = `
-            <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos">
+            <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos" 
+                    style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white;">
                 <i class="fas fa-globe"></i>
                 <span class="nav-btn-text">Todos</span>
             </button>
         `;
 
-        // Adicionar botão de favoritos (inicialmente oculto)
-        buttonsHtml += `
-            <button class="nav-btn category-btn favoritos-btn hidden" data-categoria="favoritos" title="Pontos favoritos">
-                <i class="fas fa-heart"></i>
-                <span class="nav-btn-text">Favoritos</span>
-            </button>
-        `;
+        // Gerar botões para cada categoria
+        categorias.forEach(categoria => {
+            const iconClass = this.getIconClassForCategory(categoria);
+            console.log(`📍 Categoria: ${categoria.id}, Ícone: ${iconClass}, Nome: ${categoria.nome}`);
+            buttonsHtml += `
+                <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
+                        style="background: ${categoria.cor}; border-color: ${categoria.cor}; color: white; display: flex !important; visibility: visible !important; opacity: 1 !important;"
+                        title="${categoria.nome}">
+                    <i class="${iconClass}"></i>
+                    <span class="nav-btn-text">${categoria.nome}</span>
+                </button>
+            `;
+        });
 
-        // Gerar botões para cada categoria do JSON
-        categorias
-            .filter(cat => cat.id !== 'favoritos') // Favoritos já foi adicionado manualmente
-            .forEach(categoria => {
-                const iconClass = this.getIconClassForCategory(categoria);
-                console.log(`🏷️ Categoria: ${categoria.id}, Ícone: ${iconClass}, Nome: ${categoria.nome}`);
-                buttonsHtml += `
-                    <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
-                            style="--category-color: ${categoria.cor}"
-                            title="${categoria.nome}">
-                        <i class="${iconClass}"></i>
-                        <span class="nav-btn-text">${categoria.nome}</span>
-                    </button>
-                `;
-            });
-
-        // Inserir HTML no container
+        console.log('🔧 Inserindo HTML dos botões...');
+        console.log('📝 HTML que será inserido:', buttonsHtml);
+        
+        // LIMPAR e inserir HTML no container
+        container.innerHTML = '';
         container.innerHTML = buttonsHtml;
+        
+        // FORÇAR visibilidade do container
+        container.style.display = 'flex';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
+        container.style.position = 'relative';
+        container.style.zIndex = '1000';
+        
+        console.log('HTML dos botões inserido no container');
+        console.log('📍 HTML resultante do container:', container.innerHTML);
+
+        // Verificar se os botões foram realmente criados
+        const buttonsCreated = container.querySelectorAll('.nav-btn');
+        console.log(`${buttonsCreated.length} botões criados no DOM`);
+        buttonsCreated.forEach((btn, index) => {
+            console.log(`Botão ${index + 1}: ${btn.textContent.trim()} (categoria: ${btn.dataset.categoria})`);
+            // FORÇAR estilos inline para cada botão
+            btn.style.display = 'flex';
+            btn.style.visibility = 'visible';
+            btn.style.opacity = '1';
+            btn.style.position = 'relative';
+            btn.style.zIndex = '1001';
+        });
 
         // Configurar event listeners
         container.addEventListener('click', (e) => {
@@ -797,12 +921,54 @@ class PontosEntretenimentoApp {
                 e.preventDefault();
                 e.stopPropagation();
                 const categoria = button.dataset.categoria;
-                console.log(`🖱️ Clique na categoria: ${categoria}`);
+                console.log(`Clique na categoria: ${categoria}`);
                 this.filterByCategory(categoria);
             }
         });
 
-        console.log(`Menu de navegação configurado com ${categorias.length} categorias`);
+        console.log(`Menu de navegação configurado com ${categorias.length + 1} botões (incluindo "Todos")`);
+        
+        // Forçar mais uma verificação após um delay
+        setTimeout(() => {
+            console.log('🔄 Verificação final após delay...');
+            const finalCheck = document.getElementById('nav-buttons-container');
+            if (finalCheck) {
+                console.log('📍 Container final check:', finalCheck.innerHTML !== '');
+                console.log('📊 Botões finais visíveis:', finalCheck.querySelectorAll('.nav-btn').length);
+            }
+        }, 100);
+    }
+
+    /**
+     * Diagnose category buttons visibility
+     */
+    diagnoseCategoryButtons() {
+        console.log('🔍 Diagnóstico dos botões de categoria:');
+        
+        const container = document.getElementById('nav-buttons-container');
+        if (!container) {
+            console.error('❌ Container nav-buttons-container não encontrado');
+            return;
+        }
+        
+        console.log('📦 Container encontrado:');
+        console.log('  - display:', window.getComputedStyle(container).display);
+        console.log('  - visibility:', window.getComputedStyle(container).visibility);
+        console.log('  - opacity:', window.getComputedStyle(container).opacity);
+        console.log('  - innerHTML length:', container.innerHTML.length);
+        
+        const buttons = container.querySelectorAll('.nav-btn');
+        console.log(`🔘 ${buttons.length} botões encontrados:`);
+        
+        buttons.forEach((btn, index) => {
+            const computedStyle = window.getComputedStyle(btn);
+            console.log(`  Botão ${index + 1} (${btn.textContent.trim()}):`);
+            console.log(`    - display: ${computedStyle.display}`);
+            console.log(`    - visibility: ${computedStyle.visibility}`);
+            console.log(`    - opacity: ${computedStyle.opacity}`);
+            console.log(`    - position: ${computedStyle.position}`);
+            console.log(`    - z-index: ${computedStyle.zIndex}`);
+        });
     }
 
     /**
@@ -828,12 +994,12 @@ class PontosEntretenimentoApp {
 
     filterByCategory(categoria) {
         try {
-            console.log(`🔍 Filtering by category: ${categoria}`);
+            console.log(`Filtering by category: ${categoria}`);
             this.activeCategory = categoria;
             
             // Atualizar botões de navegação com debounce para evitar múltiplos cliques
             this.updateCategoryButtons(categoria);
-            console.log(`🎨 Botões atualizados para categoria: ${categoria}`);
+            console.log(`Botões atualizados para categoria: ${categoria}`);
 
             // Verificar se é filtro de favoritos e usuário está logado
             if (categoria === 'favoritos') {
@@ -865,7 +1031,7 @@ class PontosEntretenimentoApp {
             console.log(`User context:`, user ? user.username : 'anonymous');
             window.mapManager.filterByCategory(categoria, user ? user.username : null);
             
-            console.log(`✅ Filter applied successfully: ${categoria}`);
+            console.log(`Filter applied successfully: ${categoria}`);
             
         } catch (error) {
             console.error('Error filtering by category:', error);
@@ -898,31 +1064,31 @@ class PontosEntretenimentoApp {
                 return;
             }
             
-            console.log('🎯 Iniciando renderização de pontos via app...');
+            console.log('Starting point rendering via app...');
             
-            // Debug: verificar se há pontos no DatabaseManager
+            // Verificar se há pontos no DatabaseManager
             const pontosDisponiveis = window.databaseManager.getPontos();
-            console.log(`📊 Pontos disponíveis no DatabaseManager:`, pontosDisponiveis.length);
+            console.log(`Points available in DatabaseManager:`, pontosDisponiveis.length);
             
             if (pontosDisponiveis.length === 0) {
-                console.warn('⚠️ Nenhum ponto encontrado no DatabaseManager!');
+                console.warn('No points found in DatabaseManager');
                 
-                // Tentar forçar recarregamento dos dados
-                console.log('🔄 Tentando forçar recarregamento dos dados...');
-                window.databaseManager.carregarTodosDados().then(() => {
+                // Try to force data reload
+                console.log('Attempting to force data reload...');
+                window.databaseManager.loadAllData().then(() => {
                     const novospontos = window.databaseManager.getPontos();
-                    console.log(`✅ Após recarregamento: ${novospontos.length} pontos`);
+                    console.log(`After reload: ${novospontos.length} points`);
                     if (novospontos.length > 0) {
-                        this.renderPoints(); // Tentar novamente
+                        this.renderPoints(); // Try again
                     }
                 }).catch(error => {
-                    console.error('❌ Erro ao recarregar dados:', error);
+                    console.error('Error reloading data:', error);
                 });
                 return;
             }
             
-            // Debug: mostrar alguns pontos de exemplo
-            console.log('🔍 Exemplos de pontos:', pontosDisponiveis.slice(0, 3).map(p => ({
+            // Mostrar alguns pontos de exemplo
+            console.log('Example points:', pontosDisponiveis.slice(0, 3).map(p => ({
                 id: p.id,
                 nome: p.nome,
                 categoria: p.categoria,
@@ -934,21 +1100,21 @@ class PontosEntretenimentoApp {
             const userRole = user?.role || 'visitor';
             const username = user?.username || null;
             
-            console.log(`👤 Contexto do usuário: ${userRole} (${username || 'anonymous'})`);
+            console.log(`Contexto do usuário: ${userRole} (${username || 'anonymous'})`);
             
             // Delegar para o MapManager que agora tem lógica aprimorada
-            console.log('🗺️ Delegando carregamento para MapManager...');
+            console.log('Delegando carregamento para MapManager...');
             window.mapManager.reloadPoints(userRole, username);
             
             // Ativar filtro "todos" por padrão após carregar pontos
             setTimeout(() => {
-                console.log('🔍 Aplicando filtro "todos" após carregamento...');
+                console.log('Aplicando filtro "todos" após carregamento...');
                 this.filterByCategory('todos');
             }, 200);
             
-            console.log('✅ Renderização delegada para MapManager');
+            console.log('Renderização delegada para MapManager');
         } catch (error) {
-            console.error('❌ Erro ao renderizar pontos:', error);
+            console.error('Error rendering points:', error);
         }
     }
 

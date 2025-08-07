@@ -98,21 +98,90 @@ body {
     width: 100%;
 }
 
-/* Header Navigation */
+/* Header Navigation - Forçar visibilidade com !important */
 .header-navigation {
     flex: 1;
-    display: flex;
+    display: flex !important;
     justify-content: center;
     width: 100%;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .nav-buttons-container {
-    display: flex;
+    display: flex !important;
     gap: 0.75rem;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     width: 100%;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+/* CORREÇÃO CRÍTICA: Garantir que após login o container permaneça visível */
+.header-navigation .nav-buttons-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Container sempre visível, mesmo com JavaScript desabilitado */
+#nav-buttons-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Garantir que TODOS os botões sejam visíveis */
+.nav-btn,
+.nav-btn.category-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 101 !important;
+}
+
+/* FORÇAR visibilidade dos nav-buttons em TODOS os tamanhos de tela */
+.nav-buttons-container .nav-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Garantir que os botões não sejam escondidos por nenhuma media query */
+@media (max-width: 945px) {
+    .nav-buttons-container .nav-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-width: 45px !important;
+        width: auto !important;
+        padding: 0.5rem !important;
+    }
+    
+    .nav-buttons-container .nav-btn-text {
+        display: none; /* Ocultar apenas o texto em mobile, mas manter o botão */
+    }
+}
+
+/* Forçar visibilidade mesmo com JavaScript desabilitado */
+.nav-buttons-container[style*="display: none"],
+.nav-btn[style*="display: none"] {
+    display: flex !important;
+}
+
+.nav-buttons-container[style*="visibility: hidden"],
+.nav-btn[style*="visibility: hidden"] {
+    visibility: visible !important;
+}
+
+.nav-buttons-container[style*="opacity: 0"],
+.nav-btn[style*="opacity: 0"] {
+    opacity: 1 !important;
 }
 
 .header-actions {
@@ -132,7 +201,7 @@ body {
 
 /* ===== MOBILE ACTIONS ===== */
 .mobile-actions {
-    display: none;
+    display: none; /* Oculto por padrão, mostrado apenas em mobile */
     align-items: center;
     gap: 1rem;
 }
@@ -164,6 +233,11 @@ body {
 
 /* Tablet modo ícones - 945px */
 @media (max-width: 945px) {
+    .user-info .user-name {
+        display: none; /* Ocultar nome em tablet também */
+    }
+
+    /* Manter os botões visíveis, mas ocultar apenas o texto em mobile */
     .nav-btn-text {
         display: none; /* Ocultar textos dos botões */
     }
@@ -176,11 +250,17 @@ body {
         justify-content: center;
         border-radius: 50%;
         position: relative;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .nav-buttons-container {
         gap: 0.5rem;
         justify-content: center;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     /* Ajustar header para economizar espaço */
@@ -221,11 +301,17 @@ body {
     .nav-buttons-container {
         gap: 0.5rem;
         justify-content: center;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .nav-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .header-actions {
@@ -244,22 +330,34 @@ body {
         display: flex;
     }
     
-    .nav-btn-text {
-        display: none;
-    }
-    
-    .nav-btn {
+            .user-info .user-name {
+                display: none; /* Ocultar nome em mobile */
+            }
+
+            .user-info .admin-icon {
+                display: none; /* Ocultar ícone admin em mobile para economizar espaço */
+            }
+
+            .nav-btn-text {
+                display: none;
+            }    .nav-btn {
         width: 40px;
         height: 40px;
         min-width: 40px;
         padding: 0;
         justify-content: center;
         border-radius: 50%;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .nav-buttons-container {
         gap: 0.5rem;
         flex-wrap: wrap;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .header-content {
@@ -270,6 +368,9 @@ body {
     .header-navigation {
         flex: 1;
         margin: 0 0.5rem;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .header-actions {
@@ -318,6 +419,8 @@ body {
         justify-content: center !important;
         display: flex !important;
         align-items: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .nav-btn i {
@@ -349,6 +452,8 @@ body {
         flex: 1 !important;
         display: flex !important;
         width: 100% !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .header-content {
@@ -1302,11 +1407,17 @@ body {
     .nav-buttons-container {
         gap: 0.5rem;
         justify-content: center;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .nav-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
+        display: flex !important; /* Forçar visibilidade */
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     .header-actions {
@@ -1541,4 +1652,22 @@ body {
 
 .admin-mode .admin-only {
     display: block;
+}
+
+/* CORREÇÃO CRÍTICA: Forçar visibilidade dos botões de navegação */
+/* Esta regra deve ser a última para sobrescrever qualquer outra */
+.header-navigation #nav-buttons-container,
+#nav-buttons-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+}
+
+.header-navigation #nav-buttons-container .nav-btn,
+#nav-buttons-container .nav-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }

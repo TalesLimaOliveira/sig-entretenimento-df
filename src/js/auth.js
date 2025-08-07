@@ -6,7 +6,6 @@
  * @version 1.0.0
  * @note This file contains AI-generated code snippets
  */
-
 class AuthManager {
     constructor() {
         this.currentUser = null;
@@ -46,18 +45,14 @@ class AuthManager {
     async loadUsers() {
         try {
             const response = await fetch('database/usuarios.json');
-            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
             const users = await response.json();
             console.log('AuthManager: Usuários carregados do JSON:', Object.keys(users));
             return users;
-            
         } catch (error) {
             console.error('AuthManager: Erro ao carregar usuários do JSON:', error);
-            
             // Fallback para usuários padrão em memória
             console.warn('AuthManager: Usando usuários padrão como fallback');
             return this.getDefaultUsers();
@@ -129,7 +124,7 @@ class AuthManager {
 
             // Atualizar último login
             user.ultimoLogin = new Date().toISOString();
-            
+
             const sessionData = {
                 user: {
                     id: user.id,
@@ -146,11 +141,9 @@ class AuthManager {
 
             localStorage.setItem('pontosDF_session', JSON.stringify(sessionData));
             this.currentUser = sessionData.user;
-
             this.dispatchAuthEvent('login', this.currentUser);
 
             console.log('AuthManager: Login realizado com sucesso para:', user.nome);
-
             return {
                 success: true,
                 user: this.currentUser,
@@ -173,9 +166,8 @@ class AuthManager {
     logout() {
         try {
             const user = this.currentUser;
-            
             console.log('🔓 Efetuando logout...');
-            
+
             // Limpar dados da sessão
             localStorage.removeItem('pontosDF_session');
             this.currentUser = null;
@@ -183,7 +175,7 @@ class AuthManager {
             // Disparar evento de logout
             this.dispatchAuthEvent('logout', user);
 
-            console.log('✅ Logout completed successfully');
+            console.log('Logout completed successfully');
 
             // Redirecionar para página principal se estiver no admin
             if (this.isAdminPage()) {
@@ -194,18 +186,18 @@ class AuthManager {
                     try {
                         window.location.reload();
                     } catch (reloadError) {
-                        console.error('❌ Erro ao recarregar página:', reloadError);
+                        console.error('Erro ao recarregar página:', reloadError);
                         // Fallback: recarregar forçado
                         window.location.href = window.location.href;
                     }
                 }, 500);
             }
+
         } catch (error) {
-            console.error('❌ Erro durante logout:', error);
+            console.error('Erro durante logout:', error);
             // Ainda assim tentar limpar a sessão
             localStorage.removeItem('pontosDF_session');
             this.currentUser = null;
-            
             // Tentar recarregar mesmo com erro
             setTimeout(() => {
                 window.location.reload();
@@ -263,7 +255,7 @@ class AuthManager {
                 nome: nome.trim(),
                 usuario: usuario.toLowerCase().trim(),
                 email: email.toLowerCase().trim(),
-                senha: senha, // Em produção, seria hasheada
+                senha: senha, // Em produção, seria hasheado
                 role: 'user',
                 permissions: ['view', 'create_pending', 'suggest_changes', 'favorite'],
                 dataCriacao: new Date().toISOString(),
@@ -278,7 +270,6 @@ class AuthManager {
             await this.saveUsers(users);
 
             console.log('AuthManager: Usuário cadastrado com sucesso:', novoUsuario.nome);
-
             return {
                 success: true,
                 user: {
@@ -309,16 +300,15 @@ class AuthManager {
             // Em produção real, isso seria uma requisição POST para o servidor
             // Por ora, salvamos no localStorage como backup
             localStorage.setItem('pontosDF_users_backup', JSON.stringify(users));
-            
             console.log('AuthManager: Usuários salvos (simulação)', Object.keys(users).length);
-            
-            // TODO: Implementar salvamento real no servidor
+
+            // !TODO: Implementar salvamento real no servidor
             // await fetch('/api/users', {
             //     method: 'POST',
             //     headers: { 'Content-Type': 'application/json' },
             //     body: JSON.stringify(users)
             // });
-            
+
         } catch (error) {
             console.error('AuthManager: Erro ao salvar usuários:', error);
             throw new Error('Erro ao salvar dados do usuário');
@@ -342,13 +332,12 @@ class AuthManager {
     loadSession() {
         try {
             const sessionData = localStorage.getItem('pontosDF_session');
-            
             if (!sessionData) {
                 return false;
             }
 
             const session = JSON.parse(sessionData);
-            
+
             // Verificar se a sessão não expirou
             if (Date.now() > session.expiresAt) {
                 this.logout();
@@ -370,7 +359,6 @@ class AuthManager {
      */
     validateSession() {
         const sessionData = localStorage.getItem('pontosDF_session');
-        
         if (!sessionData) {
             if (this.currentUser) {
                 this.logout();
@@ -380,12 +368,10 @@ class AuthManager {
 
         try {
             const session = JSON.parse(sessionData);
-            
             if (Date.now() > session.expiresAt) {
                 this.logout();
                 return false;
             }
-
             return true;
         } catch (error) {
             this.logout();
@@ -418,7 +404,6 @@ class AuthManager {
         if (!this.isAuthenticated()) {
             return false;
         }
-
         return this.currentUser.permissions.includes(permission);
     }
 
@@ -483,9 +468,9 @@ class AuthManager {
                 detail: { type, user }
             });
             document.dispatchEvent(event);
-            console.log(`✅ Evento de autenticação disparado: ${type}`);
+            console.log(`Evento de autenticação disparado: ${type}`);
         } catch (error) {
-            console.error('❌ Erro ao disparar evento de autenticação:', error);
+            console.error('Erro ao disparar evento de autenticação:', error);
             // Continuar mesmo com erro no evento
         }
     }
@@ -517,7 +502,7 @@ class AuthManager {
     validateActionToken(token) {
         try {
             const tokenData = JSON.parse(atob(token));
-            
+
             if (Date.now() > tokenData.expires) {
                 return false;
             }

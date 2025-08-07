@@ -7,6 +7,73 @@
  * @note Este arquivo contém trechos de código gerados com auxílio de Inteligência Artificial.
  */
 
+/* ===== BOTÕES DE NAVEGAÇÃO ===== */
+.nav-btn,
+.nav-btn.category-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    text-decoration: none;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.nav-btn:hover,
+.nav-btn.category-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-btn.active,
+.nav-btn.category-btn.active {
+    background: var(--theme-gradient-button);
+    border-color: var(--theme-primary);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-btn i,
+.nav-btn.category-btn i {
+    font-size: 1rem;
+}
+
+.nav-btn-text {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Força visibilidade mesmo com estilos inline */
+.nav-btn[style*="display: none"],
+.nav-btn.category-btn[style*="display: none"] {
+    display: flex !important;
+}
+
+.nav-btn[style*="visibility: hidden"],
+.nav-btn.category-btn[style*="visibility: hidden"] {
+    visibility: visible !important;
+}
+
+.nav-btn[style*="opacity: 0"],
+.nav-btn.category-btn[style*="opacity: 0"] {
+    opacity: 1 !important;
+}
+
 /* ===== MODAIS ===== */
 .modal-backdrop {
     position: fixed;
@@ -936,6 +1003,43 @@
     100% { transform: scale(1); }
 }
 
+/* ===== GARANTIR VISIBILIDADE DOS BOTÕES DE NAVEGAÇÃO ===== */
+
+/* Regra específica para forçar visibilidade dos botões de navegação */
+.header-navigation,
+.nav-buttons-container,
+.nav-btn,
+.nav-btn.category-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Prevenir ocultação por estilos inline */
+.nav-buttons-container[style*="display: none"] {
+    display: flex !important;
+}
+
+.nav-btn[style*="display: none"] {
+    display: flex !important;
+}
+
+.nav-buttons-container[style*="visibility: hidden"] {
+    visibility: visible !important;
+}
+
+.nav-btn[style*="visibility: hidden"] {
+    visibility: visible !important;
+}
+
+.nav-buttons-container[style*="opacity: 0"] {
+    opacity: 1 !important;
+}
+
+.nav-btn[style*="opacity: 0"] {
+    opacity: 1 !important;
+}
+
 /* Responsividade para ações do usuário */
 @media (max-width: 480px) {
     .action-buttons,
@@ -953,52 +1057,14 @@
     .action-buttons-top .action-btn {
         max-width: none;
     }
-}
-
-/* Dark theme para ações do usuário */
-[data-theme="dark"] .info-user-actions {
-    border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .action-btn {
-    color: white;
-}
-
-[data-theme="dark"] .favorite-btn:not(.favorited) {
-    background: linear-gradient(135deg, #ec4899, #be185d);
-}
-
-[data-theme="dark"] .suggest-btn {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-/* ===== MODAL DE SUGESTÃO ===== */
-.suggestion-modal-backdrop {
-    z-index: var(--z-modal-backdrop);
-}
-
-.suggestion-modal {
-    max-width: 600px;
-    width: 100%;
-    max-height: 90vh;
-}
-
-.suggestion-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    
+    /* Garantir que botões de navegação sejam visíveis em mobile */
+    .nav-buttons-container,
+    .nav-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
 }
 
 .form-group label {

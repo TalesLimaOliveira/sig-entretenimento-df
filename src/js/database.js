@@ -21,75 +21,75 @@ class DatabaseManager {
 
     async init() {
         try {
-            console.log('🔧 Inicializando DatabaseManager com nova estrutura...');
-            console.log(`🌐 Protocolo atual: ${window.location.protocol}`);
+            console.log('Initializing DatabaseManager with new structure...');
+            console.log(`Current protocol: ${window.location.protocol}`);
             
-            await this.carregarCategorias();
-            console.log('✅ Categorias carregadas');
+            await this.loadCategories();
+            console.log('Categories loaded');
             
-            await this.carregarTodosDados();
-            console.log('✅ Dados principais carregados');
+            await this.loadAllData();
+            console.log('Main data loaded');
             
-            this.migrarDadosAntigos();
-            console.log('✅ Migração de dados concluída');
+            this.migrateOldData();
+            console.log('Data migration completed');
             
-            this.migrarCategoriaAlternativo();
-            console.log('✅ Migração da categoria alternativo concluída');
+            this.migrateAlternativeCategory();
+            console.log('Alternative category migration completed');
             
             // Verificação final - garantir que há dados
             if (this.confirmedPoints.length === 0) {
-                console.warn('⚠️ Nenhum ponto confirmado após carregamento, forçando dados padrão...');
+                console.warn('No confirmed points after loading, forcing default data...');
                 this.confirmedPoints = this.getConfirmedPointsDefault();
-                this.salvarTodosDados();
+                this.saveAllData();
             }
             
             if (this.categorias.length === 0) {
-                console.warn('⚠️ Nenhuma categoria após carregamento, forçando categorias padrão...');
+                console.warn('No categories after loading, forcing default categories...');
                 this.categorias = this.getCategoriesDefault();
-                this.salvarCategorias();
+                this.saveCategories();
             }
             
-            console.log(`📊 Estado final: ${this.confirmedPoints.length} pontos confirmados, ${this.categorias.length} categorias`);
-            console.log('✅ DatabaseManager inicializado com sucesso');
+            console.log(`Final state: ${this.confirmedPoints.length} confirmed points, ${this.categorias.length} categories`);
+            console.log('DatabaseManager successfully initialized');
         } catch (error) {
-            console.error('❌ Erro ao inicializar DatabaseManager:', error);
-            this.inicializarDadosDefault();
+            console.error('Error initializing DatabaseManager:', error);
+            this.initializeDefaultData();
         }
     }
 
     /**
-     * Carrega todos os dados dos arquivos JSON
+     * Load all data from JSON files
      */
-    async carregarTodosDados() {
+    async loadAllData() {
         try {
-            console.log('🔄 Iniciando carregamento de dados dos arquivos JSON...');
+            console.log('Iniciando carregamento de dados dos arquivos JSON...');
             
             // Primeiro, tentar carregar dos arquivos JSON (prioridade)
             let dadosCarregadosJSON = false;
             
             try {
-                console.log('📂 Tentando carregar dados dos arquivos JSON...');
+                console.log('Attempting to load data from JSON files...');
                 
                 // Carregar pontos confirmados
                 const pontosConfirmados = await this.loadJsonFile('./database/pontos_confirmados.json');
                 if (pontosConfirmados && Array.isArray(pontosConfirmados) && pontosConfirmados.length > 0) {
                     this.confirmedPoints = pontosConfirmados;
                     dadosCarregadosJSON = true;
-                    console.log(`✅ ${pontosConfirmados.length} pontos confirmados carregados do JSON`);
+                    console.log(`${pontosConfirmados.length} pontos confirmados carregados do JSON`);
                 }
 
                 // Carregar pontos pendentes
                 const pontosPendentes = await this.loadJsonFile('./database/pontos_pendentes.json');
                 if (pontosPendentes && Array.isArray(pontosPendentes)) {
                     this.pendingPoints = pontosPendentes;
-                    console.log(`✅ ${pontosPendentes.length} pontos pendentes carregados do JSON`);
+                    console.log(`${pontosPendentes.length} pontos pendentes carregados do JSON`);
                 }
 
                 // Carregar pontos ocultos
                 const pontosOcultos = await this.loadJsonFile('./database/pontos_ocultos.json');
                 if (pontosOcultos && Array.isArray(pontosOcultos)) {
                     this.hiddenPoints = pontosOcultos;
-                    console.log(`✅ ${pontosOcultos.length} pontos ocultos carregados do JSON`);
+                    console.log(`${pontosOcultos.length} pontos ocultos carregados do JSON`);
                 }
 
                 // Carregar usuários
@@ -99,16 +99,16 @@ class DatabaseManager {
                         acc[user.username] = user;
                         return acc;
                     }, {});
-                    console.log(`✅ ${usuarios.length} usuários carregados do JSON`);
+                    console.log(`${usuarios.length} usuários carregados do JSON`);
                 }
 
             } catch (error) {
-                console.warn('⚠️ Erro ao carregar dos arquivos JSON:', error);
+                console.warn('Error loading from JSON files:', error);
             }
             
-            // Se não conseguiu carregar do JSON, tentar localStorage
+            // If couldn't load from JSON, try localStorage
             if (!dadosCarregadosJSON) {
-                console.log('📦 Tentando carregar do localStorage...');
+                console.log('Attempting to load from localStorage...');
                 
                 const confirmedPoints = localStorage.getItem(this.baseStorageKey + '_pontosConfirmados');
                 const pendingPoints = localStorage.getItem(this.baseStorageKey + '_pontosPendentes');
@@ -117,7 +117,7 @@ class DatabaseManager {
 
                 if (confirmedPoints) {
                     this.confirmedPoints = JSON.parse(confirmedPoints);
-                    console.log(`✅ ${this.confirmedPoints.length} pontos confirmados carregados do localStorage`);
+                    console.log(`${this.confirmedPoints.length} pontos confirmados carregados do localStorage`);
                     dadosCarregadosJSON = true;
                 }
                 if (pendingPoints) {
@@ -133,25 +133,25 @@ class DatabaseManager {
 
             // Se ainda não há pontos, usar dados padrão
             if (!dadosCarregadosJSON || this.confirmedPoints.length === 0) {
-                console.log('📝 Carregando dados padrão...');
+                console.log('Carregando dados padrão...');
                 this.inicializarPontosDefault();
             }
 
             // Salvar dados carregados no localStorage para cache
             if (this.confirmedPoints.length > 0) {
-                this.salvarTodosDados();
-                console.log('💾 Dados salvos no localStorage para cache');
+                this.saveAllData();
+                console.log('Data saved to localStorage for caching');
             }
 
             // Calcular próximo ID
             const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
             this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
 
-            console.log(`🎯 Total final: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes, ${this.hiddenPoints.length} ocultos`);
+            console.log(`Total final: ${this.confirmedPoints.length} confirmados, ${this.pendingPoints.length} pendentes, ${this.hiddenPoints.length} ocultos`);
 
         } catch (error) {
-            console.error('❌ Erro crítico ao carregar dados:', error);
-            this.inicializarDadosDefault();
+            console.error('Critical error loading data:', error);
+            this.initializeDefaultData();
         }
     }
 
@@ -164,11 +164,11 @@ class DatabaseManager {
         // Detectar se estamos usando protocolo file://
         const isFileProtocol = window.location.protocol === 'file:';
         
-        console.log(`🌐 Carregando: ${url} (Protocolo: ${window.location.protocol})`);
+        console.log(`Loading: ${url} (Protocol: ${window.location.protocol})`);
         
         if (isFileProtocol) {
-            // Para protocolo file://, usar dados padrão incorporados
-            console.log(`📁 Protocolo file:// detectado, usando dados padrão para: ${url}`);
+            // For file:// protocol, use default embedded data
+            console.log(`File:// protocol detected, using default data for: ${url}`);
             
             // Retornar dados padrão baseado na URL
             if (url.includes('categorias.json')) {
@@ -201,7 +201,7 @@ class DatabaseManager {
                 }
                 
                 const data = await response.json();
-                console.log(`✅ Dados carregados com sucesso de ${url}:`, data.length || Object.keys(data).length, 'itens');
+                console.log(`Dados carregados com sucesso de ${url}:`, data.length || Object.keys(data).length, 'itens');
                 return data;
             } catch (error) {
                 console.error(`❌ Erro ao carregar ${url}:`, error);
@@ -239,7 +239,7 @@ class DatabaseManager {
                     }));
 
                 this.confirmedPoints = pontosConvertidos;
-                this.salvarTodosDados();
+                this.saveAllData();
                 
                 console.log(`${pontosConvertidos.length} pontos carregados do db.json`);
             }
@@ -250,13 +250,13 @@ class DatabaseManager {
     }
 
     /**
-     * Migra dados antigos para nova estrutura
+     * Migrate old data to new structure
      */
-    migrarDadosAntigos() {
-        const pontosAntigos = localStorage.getItem(this.baseStorageKey + '_pontos');
-        if (pontosAntigos && this.confirmedPoints.length === 0) {
-            console.log('Migrando dados antigos...');
-            const pontos = JSON.parse(pontosAntigos);
+    migrateOldData() {
+        const oldPoints = localStorage.getItem(this.baseStorageKey + '_pontos');
+        if (oldPoints && this.confirmedPoints.length === 0) {
+            console.log('Migrating old data...');
+            const pontos = JSON.parse(oldPoints);
             
             pontos.forEach(ponto => {
                 // Pontos verificados vão para confirmados, não verificados para pendentes
@@ -267,22 +267,22 @@ class DatabaseManager {
                 }
             });
             
-            this.salvarTodosDados();
+            this.saveAllData();
             console.log('Migracao concluida');
         }
     }
 
     /**
-     * Migra pontos da categoria "alternativo" para "geral"
+     * Migrate points from "alternative" category to "general"
      */
-    migrarCategoriaAlternativo() {
-        let alteracoes = 0;
+    migrateAlternativeCategory() {
+        let changes = 0;
         
         // Migrar pontos confirmados
         this.confirmedPoints.forEach(ponto => {
             if (ponto.categoria === 'alternativo') {
                 ponto.categoria = 'geral';
-                alteracoes++;
+                changes++;
             }
         });
         
@@ -290,7 +290,7 @@ class DatabaseManager {
         this.pendingPoints.forEach(ponto => {
             if (ponto.categoria === 'alternativo') {
                 ponto.categoria = 'geral';
-                alteracoes++;
+                changes++;
             }
         });
         
@@ -298,21 +298,21 @@ class DatabaseManager {
         this.hiddenPoints.forEach(ponto => {
             if (ponto.categoria === 'alternativo') {
                 ponto.categoria = 'geral';
-                alteracoes++;
+                changes++;
             }
         });
         
-        if (alteracoes > 0) {
-            this.salvarTodosDados();
-            console.log(`${alteracoes} pontos migrados da categoria 'alternativo' para 'geral'`);
+        if (changes > 0) {
+            this.saveAllData();
+            console.log(`${changes} points migrated from 'alternativo' to 'geral' category`);
         }
         
         // Remover categoria "alternativo" das categorias salvas
         this.categorias = this.categorias.filter(cat => cat.id !== 'alternativo');
-        this.salvarCategorias();
+        this.saveCategories();
     }
 
-    async carregarCategorias() {
+    async loadCategories() {
         try {
             // Tentar carregar usando a função compatível
             const categorias = await this.loadJsonFile('./database/categorias.json');
@@ -376,16 +376,17 @@ class DatabaseManager {
                     icon: 'fas fa-glass-cheers', 
                     cor: '#f59e0b',
                     descricao: 'Boates, pubs, lounges, baladas temáticas e outros espaços voltados à vida noturna'
-                },
-                { 
-                    id: 'favoritos', 
-                    nome: 'Favoritos', 
-                    icon: 'fas fa-heart', 
-                    cor: '#ec4899',
-                    descricao: 'Pontos marcados como favoritos pelo usuário'
                 }
+                // !TODO: Implementar sistema de favoritos completo
+                // { 
+                //     id: 'favoritos', 
+                //     nome: 'Favoritos', 
+                //     icon: 'fas fa-heart', 
+                //     cor: '#ec4899',
+                //     descricao: 'Pontos marcados como favoritos pelo usuário'
+                // }
             ];
-            this.salvarCategorias();
+            this.saveCategories();
             console.log('Categorias padrão carregadas');
             
             // Disparar evento para atualizar marcadores
@@ -398,14 +399,14 @@ class DatabaseManager {
     /**
      * Salva todos os dados
      */
-    salvarTodosDados() {
+    saveAllData() {
         localStorage.setItem(this.baseStorageKey + '_pontosConfirmados', JSON.stringify(this.confirmedPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosPendentes', JSON.stringify(this.pendingPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosOcultos', JSON.stringify(this.hiddenPoints));
         localStorage.setItem(this.baseStorageKey + '_usuarios', JSON.stringify(this.usuarios));
     }
 
-    salvarCategorias() {
+    saveCategories() {
         localStorage.setItem(this.baseStorageKey + '_categorias', JSON.stringify(this.categorias));
     }
 
@@ -421,7 +422,7 @@ class DatabaseManager {
                 sugestoesEnviadas: [],
                 dataCriacao: new Date().toISOString()
             };
-            this.salvarTodosDados();
+            this.saveAllData();
         }
         return this.usuarios[username];
     }
@@ -429,10 +430,10 @@ class DatabaseManager {
     /**
      * Inicializar dados padrão quando não há dados salvos
      */
-    inicializarDadosDefault() {
+    initializeDefaultData() {
         console.log('Inicializando dados padrão...');
         this.inicializarPontosDefault();
-        this.carregarCategorias(); // Garantir que categorias estejam carregadas
+        this.loadCategories(); // Garantir que categorias estejam carregadas
         console.log('Dados padrao inicializados');
     }
 
@@ -633,7 +634,7 @@ class DatabaseManager {
         
         this.confirmedPoints = pontosDefault;
         this.proximoId = 13;
-        this.salvarTodosDados();
+        this.saveAllData();
         console.log(`${pontosDefault.length} pontos padrao carregados`);
     }
 
@@ -767,7 +768,7 @@ class DatabaseManager {
             }
         }
         
-        this.salvarTodosDados();
+        this.saveAllData();
         return ponto;
     }
 
@@ -790,7 +791,7 @@ class DatabaseManager {
         ponto.dataAprovacao = new Date().toISOString();
         
         this.confirmedPoints.push(ponto);
-        this.salvarTodosDados();
+        this.saveAllData();
         
         return ponto;
     }
@@ -824,7 +825,7 @@ class DatabaseManager {
         ponto.status = 'oculto';
         ponto.dataOcultacao = new Date().toISOString();
         this.hiddenPoints.push(ponto);
-        this.salvarTodosDados();
+        this.saveAllData();
         
         return ponto;
     }
@@ -848,48 +849,36 @@ class DatabaseManager {
         ponto.dataRestauracao = new Date().toISOString();
         
         this.confirmedPoints.push(ponto);
-        this.salvarTodosDados();
+        this.saveAllData();
         
         return ponto;
     }
 
     /**
-     * Adicionar/remover favorito
+     * Adicionar/remover favorito - FUNCIONALIDADE EM DESENVOLVIMENTO
+     * !TODO: Implementar sistema completo de favoritos
      */
     toggleFavorito(pontoId, username) {
-        if (!username) {
-            throw new Error('Usuário deve estar logado para favoritar');
-        }
-
-        const dadosUsuario = this.obterDadosUsuario(username);
-        const index = dadosUsuario.favoritos.indexOf(pontoId);
-        
-        if (index === -1) {
-            dadosUsuario.favoritos.push(pontoId);
-        } else {
-            dadosUsuario.favoritos.splice(index, 1);
-        }
-        
-        this.salvarTodosDados();
-        return index === -1; // retorna true se foi adicionado, false se foi removido
+        console.log('!TODO: Implementar toggleFavorito - pontoId:', pontoId, 'username:', username);
+        return false; // Retornar false para não interferir no sistema
     }
 
     /**
-     * Verificar se ponto é favorito
+     * Verificar se ponto é favorito - FUNCIONALIDADE EM DESENVOLVIMENTO
+     * !TODO: Implementar sistema completo de favoritos
      */
     isFavorito(pontoId, username) {
-        if (!username) return false;
-        const dadosUsuario = this.obterDadosUsuario(username);
-        return dadosUsuario.favoritos.includes(pontoId);
+        console.log('!TODO: Implementar isFavorito - pontoId:', pontoId, 'username:', username);
+        return false; // Sempre retornar false para não mostrar como favorito
     }
 
     /**
-     * Obter pontos favoritos do usuário
+     * Obter pontos favoritos do usuário - FUNCIONALIDADE EM DESENVOLVIMENTO
+     * !TODO: Implementar sistema completo de favoritos
      */
     getFavoritos(username) {
-        if (!username) return [];
-        const dadosUsuario = this.obterDadosUsuario(username);
-        return this.confirmedPoints.filter(p => dadosUsuario.favoritos.includes(p.id));
+        console.log('!TODO: Implementar getFavoritos - username:', username);
+        return []; // Retornar array vazio
     }
 
     /**
@@ -924,7 +913,7 @@ class DatabaseManager {
         }
         this.usuarios._sugestoes.push(sugestao);
         
-        this.salvarTodosDados();
+        this.saveAllData();
         return sugestao;
     }
 
@@ -962,7 +951,7 @@ class DatabaseManager {
         sugestao.status = 'aprovada';
         sugestao.dataAprovacao = new Date().toISOString();
         
-        this.salvarTodosDados();
+        this.saveAllData();
         return sugestao;
     }
 
@@ -979,7 +968,7 @@ class DatabaseManager {
         if (ponto) {
             Object.assign(ponto, novosDados);
             ponto.dataUltimaEdicao = new Date().toISOString();
-            this.salvarTodosDados();
+            this.saveAllData();
             return ponto;
         }
         return null;
@@ -1032,7 +1021,7 @@ class DatabaseManager {
             ponto.imagem = imagemStructure;
             ponto.dataUltimaEdicao = new Date().toISOString();
 
-            this.salvarTodosDados();
+            this.saveAllData();
             console.log(`Image updated for point ${pontoId}: ${imageData.source} - ${imageData.url}`);
             return true;
 
@@ -1057,7 +1046,7 @@ class DatabaseManager {
             delete ponto.imagem;
             ponto.dataUltimaEdicao = new Date().toISOString();
 
-            this.salvarTodosDados();
+            this.saveAllData();
             console.log(`Image removed from point ${pontoId}`);
             return true;
 
@@ -1110,8 +1099,10 @@ class DatabaseManager {
             return this.confirmedPoints;
         }
         
+        // !TODO: Implementar sistema de favoritos completo
         if (categoria === 'favoritos' && username) {
-            return this.getFavoritos(username);
+            console.log('!TODO: Implementar filtro de favoritos');
+            return []; // Retornar array vazio temporariamente
         }
         
         return this.confirmedPoints.filter(p => p.categoria === categoria);
@@ -1187,7 +1178,7 @@ class DatabaseManager {
             const todosOsPontos = [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
             this.proximoId = todosOsPontos.length > 0 ? Math.max(...todosOsPontos.map(p => p.id || 0)) + 1 : 1;
             
-            this.salvarTodosDados();
+            this.saveAllData();
             return { success: true, message: 'Dados importados com sucesso' };
         }
         
@@ -1198,7 +1189,7 @@ class DatabaseManager {
      * Salvar dados no localStorage (método de compatibilidade)
      */
     salvarNoLocalStorage() {
-        this.salvarTodosDados();
+        this.saveAllData();
     }
 
     /**
@@ -1235,7 +1226,7 @@ class DatabaseManager {
         }
 
         if (deletado) {
-            this.salvarTodosDados();
+            this.saveAllData();
             console.log(`Ponto ${pontoId} deletado definitivamente`);
         }
 

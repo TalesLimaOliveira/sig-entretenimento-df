@@ -44,7 +44,7 @@
                     <!-- Desktop Actions -->
                     <div class="desktop-actions">
                         <!-- Login Button -->
-                        <button class="login-btn desktop" id="desktop-login-btn">
+                        <button class="header-login-btn desktop" id="desktop-login-btn">
                             <i class="fas fa-user"></i>
                             <span class="login-btn-text">ENTRAR</span>
                         </button>
@@ -53,7 +53,7 @@
                     <!-- Mobile Actions - sempre visíveis em mobile/tablet -->
                     <div class="mobile-actions">
                         <!-- Login Button Mobile -->
-                        <button class="login-btn mobile" id="mobile-login-btn">
+                        <button class="header-login-btn mobile" id="mobile-login-btn">
                             <i class="fas fa-user"></i>
                             <span class="login-btn-text">ENTRAR</span>
                         </button>
@@ -143,17 +143,6 @@
     <script src="src/components/error-handler.js"></script>
     <script src="src/js/app.js"></script>
     
-    <!-- Create Global Instances -->
-    <script>
-        // Criar instâncias globais dos managers
-        if (typeof MapManager !== 'undefined') {
-            window.mapManager = new MapManager('map');
-            console.log('✅ MapManager instanciado');
-        } else {
-            console.error('❌ MapManager não foi carregado');
-        }
-    </script>
-    
     <!-- Initialize -->
     <script>
         // Sistema de inicialização robusto
@@ -188,7 +177,7 @@
                         document.addEventListener('DOMContentLoaded', resolve);
                     });
                 }
-                console.log('✅ DOM pronto');
+                console.log('DOM ready');
             }
             
             async checkDependencies() {
@@ -234,21 +223,21 @@
                     }
                     
                     if (window[manager.name]) {
-                        console.log(`✅ ${manager.name} carregado`);
+                        console.log(`${manager.name} loaded`);
                         
                         // Inicializar o databaseManager se necessário
                         if (manager.name === 'databaseManager' && window.databaseManager.init) {
-                            console.log('🔄 Inicializando databaseManager...');
+                            console.log('Initializing databaseManager...');
                             try {
                                 await window.databaseManager.init();
-                                console.log('✅ DatabaseManager inicializado com sucesso');
+                                console.log('DatabaseManager initialized successfully');
                                 
                                 // Verificar se pontos foram carregados
                                 const pontos = window.databaseManager.getPontos();
-                                console.log(`📊 Pontos carregados: ${pontos.length}`);
+                                console.log(`Points loaded: ${pontos.length}`);
                                 
                                 if (pontos.length === 0) {
-                                    console.warn('⚠️ Nenhum ponto foi carregado, forçando dados padrão...');
+                                    console.warn('No points loaded, forcing default data...');
                                     // Forçar uso de dados padrão
                                     window.databaseManager.confirmedPoints = window.databaseManager.getConfirmedPointsDefault();
                                     window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
@@ -256,23 +245,23 @@
                                     // Salvar no localStorage para próximas sessões
                                     window.databaseManager.salvarTodosDados();
                                     
-                                    console.log(`✅ Dados padrão forçados: ${window.databaseManager.confirmedPoints.length} pontos`);
+                                    console.log(`Default data forced: ${window.databaseManager.confirmedPoints.length} points`);
                                 }
                                 
                                 // Verificar categorias também
                                 const categorias = window.databaseManager.getCategorias();
                                 if (!categorias || categorias.length === 0) {
-                                    console.warn('⚠️ Nenhuma categoria carregada, forçando categorias padrão...');
+                                    console.warn('No categories loaded, forcing default categories...');
                                     window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
                                     window.databaseManager.salvarCategorias();
                                 }
                                 
                             } catch (error) {
-                                console.error('❌ Erro ao inicializar DatabaseManager:', error);
+                                console.error('Error initializing DatabaseManager:', error);
                                 
                                 // Para protocolo file://, tentar inicialização com dados padrão
                                 if (window.location.protocol === 'file:') {
-                                    console.log('🔄 Tentando inicialização com dados padrão para file://...');
+                                    console.log('Attempting initialization with default data for file://...');
                                     try {
                                         // Garantir que categorias padrão estejam disponíveis
                                         window.databaseManager.categorias = window.databaseManager.getCategoriesDefault();
@@ -281,9 +270,9 @@
                                             acc[user.username] = user;
                                             return acc;
                                         }, {});
-                                        console.log('✅ Dados padrão carregados para file://');
+                                        console.log('Default data loaded for file://');
                                     } catch (fallbackError) {
-                                        console.error('❌ Falha no fallback:', fallbackError);
+                                        console.error('Fallback failed:', fallbackError);
                                         if (manager.critical) {
                                             throw new Error(`Falha crítica na inicialização do DatabaseManager: ${error.message}`);
                                         }
@@ -296,22 +285,22 @@
                         
                         // Inicializar o mapManager se necessário
                         if (manager.name === 'mapManager' && window.mapManager && window.mapManager.init) {
-                            console.log('🗺️ Inicializando mapManager...');
+                            console.log('Initializing mapManager...');
                             try {
                                 await window.mapManager.init();
-                                console.log('✅ MapManager inicializado com sucesso');
+                                console.log('MapManager initialized successfully');
                                 
                                 // Forçar carregamento dos pontos após inicialização
                                 setTimeout(async () => {
                                     if (window.databaseManager && window.databaseManager.getPontos) {
                                         const pontos = window.databaseManager.getPontos();
-                                        console.log(`🔄 Forçando carregamento de ${pontos.length} pontos no mapa...`);
+                                        console.log(`Forcing load of ${pontos.length} points on map...`);
                                         
                                         if (pontos.length > 0) {
                                             window.mapManager._loadPoints(pontos);
-                                            console.log('✅ Pontos carregados no mapa');
+                                            console.log('Points loaded on map');
                                         } else {
-                                            console.warn('⚠️ Nenhum ponto disponível para carregar no mapa');
+                                            console.warn('No points available to load on map');
                                         }
                                     }
                                 }, 500);
@@ -411,6 +400,57 @@
                 `;
             }
         });
+        
+        // FUNÇÃO DE DEBUG: Forçar criação dos botões após 2 segundos
+        setTimeout(() => {
+            console.log('🚨 DEBUG: Forçando criação dos botões de categoria...');
+            const container = document.getElementById('nav-buttons-container');
+            if (container) {
+                console.log('DEBUG: Container encontrado, forçando botões...');
+                container.innerHTML = `
+                    <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-globe"></i>
+                        <span class="nav-btn-text">Todos</span>
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="geral" title="Geral" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="nav-btn-text">Geral</span>
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="esportes-lazer" title="Esportes e Lazer" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #10b981; border-color: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-futbol"></i>
+                        <span class="nav-btn-text">Esportes e Lazer</span>
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="gastronomia" title="Gastronomia" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #f59e0b; border-color: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-utensils"></i>
+                        <span class="nav-btn-text">Gastronomia</span>
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="geek-nerd" title="Geek/Nerd" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #8b5cf6; border-color: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-gamepad"></i>
+                        <span class="nav-btn-text">Geek/Nerd</span>
+                    </button>
+                    <button class="nav-btn category-btn" data-categoria="casas-noturnas" title="Casas Noturnas" 
+                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #ef4444; border-color: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
+                        <i class="fas fa-glass-cheers"></i>
+                        <span class="nav-btn-text">Casas Noturnas</span>
+                    </button>
+                `;
+                container.style.display = 'flex';
+                container.style.flexWrap = 'wrap';
+                container.style.gap = '0.5rem';
+                container.style.justifyContent = 'center';
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+                container.style.zIndex = '1000';
+                console.log('DEBUG: Botões criados com sucesso!');
+            } else {
+                console.error('DEBUG: Container não encontrado!');
+            }
+        }, 2000);
     </script>
 </body>
 </html>

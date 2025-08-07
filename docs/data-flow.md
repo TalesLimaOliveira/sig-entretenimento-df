@@ -18,9 +18,9 @@ AuthManager.init() → Verifica sessão ativa
 MapManager.init() → Inicializa mapa Leaflet
 ThemeManager.init() → Aplica tema salvo
      ↓
-App.inicializar() → Configura interface e eventos
+App.configureInterface() → Configura interface e eventos
      ↓
-App.carregarDados() → Renderiza pontos no mapa
+App.loadData() → Renderiza pontos no mapa
      ↓
 Remove Loading Screen
 ```

@@ -1,5 +1,5 @@
 /**
- * Modal Manager - Clean Version
+ * ModalManager - Clean Version
  */
 class ModalManager {
     constructor() {
@@ -16,7 +16,7 @@ class ModalManager {
 
     criarEstilos() {
         if (document.querySelector('#modal-styles')) return;
-
+        
         const style = document.createElement('style');
         style.id = 'modal-styles';
         style.textContent = `
@@ -26,7 +26,7 @@ class ModalManager {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.5);
+                background: rgba(0,0,0,0.5);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -34,11 +34,11 @@ class ModalManager {
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
-
+            
             .modal-overlay.show {
                 opacity: 1;
             }
-
+            
             .modal {
                 background: var(--bg-primary);
                 border-radius: 8px;
@@ -50,11 +50,11 @@ class ModalManager {
                 transform: scale(0.9);
                 transition: transform 0.3s ease;
             }
-
+            
             .modal-overlay.show .modal {
                 transform: scale(1);
             }
-
+            
             .modal-header {
                 display: flex;
                 justify-content: space-between;
@@ -63,13 +63,13 @@ class ModalManager {
                 padding-bottom: 1rem;
                 border-bottom: 1px solid var(--border);
             }
-
+            
             .modal-title {
                 font-size: 1.25rem;
                 font-weight: 600;
                 color: var(--text-primary);
             }
-
+            
             .modal-close {
                 background: none;
                 border: none;
@@ -85,15 +85,15 @@ class ModalManager {
                 border-radius: 50%;
                 transition: background-color 0.3s ease;
             }
-
+            
             .modal-close:hover {
                 background: var(--bg-secondary);
             }
-
+            
             .modal-body {
                 margin-bottom: 1.5rem;
             }
-
+            
             .modal-footer {
                 display: flex;
                 justify-content: flex-end;
@@ -101,18 +101,18 @@ class ModalManager {
                 padding-top: 1rem;
                 border-top: 1px solid var(--border);
             }
-
+            
             .form-group {
                 margin-bottom: 1rem;
             }
-
+            
             .form-label {
                 display: block;
                 margin-bottom: 0.5rem;
                 font-weight: 500;
                 color: var(--text-primary);
             }
-
+            
             .form-input {
                 width: 100%;
                 padding: 0.75rem;
@@ -123,12 +123,12 @@ class ModalManager {
                 color: var(--text-primary);
                 transition: border-color 0.3s ease;
             }
-
+            
             .form-input:focus {
                 outline: none;
                 border-color: var(--primary);
             }
-
+            
             .btn-secondary {
                 background: var(--gray);
                 color: var(--white);
@@ -153,18 +153,18 @@ class ModalManager {
 
     mostrar(tipo, dados = {}) {
         this.fechar(); // Fechar modal anterior se existir
-
+        
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.innerHTML = this.getModalHTML(tipo, dados);
-
+        
         document.body.appendChild(overlay);
         this.activeModal = overlay;
-
+        
         // Animar entrada
         setTimeout(() => overlay.classList.add('show'), 10);
-
-        // Configurar formulário se for de login
+        
+        // Configurar formulários se for de login
         if (tipo === 'login') {
             this.configurarFormularioLogin(overlay);
         }
@@ -172,7 +172,7 @@ class ModalManager {
 
     fechar() {
         if (!this.activeModal) return;
-
+        
         this.activeModal.classList.remove('show');
         setTimeout(() => {
             if (this.activeModal && this.activeModal.parentNode) {
@@ -209,7 +209,6 @@ class ModalManager {
                         </div>
                     </div>
                 `;
-
             default:
                 return `
                     <div class="modal">
@@ -230,18 +229,34 @@ class ModalManager {
 
     configurarFormularioLogin(overlay) {
         const form = overlay.querySelector('#login-form');
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(form);
             const usuario = formData.get('usuario');
             const senha = formData.get('senha');
             
-            if (window.authManager.login(usuario, senha)) {
-                this.fechar();
-                window.app.verificarAutenticacao();
+            if (window.authManager && window.authManager.login) {
+                try {
+                    const result = await window.authManager.login(usuario, senha);
+                    
+                    if (result.success) {
+                        this.fechar();
+                        if (window.app && window.app.verifyAuthentication) {
+                            window.app.verifyAuthentication();
+                        } else if (window.app && window.app.configureLoggedUser) {
+                            window.app.configureLoggedUser(result.user);
+                        }
+                    } else {
+                        alert(result.message || 'Credenciais inválidas');
+                    }
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    alert('Erro ao tentar fazer login');
+                }
             } else {
-                alert('Credenciais inválidas');
+                console.error('AuthManager não disponível');
+                alert('Sistema de autenticação não disponível');
             }
         });
     }
