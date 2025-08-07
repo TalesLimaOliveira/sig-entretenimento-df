@@ -366,7 +366,7 @@ class AddPointModal {
     disableLocationSelection() {
         if (!this.map) return;
 
-        console.log('');
+        console.log('🔇 Desabilitando seleção de localização...');
         
         // Marcar que não está mais em modo de seleção
         this.isLocationSelectionActive = false;
@@ -379,13 +379,15 @@ class AddPointModal {
         this.map.getContainer().style.cursor = '';
         this.map.getContainer().classList.remove('location-selection-mode');
         
-        // Restaurar modal
-        this.restoreModal();
+        // Restaurar modal apenas se foi minimizado
+        if (this.originalModalState) {
+            this.restoreModal();
+        }
         
         // Remover instruções do mapa
         this.hideMapInstructions();
         
-        console.log('');
+        console.log('✅ Seleção de localização desabilitada');
     }
 
     minimizeModal() {
@@ -418,7 +420,7 @@ class AddPointModal {
     }
 
     restoreModal() {
-        console.log('');
+        console.log('🔄 Restaurando modal...');
         
         if (this.modal && this.originalModalState) {
             // Restaurar estados originais
@@ -441,9 +443,11 @@ class AddPointModal {
             // Limpar estados salvos
             this.originalModalState = null;
             
-            console.log('');
-        } else {
-            console.error('❌ Modal não encontrado para restaurar ou estado não salvo');
+            console.log('✅ Modal restaurado com sucesso');
+        } else if (!this.modal) {
+            console.warn('⚠️ Modal não encontrado para restaurar');
+        } else if (!this.originalModalState) {
+            console.log('ℹ️ Modal não estava minimizado, nada para restaurar');
         }
     }
 
@@ -775,9 +779,11 @@ class AddPointModal {
             this.close();
 
             // Refresh map if available
-            if (window.mapManager) {
-                console.log('');
-                setTimeout(() => window.mapManager.carregarPontos(), 500);
+            if (window.mapManager && typeof window.mapManager.recarregarMarcadores === 'function') {
+                console.log('🔄 Recarregando marcadores do mapa...');
+                setTimeout(() => window.mapManager.recarregarMarcadores(), 500);
+            } else {
+                console.warn('⚠️ MapManager não disponível para atualizar marcadores');
             }
 
         } catch (error) {
@@ -796,127 +802,186 @@ class AddPointModal {
     }
 
     validateForm() {
-        console.log('');
+        console.log('🔍 Validando formulário...');
 
+        // Verificar se uma localização foi selecionada
         if (!this.selectedPosition) {
-            console.error('Localizacao nao selecionada');
+            console.error('❌ Localização não selecionada');
             this.showError('Por favor, selecione uma localização no mapa');
             return false;
         }
-        console.log('Localizacao valida:', this.selectedPosition);
+        console.log('✅ Localização válida:', this.selectedPosition);
 
-        const required = ['point-name', 'point-category'];
-        for (const fieldId of required) {
-            const field = document.getElementById(fieldId);
-            if (!field) {
-                console.error(`Campo ${fieldId} nao encontrado no DOM`);
-                this.showError(`Erro interno: Campo ${fieldId} não encontrado`);
+        // Validar campos obrigatórios
+        const required = [
+            { id: 'point-name', label: 'Nome do Local' },
+            { id: 'point-category', label: 'Categoria' }
+        ];
+
+        for (const field of required) {
+            const element = document.getElementById(field.id);
+            if (!element) {
+                console.error(`❌ Campo ${field.id} não encontrado no DOM`);
+                this.showError(`Erro interno: Campo ${field.label} não encontrado`);
                 return false;
             }
 
-            if (!field.value.trim()) {
-                console.error(`Campo obrigatorio vazio: ${fieldId}`);
-                field.focus();
-                const label = field.previousElementSibling?.textContent || fieldId;
-                this.showError(`Campo obrigatório: ${label}`);
+            const value = element.value ? element.value.trim() : '';
+            if (!value) {
+                console.error(`❌ Campo obrigatório vazio: ${field.id}`);
+                element.focus();
+                this.showError(`Campo obrigatório: ${field.label}`);
                 return false;
             }
-            console.log(`Campo ${fieldId} valido:`, field.value.trim());
+            console.log(`✅ Campo ${field.id} válido:`, value);
         }
 
-        console.log('');
+        // Validar coordenadas
+        if (!this.selectedPosition.lat || !this.selectedPosition.lng) {
+            console.error('❌ Coordenadas inválidas');
+            this.showError('Coordenadas inválidas. Selecione novamente a localização.');
+            return false;
+        }
+
+        console.log('✅ Formulário válido');
         return true;
     }
 
     collectFormData() {
-        console.log('');
+        console.log('📝 Coletando dados do formulário...');
         
-        const user = window.authManager?.getCurrentUser();
-        console.log('👤 Usuário atual:', user);
+        try {
+            // Verificar usuário atual
+            const user = window.authManager?.getCurrentUser();
+            console.log('👤 Usuário atual:', user);
 
-        // Verificar se uma localização foi selecionada
-        if (!this.selectedPosition) {
-            console.error('❌ Nenhuma localização selecionada');
-            throw new Error('Localização não selecionada');
-        }
-        console.log('📍 Localização selecionada:', this.selectedPosition);
+            // Verificar se uma localização foi selecionada
+            if (!this.selectedPosition) {
+                console.error('❌ Nenhuma localização selecionada');
+                throw new Error('Localização não selecionada');
+            }
+            console.log('📍 Localização selecionada:', this.selectedPosition);
 
-        // Coletar dados básicos
-        const nome = document.getElementById('point-name')?.value?.trim();
-        const categoria = document.getElementById('point-category')?.value;
-        const descricao = document.getElementById('point-description')?.value?.trim();
-        
-        console.log('📝 Dados básicos:', { nome, categoria, descricao });
+            // Coletar e validar dados básicos
+            const nameElement = document.getElementById('point-name');
+            const categoryElement = document.getElementById('point-category');
+            
+            if (!nameElement || !categoryElement) {
+                throw new Error('Campos essenciais não encontrados no formulário');
+            }
 
-        // Coletar dados opcionais
-        const endereco = document.getElementById('point-address')?.value?.trim() || '';
-        const telefone = document.getElementById('point-phone')?.value?.trim() || '';
-        const website = document.getElementById('point-website')?.value?.trim() || '';
-        const horario = document.getElementById('point-hours')?.value?.trim() || 'Não informado';
-        const preco = document.getElementById('point-price')?.value?.trim() || 'Não informado';
-        const tags = document.getElementById('point-tags')?.value || '';
+            const nome = nameElement.value ? nameElement.value.trim() : '';
+            const categoria = categoryElement.value ? categoryElement.value.trim() : '';
+            
+            if (!nome || !categoria) {
+                throw new Error('Nome e categoria são obrigatórios');
+            }
 
-        // Coletar dados da imagem
-        const imageSource = document.getElementById('point-image-source')?.value;
-        const imageUrl = document.getElementById('point-image-url')?.value?.trim();
-        const imageDescription = document.getElementById('point-image-description')?.value?.trim();
+            console.log('📝 Dados básicos válidos:', { nome, categoria });
 
-        // Criar objeto de imagem se há dados suficientes
-        let imageData = null;
-        if (imageSource && imageUrl) {
-            imageData = {
-                url: imageUrl,
-                source: imageSource,
-                description: imageDescription || null
+            // Coletar dados opcionais (com fallbacks seguros)
+            const descricaoElement = document.getElementById('point-description');
+            const enderecoElement = document.getElementById('point-address');
+            const telefoneElement = document.getElementById('point-phone');
+            const websiteElement = document.getElementById('point-website');
+            const horarioElement = document.getElementById('point-hours');
+            const precoElement = document.getElementById('point-price');
+            const tagsElement = document.getElementById('point-tags');
+
+            const descricao = descricaoElement ? descricaoElement.value.trim() : '';
+            const endereco = enderecoElement ? enderecoElement.value.trim() : '';
+            const telefone = telefoneElement ? telefoneElement.value.trim() : '';
+            const website = websiteElement ? websiteElement.value.trim() : '';
+            const horario = horarioElement ? horarioElement.value.trim() || 'Não informado' : 'Não informado';
+            const preco = precoElement ? precoElement.value.trim() || 'Não informado' : 'Não informado';
+            const tags = tagsElement ? tagsElement.value.trim() : '';
+
+            // Coletar dados da imagem
+            const imageSourceElement = document.getElementById('point-image-source');
+            const imageUrlElement = document.getElementById('point-image-url');
+            const imageDescriptionElement = document.getElementById('point-image-description');
+
+            const imageSource = imageSourceElement ? imageSourceElement.value : '';
+            const imageUrl = imageUrlElement ? imageUrlElement.value.trim() : '';
+            const imageDescription = imageDescriptionElement ? imageDescriptionElement.value.trim() : '';
+
+            // Criar objeto de imagem se há dados suficientes
+            let imageData = null;
+            if (imageSource && imageUrl) {
+                imageData = {
+                    url: imageUrl,
+                    source: imageSource,
+                    description: imageDescription || null
+                };
+                console.log('🖼️ Dados da imagem:', imageData);
+            }
+
+            // Processar tags
+            const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+            console.log('🏷️ Tags processadas:', tagsArray);
+
+            // Gerar ID único baseado no timestamp
+            const id = Date.now();
+
+            const pointData = {
+                id: id,
+                nome: nome,
+                categoria: categoria,
+                coordenadas: [this.selectedPosition.lat, this.selectedPosition.lng],
+                descricao: descricao || 'Sem descrição',
+                endereco: endereco,
+                telefone: telefone,
+                website: website,
+                horario: horario,
+                preco: preco,
+                avaliacao: 0,
+                tags: tagsArray,
+                ativo: true,
+                dataCriacao: new Date().toISOString(),
+                imagem: imageData,
+                adicionadoPor: user?.username || user?.name || 'Usuário Anônimo',
+                userRole: user?.role || 'user'
             };
-            console.log('🖼️ Dados da imagem:', imageData);
+
+            console.log('✅ Dados coletados com sucesso:', pointData);
+            return pointData;
+
+        } catch (error) {
+            console.error('❌ Erro ao coletar dados do formulário:', error);
+            throw error;
         }
-
-        // Processar tags
-        const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-        console.log('🏷️ Tags processadas:', tagsArray);
-
-        // Gerar ID único baseado no timestamp
-        const id = Date.now();
-
-        const pointData = {
-            id: id,
-            nome: nome,
-            categoria: categoria,
-            coordenadas: [this.selectedPosition.lat, this.selectedPosition.lng],
-            descricao: descricao || 'Sem descrição',
-            endereco: endereco,
-            telefone: telefone,
-            website: website,
-            horario: horario,
-            preco: preco,
-            avaliacao: 0,
-            tags: tagsArray,
-            ativo: true,
-            dataCriacao: new Date().toISOString(),
-            imagem: imageData,
-            adicionadoPor: user?.username || user?.name || 'Usuário Anônimo',
-            userRole: user?.role || 'user'
-        };
-
-        console.log('✅ Dados coletados com sucesso:', pointData);
-        return pointData;
     }
 
     async submitPoint(pointData) {
         console.log('📤 Salvando ponto no banco de dados...', pointData);
         
-        if (!window.databaseManager?.adicionarPonto) {
-            throw new Error('Database manager não disponível');
-        }
-
-        const user = window.authManager?.getCurrentUser();
-        const userRole = user?.role || 'user';
-        const username = user?.username || user?.name || null;
-
-        console.log('👤 Contexto do usuário:', { userRole, username });
-
         try {
+            // Verificar se o database manager está disponível
+            if (!window.databaseManager) {
+                throw new Error('Sistema de banco de dados não disponível');
+            }
+
+            if (typeof window.databaseManager.adicionarPonto !== 'function') {
+                throw new Error('Função de adicionar ponto não disponível');
+            }
+
+            // Obter informações do usuário
+            const user = window.authManager?.getCurrentUser();
+            const userRole = user?.role || 'user';
+            const username = user?.username || user?.name || null;
+
+            console.log('👤 Contexto do usuário:', { userRole, username });
+
+            // Validar dados essenciais antes de submeter
+            if (!pointData.nome || !pointData.categoria || !pointData.coordenadas) {
+                throw new Error('Dados essenciais do ponto estão faltando');
+            }
+
+            if (!Array.isArray(pointData.coordenadas) || pointData.coordenadas.length !== 2) {
+                throw new Error('Coordenadas inválidas');
+            }
+
+            // Tentar adicionar o ponto
             const novoPonto = await window.databaseManager.adicionarPonto(pointData, userRole, username);
             console.log('✅ Ponto adicionado com sucesso:', novoPonto);
             
@@ -924,9 +989,13 @@ class AddPointModal {
             await this.forceDataRefresh();
             
             return novoPonto;
+
         } catch (error) {
             console.error('❌ Erro ao adicionar ponto:', error);
-            throw error;
+            console.error('📚 Stack trace:', error.stack);
+            
+            // Re-throw com mensagem mais clara
+            throw new Error(`Falha ao salvar ponto: ${error.message}`);
         }
     }
 
@@ -947,11 +1016,13 @@ class AddPointModal {
             }
             
             // Trigger refresh do mapa se disponível
-            if (window.mapManager?.carregarPontos) {
+            if (window.mapManager?.recarregarMarcadores) {
                 setTimeout(() => {
-                    window.mapManager.carregarPontos();
-                    console.log('');
+                    window.mapManager.recarregarMarcadores();
+                    console.log('🔄 Marcadores do mapa atualizados');
                 }, 500);
+            } else {
+                console.warn('⚠️ Função recarregarMarcadores não disponível');
             }
             
         } catch (error) {

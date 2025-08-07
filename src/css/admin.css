@@ -178,11 +178,29 @@
 .tab-content {
     display: none;
     animation: fadeIn 0.3s ease;
-    color: #212529; /* Garantir texto escuro */
+    color: #212529 !important; /* Garantir texto escuro */
+    background-color: white !important; /* Garantir fundo claro */
 }
 
 .tab-content.active {
     display: block;
+}
+
+/* Garantir texto escuro em toda a aba de pontos */
+#tab-pontos,
+#tab-pontos * {
+    color: #212529 !important;
+}
+
+#tab-pontos input,
+#tab-pontos select,
+#tab-pontos label,
+#tab-pontos p,
+#tab-pontos span,
+#tab-pontos td,
+#tab-pontos th {
+    color: #212529 !important;
+    background-color: white !important;
 }
 
 .tab-header {
@@ -357,11 +375,12 @@
     gap: var(--spacing-lg);
     align-items: end;
     padding: var(--spacing-lg);
-    background: white;
+    background: white !important;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--spacing-lg);
     flex-wrap: wrap;
+    color: #212529 !important;
 }
 
 .filter-group {
@@ -369,6 +388,18 @@
     flex-direction: column;
     gap: var(--spacing-xs);
     min-width: 150px;
+}
+
+.filter-group label {
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.filter-group input,
+.filter-group select {
+    color: #212529 !important;
+    background-color: white !important;
+    border: 1px solid #dee2e6 !important;
 }
 
 .filter-group label {
@@ -398,12 +429,12 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
-    color: #212529; /* Garantir texto escuro na tabela */
+    color: #212529 !important; /* Garantir texto escuro na tabela */
 }
 
 .admin-table th {
     background: var(--admin-light);
-    color: var(--admin-primary);
+    color: var(--admin-primary) !important;
     font-weight: 600;
     padding: var(--spacing-md) var(--spacing-lg);
     text-align: left;
@@ -415,7 +446,8 @@
     padding: var(--spacing-md) var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
-    color: #212529; /* Garantir texto escuro nas células */
+    color: #212529 !important; /* Garantir texto escuro nas células */
+    background-color: white !important; /* Garantir fundo claro */
 }
 
 .admin-table tbody tr:hover {
