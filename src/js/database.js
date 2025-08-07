@@ -156,56 +156,50 @@ class DatabaseManager {
     }
 
     /**
-     * Função auxiliar para carregar arquivos JSON compatível com file:// e http://
+     * UNIFIED: Load JSON file - same behavior for both file:// and http://
+     * No more protocol-specific logic, always try to load actual files
      * @param {string} url - URL do arquivo JSON
      * @returns {Promise<Object>} - Dados JSON carregados
      */
     async loadJsonFile(url) {
-        // Detectar se estamos usando protocolo file://
-        const isFileProtocol = window.location.protocol === 'file:';
-        
         console.log(`Loading: ${url} (Protocol: ${window.location.protocol})`);
         
-        if (isFileProtocol) {
-            // For file:// protocol, use default embedded data
-            console.log(`File:// protocol detected, using default data for: ${url}`);
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log(`✅ Successfully loaded ${url}:`, Array.isArray(data) ? `${data.length} items` : 'data object');
+            return data;
+
+        } catch (error) {
+            console.warn(`⚠️ Failed to load ${url}:`, error.message);
             
-            // Retornar dados padrão baseado na URL
+            // Fallback to default data only if fetch completely fails
             if (url.includes('categorias.json')) {
+                console.log('Using default categories');
                 return this.getCategoriesDefault();
             } else if (url.includes('pontos_confirmados.json')) {
+                console.log('Using default confirmed points');
                 return this.getConfirmedPointsDefault();
-            } else if (url.includes('pontos_pendentes.json')) {
-                return [];
             } else if (url.includes('pontos_ocultos.json')) {
-                return [];
+                console.log('Using default hidden points');
+                return this.getHiddenPointsDefault();
             } else if (url.includes('usuarios.json')) {
+                console.log('Using default users');
                 return this.getUsersDefault();
-            }
-            
-            return [];
-        } else {
-            // Para protocolo HTTP/HTTPS, usar fetch normal
-            console.log(`🌍 Protocolo HTTP detectado, carregando via fetch: ${url}`);
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log(`Dados carregados com sucesso de ${url}:`, data.length || Object.keys(data).length, 'itens');
-                return data;
-            } catch (error) {
-                console.error(`❌ Erro ao carregar ${url}:`, error);
-                throw error;
+            } else {
+                console.log('No default data available');
+                return [];
             }
         }
     }
@@ -641,20 +635,24 @@ class DatabaseManager {
     // API pública - Métodos principais
 
     /**
-     * Retorna pontos visíveis (confirmados)
+     * Retorna pontos confirmados + ocultos (unified behavior)
+     * UNIFIED: Now includes hidden points like the Python server
      */
     getPontos() {
-        return this.confirmedPoints;
+        return [...this.confirmedPoints, ...this.hiddenPoints];
     }
 
     /**
      * Retorna pontos baseado no perfil do usuário
+     * UNIFIED: Now returns all points (confirmed + hidden) for all users, like the Python server
      */
     getPontosParaUsuario(userRole = 'visitor', username = null) {
         if (userRole === 'administrator') {
-            return [...this.confirmedPoints, ...this.pendingPoints];
+            // Admins see everything: confirmed + pending + hidden
+            return [...this.confirmedPoints, ...this.pendingPoints, ...this.hiddenPoints];
         }
-        return this.confirmedPoints;
+        // Regular users see confirmed + hidden points (unified with Python server behavior)
+        return [...this.confirmedPoints, ...this.hiddenPoints];
     }
 
     /**
@@ -1410,6 +1408,25 @@ class DatabaseManager {
                     "source": "web",
                     "description": "Parque da Cidade"
                 }
+            }
+        ];
+    }
+
+    /**
+     * Dados padrão de pontos ocultos para fallback
+     */
+    getHiddenPointsDefault() {
+        return [
+            {
+                "id": 101,
+                "nome": "Ponto Oculto de Exemplo",
+                "categoria": "geral",
+                "coordenadas": [-15.794, -47.882],
+                "descricao": "Exemplo de ponto oculto carregado por padrão",
+                "endereco": "Localização reservada",
+                "ativo": true,
+                "dataCriacao": "2025-01-20T12:00:00.000Z",
+                "oculto": true
             }
         ];
     }

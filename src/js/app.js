@@ -100,6 +100,10 @@ class PontosEntretenimentoApp {
             this.configureResponsiveness();
             console.log('Responsiveness configured');
             
+            console.log('Configuring events...');
+            this.configureEvents();
+            console.log('Events configured');
+            
             console.log('Verifying authentication...');
             this.verifyAuthentication();
             console.log('Authentication verified');
@@ -107,10 +111,6 @@ class PontosEntretenimentoApp {
             console.log('Configuring interface...');
             await this.configureInterface();
             console.log('Interface configured');
-            
-            console.log('Configuring events...');
-            this.configureEvents();
-            console.log('Events configured');
             
             console.log('Loading data...');
             this.loadData();
@@ -248,15 +248,19 @@ class PontosEntretenimentoApp {
     }
 
     verifyAuthentication() {
+        console.log('🔐 Verificando autenticação...');
+        
         try {
             if (window.authManager && window.authManager.isAuthenticated()) {
                 const user = window.authManager.getCurrentUser();
+                console.log('🔐 Usuário autenticado encontrado:', user);
                 this.configureLoggedUser(user);
             } else {
+                console.log('🔐 Nenhum usuário autenticado');
                 this.configureVisitorUser();
             }
         } catch (error) {
-            console.error('Error verifying authentication:', error);
+            console.error('🔐 Erro ao verificar autenticação:', error);
             this.configureVisitorUser();
         }
     }
@@ -265,18 +269,22 @@ class PontosEntretenimentoApp {
      * Configure interface for logged user
      */
     configureLoggedUser(user) {
-        console.log(`Logged user: ${user.nome} (${user.role})`);
+        console.log(`🔐 Configurando usuário logado: ${user.nome} (${user.role})`);
         
+        console.log('🔐 Chamando updateLoginButton...');
         this.updateLoginButton(user);
         
         if (user.role === 'administrator') {
+            console.log('🔐 Configurando interface de administrador');
             this.isAdmin = true;
             this.configureAdminInterface();
         } else if (user.role === 'user') {
+            console.log('🔐 Configurando interface de usuário');
             this.isAdmin = false;
             this.configureUserInterface();
         }
         
+        console.log('🔐 Atualizando visibilidade de favoritos');
         this.updateFavoritesVisibility(user.role);
     }
 
@@ -424,28 +432,40 @@ class PontosEntretenimentoApp {
      * Update button after login
      */
     updateLoginButton(user) {
-        console.log('Atualizando botão de login para usuário:', user.nome, 'Role:', user.role);
+        console.log('🔄 Atualizando botão de login para usuário:', user.nome, 'Role:', user.role);
         
         // Atualizar ambos os botões (desktop e mobile)
         const desktopLoginBtn = document.getElementById('desktop-login-btn');
         const mobileLoginBtn = document.getElementById('mobile-login-btn');
         
+        console.log('🔍 Botões encontrados:', {
+            desktop: !!desktopLoginBtn,
+            mobile: !!mobileLoginBtn
+        });
+        
         [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
             if (loginBtn) {
+                console.log('🔧 Processando botão:', loginBtn.id);
+                
                 const isAdmin = user.role === 'administrator';
                 const newId = loginBtn.id.replace('login-btn', 'user-info-btn');
+                const userName = user.nome || user.username || 'Usuário';
                 
-                // Criar menu suspenso do usuário
-                loginBtn.outerHTML = `
+                console.log('📝 Dados do usuário:', { userName, isAdmin, newId });
+                
+                // Criar menu suspenso do usuário melhorado
+                const newHTML = `
                     <div class="user-dropdown" id="${newId}-container">
                         <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${newId}">
-                            <i class="fas fa-user user-icon"></i>
-                            <span class="user-name">${user.nome}</span>
+                            <div class="user-avatar">
+                                <i class="fas fa-user user-icon"></i>
+                            </div>
+                            <span class="user-name">${userName}</span>
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
                         </button>
                         <div class="user-dropdown-menu" id="${newId}-menu" style="display: none;">
                             ${isAdmin ? `
-                                <a href="admin.html" class="dropdown-item">
+                                <a href="admin.html" class="dropdown-item admin-item">
                                     <i class="fas fa-cogs"></i>
                                     <span>Gerenciar Pontos</span>
                                 </a>
@@ -457,18 +477,31 @@ class PontosEntretenimentoApp {
                         </div>
                     </div>
                 `;
+                
+                console.log('🔄 Substituindo HTML do botão...');
+                loginBtn.outerHTML = newHTML;
+                console.log('✅ Botão substituído com sucesso');
             }
         });
         
+        // Configurar o menu após substituição
+        console.log('🔧 Configurando menu do usuário...');
         this.configureUserMenu();
-        this.removeFavoriteButton(); // Remover botão de favoritos quando logado
+        
+        // Remover botão de favoritos apenas se for administrador
+        if (user.role === 'administrator') {
+            console.log('🗑️ Removendo botão de favoritos (usuário admin)...');
+            this.removeFavoriteButton();
+        }
+        
+        console.log('✅ updateLoginButton concluído');
     }
 
     /**
      * Remove o botão de favoritos da interface quando usuário está logado
      */
     removeFavoriteButton() {
-        console.log('Removendo botão de favoritos da interface...');
+        console.log('Removendo botão de favoritos da interface (apenas para administradores)...');
         
         // Procurar e remover botão de favoritos em todas as possíveis localizações
         const favoriteButtons = document.querySelectorAll('[data-categoria="favoritos"]');
@@ -483,7 +516,7 @@ class PontosEntretenimentoApp {
             const favoriteBtn = navContainer.querySelector('[data-categoria="favoritos"]');
             if (favoriteBtn) {
                 favoriteBtn.remove();
-                console.log('Botão de favoritos removido do container de navegação');
+                console.log('Botão de favoritos removido do container de navegação (interface admin)');
             }
         }
     }
@@ -534,56 +567,78 @@ class PontosEntretenimentoApp {
             if (userInfoBtn) {
                 console.log('Configurando menu suspenso para botão:', userInfoBtn.id);
                 
-                const menuId = userInfoBtn.id + '-menu';
-                const dropdownMenu = document.getElementById(menuId);
-                
-                if (dropdownMenu) {
-                    // Evento para mostrar/ocultar menu
+                // Usar o componente UserMenu se disponível
+                if (window.userMenu) {
                     userInfoBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        
-                        const isVisible = dropdownMenu.style.display !== 'none';
-                        
-                        // Fechar todos os outros menus
-                        document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
-                            if (menu !== dropdownMenu) {
-                                menu.style.display = 'none';
-                            }
-                        });
-                        
-                        // Toggle do menu atual
-                        dropdownMenu.style.display = isVisible ? 'none' : 'block';
-                        
-                        console.log('Menu suspenso toggled:', !isVisible);
+                        window.userMenu.toggle(userInfoBtn);
                     });
-                    
-                    // Configurar botão de logout no menu
-                    const logoutBtn = dropdownMenu.querySelector('.logout-btn');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            
-                            console.log('Logout solicitado');
-                            if (window.authManager) {
-                                window.authManager.logout();
-                                this.showNotification('Logout realizado com sucesso!', 'success');
-                            }
-                            
-                            // Fechar menu
-                            dropdownMenu.style.display = 'none';
-                        });
-                    }
+                } else {
+                    // Fallback para método antigo
+                    this.setupFallbackUserMenu(userInfoBtn);
                 }
             }
         });
+    }
+
+    /**
+     * Setup fallback user menu (método antigo como backup)
+     */
+    setupFallbackUserMenu(userInfoBtn) {
+        const menuId = userInfoBtn.id + '-menu';
+        const dropdownMenu = document.getElementById(menuId);
+        
+        if (dropdownMenu) {
+            // Evento para mostrar/ocultar menu
+            userInfoBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isVisible = dropdownMenu.style.display !== 'none';
+                
+                // Fechar todos os outros menus
+                document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
+                    if (menu !== dropdownMenu) {
+                        menu.style.display = 'none';
+                    }
+                });
+                
+                // Toggle do menu atual
+                dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                userInfoBtn.classList.toggle('menu-open', !isVisible);
+                
+                console.log('Menu suspenso toggled:', !isVisible);
+            });
+            
+            // Configurar botão de logout no menu
+            const logoutBtn = dropdownMenu.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('Logout solicitado');
+                    if (window.authManager) {
+                        window.authManager.logout();
+                        this.showNotification('Logout realizado com sucesso!', 'success');
+                    }
+                    
+                    // Fechar menu
+                    dropdownMenu.style.display = 'none';
+                    userInfoBtn.classList.remove('menu-open');
+                });
+            }
+        }
         
         // Fechar menu ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.user-dropdown')) {
                 document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
                     menu.style.display = 'none';
+                });
+                document.querySelectorAll('.user-info').forEach(btn => {
+                    btn.classList.remove('menu-open');
                 });
             }
         });
@@ -654,29 +709,37 @@ class PontosEntretenimentoApp {
     }
 
     configureEvents() {
+        console.log('Configurando eventos de autenticação...');
+        
         // Event listener para mudanças de autenticação
         document.addEventListener('authStateChanged', (e) => {
+            console.log('Event authStateChanged disparado!', e);
+            
             try {
                 const { type, user } = e.detail;
-                console.log(`Authentication event received: ${type}`);
+                console.log(`Processando evento de autenticação: ${type}`, user);
                 
                 if (type === 'login') {
+                    console.log('Processando login...');
                     this.configureLoggedUser(user);
                     this.reloadData();
                 } else if (type === 'logout') {
+                    console.log('Processando logout...');
                     this.configureVisitorUser();
                     this.reloadData();
                 }
             } catch (error) {
-                console.error('Error processing authentication event:', error);
+                console.error('Erro ao processar evento de autenticação:', error);
                 // Try to reconfigure as visitor in case of error
                 try {
                     this.configureVisitorUser();
                 } catch (fallbackError) {
-                    console.error('Error in configuration fallback:', fallbackError);
+                    console.error('Erro no fallback de configuração:', fallbackError);
                 }
             }
         });
+        
+        console.log('Event listener de autenticação configurado');
 
         // Event listener for loaded categories
         document.addEventListener('database_categoriasCarregadas', (e) => {
