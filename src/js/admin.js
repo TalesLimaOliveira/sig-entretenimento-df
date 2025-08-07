@@ -1,1 +1,1048 @@
-/***GerenciadorAdministrativo-PontosdeEntretenimentoDF*Funcionalidadesespecíficasparaopaineladministrativo**@authorTalesOliveira(github.com/TalesLimaOliveira)*@version1.0.0*@noteEstearquivocontémtrechosdecódigogeradoscomauxíliodeInteligênciaArtificial.*/classAdminManager{constructor(){this.currentTab='dashboard';this.currentPage=1;this.itemsPerPage=10;this.sortBy='nome';this.sortOrder='asc';this.filters={categoria:'todos',search:'',status:'todos'};this.charts={};this.init();}/***Inicializarogerenciadoradministrativo*/asyncinit(){try{console.log('InicializandoAdminManager...');//Debug:verificarestadodosmanagersconsole.log('AuthManagerdisponível:',!!window.authManager);console.log('DatabaseManagerdisponível:',!!window.databaseManager);console.log('ModalManagerdisponível:',!!window.modalManager);//Verificarpermissõesconsole.log('Verificandopermissõesdeadmin...');if(!window.authManager){console.error('AuthManagernãoestádisponível');thrownewError('AuthManagernãoinicializado');}constisAuthenticated=window.authManager.isAuthenticated();constcurrentUser=window.authManager.getCurrentUser();console.log('Usuárioautenticado:',isAuthenticated);console.log('Usuárioatual:',currentUser);//Senãoháusuáriologado,fazerloginautomáticocomoadminparadesenvolvimentoif(!isAuthenticated){console.log('Nenhumusuáriologado,tentandologinautomáticodeadmin...');try{awaitwindow.authManager.login('admin','admin');console.log('Loginautomáticodeadminrealizado');}catch(loginError){console.error('Falhanologinautomático:',loginError);this.redirectToLogin();return;}}if(!window.authManager.isAdmin()){console.warn('Usuárionãoéadministrador');this.redirectToLogin();return;}console.log('Permissõesconfirmadas-usuárioéadmin');//Configurarinterfaceconsole.log('Configurandointerface...');this.setupInterface();console.log('Interfaceconfigurada');//Carregardadosiniciaisconsole.log('Carregandodadosiniciais...');awaitthis.loadInitialData();console.log('Dadosiniciaiscarregados');//Configurareventlistenersconsole.log('Configurandoeventlisteners...');this.setupEventListeners();console.log('Eventlistenersconfigurados');//Inicializarmapaadminconsole.log('Inicializandomapaadmin...');this.initializeAdminMap();console.log('Mapaadmininicializado');//Removerteladeloadingconsole.log('Removendoteladeloading...');this.hideLoadingScreen();console.log('AdminManagerinicializadocomsucesso');}catch(error){console.error('ErrocríticoduranteinicializaçãodoAdminManager:',error);this.showNotification('Erroaoinicializarpaineladministrativo','error');//Tentarremoverloadingmesmocomerrothis.hideLoadingScreen();}}/***Configurarinterfaceadministrativa*/setupInterface(){//Atualizarinformaçõesdousuáriothis.updateUserInfo();//Mostrartabinicialthis.showTab('dashboard');//Configurartooltipsthis.setupTooltips();}/***Carregardadosiniciais*/asyncloadInitialData(){try{console.log('Iniciandocarregamentodedados...');//Carregarestatísticasconsole.log('Carregandoestatísticas...');awaitthis.loadStatistics();console.log('Estatísticascarregadas');//Carregardadosdastabsconsole.log('Carregandodadosdastabs...');awaitthis.loadTabData();console.log('Dadosdastabscarregados');//Inicializargráficosconsole.log('Inicializandográficos...');this.initializeCharts();console.log('Gráficosinicializados');}catch(error){console.error('Erroaocarregardados:',error);this.showNotification('Erroaocarregardados','error');throwerror;//Re-throwparasercapturadopeloinit()}}/***Configurareventlisteners*/setupEventListeners(){//Eventosdenavegaçãodocument.addEventListener('click',(e)=>{if(e.target.matches('.nav-tab')){consttab=e.target.dataset.tab;this.showTab(tab);}});//Eventosdefiltrosdocument.getElementById('filter-categoria')?.addEventListener('change',()=>{this.applyFilters();});document.getElementById('search-pontos')?.addEventListener('input',(e)=>{this.filters.search=e.target.value;this.applyFilters();});//Eventosdeordenaçãodocument.getElementById('sort-pontos')?.addEventListener('change',(e)=>{this.sortBy=e.target.value;this.applyFilters();});//Eventosdepaginaçãodocument.addEventListener('click',(e)=>{if(e.target.matches('[data-action="prev-page"]')){this.previousPage();}elseif(e.target.matches('[data-action="next-page"]')){this.nextPage();}});//Eventosdemodaldocument.addEventListener('click',(e)=>{if(e.target.matches('.action-btn-edit')){constid=e.target.dataset.id;this.editItem(id);}elseif(e.target.matches('.action-btn-delete')){constid=e.target.dataset.id;this.deleteItem(id);}});}/***Inicializarmapaadministrativo*/initializeAdminMap(){try{constmapElement=document.getElementById('admin-map');if(!mapElement)return;//Criarmapathis.adminMap=L.map('admin-map').setView([-15.7975,-47.8919],11);//AdicionartilelayerL.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'©OpenStreetMapcontributors'}).addTo(this.adminMap);//Carregarpontosthis.loadMapPoints();console.log('Mapaadministrativoinicializado');}catch(error){console.error('Erroaoinicializarmapaadmin:',error);}}/***Carregarpontosnomapa*/loadMapPoints(){constpontos=window.databaseManager?.obterTodos()||[];pontos.forEach(ponto=>{constmarker=L.marker([ponto.latitude,ponto.longitude]).addTo(this.adminMap).bindPopup(`<divclass="popup-admin"><h4>${ponto.nome}</h4><p><strong>Categoria:</strong>${ponto.categoria}</p><p><strong>Endereço:</strong>${ponto.endereco||'N/A'}</p><divclass="popup-actions"><buttonclass="btnbtn-smbtn-primary"onclick="window.adminManager.editPoint(${ponto.id})"><iclass="fasfa-edit"></i>Editar</button><buttonclass="btnbtn-smbtn-danger"onclick="window.adminManager.deletePoint(${ponto.id})"><iclass="fasfa-trash"></i>Excluir</button></div></div>`);//Adicionareventodecliqueparaediçãomarker.on('click',()=>{this.selectPoint(ponto.id);});});}/***Carregarestatísticas*/asyncloadStatistics(){try{conststats=window.databaseManager?.getEstatisticas?.()||{totalPontos:0,pontosPorCategoria:{},pontosRecentes:[]};//Atualizarcardsdeestatísticas(comfallbackseelementosnãoexistirem)conststatElements={'stat-total-pontos':stats.totalPontos,'stat-categorias':Object.keys(stats.pontosPorCategoria||{}).length,'stat-usuarios':window.authManager?.getTotalUsers?.()||0,'stat-hoje':this.getPointsAddedToday()};Object.entries(statElements).forEach(([id,value])=>{constelement=document.getElementById(id);if(element){element.textContent=value;}});}catch(error){console.error('Erroaocarregarestatísticas:',error);}}/***Carregardadosdastabs*/asyncloadTabData(){try{console.log('Carregandodadosdepontos...');//Carregardadosdatabdepontosthis.loadPointsData();console.log('Carregandodadosdecategorias...');//Carregardadosdatabdecategoriasthis.loadCategoriesData();console.log('Carregandodadosdeusuários...');//Carregardadosdatabdeusuáriosthis.loadUsersData();console.log('Todososdadosdastabscarregados');}catch(error){console.error('Erroaocarregardadosdastabs:',error);throwerror;}}/***Carregardadosdepontos*/loadPointsData(){constpontos=window.databaseManager?.obterTodos()||[];consttbody=document.getElementById('pontos-tbody');if(!tbody)return;//AplicarfiltrosletfilteredPontos=this.filterPoints(pontos);//AplicarordenaçãofilteredPontos=this.sortPoints(filteredPontos);//AplicarpaginaçãoconststartIndex=(this.currentPage-1)*this.itemsPerPage;constendIndex=startIndex+this.itemsPerPage;constpaginatedPontos=filteredPontos.slice(startIndex,endIndex);//GerarHTMLtbody.innerHTML=paginatedPontos.map(ponto=>`<tr><td>${ponto.id}</td><td>${ponto.nome}</td><td><spanclass="badgebadge-primary">${ponto.categoria}</span></td><td>${ponto.endereco||'N/A'}</td><td><spanclass="status-badge${ponto.status==='aprovado'?'status-active':'status-pending'}">${ponto.status||'Ativo'}</span></td><td><divclass="table-actions"><buttonclass="btnbtn-smbtn-primary"onclick="window.adminManager.editPoint(${ponto.id})"title="Editar"><iclass="fasfa-edit"></i></button><buttonclass="btnbtn-smbtn-danger"onclick="window.adminManager.deletePoint(${ponto.id})"title="Excluir"><iclass="fasfa-trash"></i></button></div></td></tr>`).join('');//Atualizarpaginaçãothis.updatePagination(filteredPontos.length);}/***Carregardadosdecategorias*/loadCategoriesData(){constcategorias=databaseManager.getCategorias();constcontainer=document.getElementById('categories-grid');if(!container)return;container.innerHTML=categorias.map(categoria=>{conststats=databaseManager.getEstatisticas();constcount=stats.pontosPorCategoria[categoria.id]||0;return`<divclass="category-card"><divclass="category-header"><divclass="category-icon"style="background:${categoria.cor}20;color:${categoria.cor};"><iclass="${categoria.icon}"></i></div><divclass="category-actions"><buttonclass="action-btnaction-btn-edit"onclick="adminManager.editCategory('${categoria.id}')"><iclass="fasfa-edit"></i></button><buttonclass="action-btnaction-btn-delete"onclick="adminManager.deleteCategory('${categoria.id}')"><iclass="fasfa-trash"></i></button></div></div><divclass="category-name">${categoria.nome}</div><divclass="category-description">${categoria.descricao||'Semdescrição'}</div><divclass="category-stats"><span>Pontos:<spanclass="category-count">${count}</span></span><spanstyle="color:${categoria.cor};">●</span></div></div>`;}).join('');}/***Carregardadosdeusuários*/loadUsersData(){constusuarios=authManager.getAllUsers();consttbody=document.getElementById('usuarios-tbody');if(!tbody)return;tbody.innerHTML=usuarios.map(usuario=>`<tr><td>${usuario.id}</td><td>${usuario.name}</td><td>${usuario.email||'N/A'}</td><td><spanclass="badge${usuario.role==='administrator'?'badge-danger':'badge-secondary'}">${usuario.role==='administrator'?'Administrador':'Usuário'}</span></td><td><spanclass="status-badge${usuario.active?'status-active':'status-inactive'}">${usuario.active?'Ativo':'Inativo'}</span></td><td>${usuario.lastLogin?newDate(usuario.lastLogin).toLocaleDateString():'Nunca'}</td><td><divclass="table-actions"><buttonclass="action-btnaction-btn-edit"onclick="adminManager.editUser(${usuario.id})"><iclass="fasfa-edit"></i></button><buttonclass="action-btnaction-btn-delete"onclick="adminManager.deleteUser(${usuario.id})"${usuario.role==='administrator'?'disabled':''}><iclass="fasfa-trash"></i></button></div></td></tr>`).join('');}/***Obterpontosadicionadoshoje*/getPointsAddedToday(){constpontos=window.databaseManager?.obterTodos()||[];consthoje=newDate().toDateString();returnpontos.filter(ponto=>{constdataAdicao=newDate(ponto.dataAdicao||ponto.dataCriacao||Date.now());returndataAdicao.toDateString()===hoje;}).length;}/***Mostrartabespecífica*@param{string}tabName-Nomedatab*/showTab(tabName){//Removeractivedetodasastabsdocument.querySelectorAll('.nav-tab').forEach(tab=>{tab.classList.remove('active');});document.querySelectorAll('.tab-content').forEach(content=>{content.classList.remove('active');});//Ativartabatualdocument.querySelector(`[data-tab="${tabName}"]`).classList.add('active');document.getElementById(`tab-${tabName}`).classList.add('active');this.currentTab=tabName;//Carregardadosespecíficosdatabthis.loadTabSpecificData(tabName);}/***Carregardadosespecíficosdeumatab*@param{string}tabName-Nomedatab*/loadTabSpecificData(tabName){switch(tabName){case'dashboard':this.loadStatistics();this.initializeCharts();break;case'pontos':this.loadPointsData();this.populateFilters();break;case'pendentes':this.mostrarPontosPendentes();break;case'ocultos':this.mostrarPontosOcultos();break;case'sugestoes':this.mostrarSugestoes();break;case'usuarios':this.loadUsersData();break;case'relatorios':this.loadReportsData();break;}//Atualizarcontadoressemprequetrocardeabathis.atualizarContadores();}/***Inicializargráficos*/initializeCharts(){this.initializeCategoriesChart();}/***Inicializargráficodecategorias*/initializeCategoriesChart(){constcanvas=document.getElementById('categorias-chart');if(!canvas)return;constctx=canvas.getContext('2d');conststats=databaseManager.getEstatisticas();constcategorias=databaseManager.getCategorias();constdata={labels:categorias.map(c=>c.nome),datasets:[{label:'PontosporCategoria',data:categorias.map(c=>stats.pontosPorCategoria[c.id]||0),backgroundColor:categorias.map(c=>c.cor+'80'),borderColor:categorias.map(c=>c.cor),borderWidth:2}]};if(this.charts.categorias){this.charts.categorias.destroy();}this.charts.categorias=newChart(ctx,{type:'doughnut',data:data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});}/***Filtrarpontos*@param{Array}pontos-Arraydepontos*@returns{Array}Pontosfiltrados*/filterPoints(pontos){returnpontos.filter(ponto=>{//Filtroporcategoriaif(this.filters.categoria!=='todos'&&ponto.categoria!==this.filters.categoria){returnfalse;}//Filtroporbuscaif(this.filters.search){constsearchTerm=this.filters.search.toLowerCase();returnponto.nome.toLowerCase().includes(searchTerm)||ponto.endereco.toLowerCase().includes(searchTerm)||ponto.categoria.toLowerCase().includes(searchTerm);}returntrue;});}/***Ordenarpontos*@param{Array}pontos-Arraydepontos*@returns{Array}Pontosordenados*/sortPoints(pontos){returnpontos.sort((a,b)=>{letaVal=a[this.sortBy];letbVal=b[this.sortBy];if(typeofaVal==='string'){aVal=aVal.toLowerCase();bVal=bVal.toLowerCase();}if(this.sortOrder==='asc'){returnaVal>bVal?1:-1;}else{returnaVal<bVal?1:-1;}});}/***Aplicarfiltros*/applyFilters(){this.filters.categoria=document.getElementById('filter-categoria')?.value||'todos';this.currentPage=1;//Resetparaprimeirapáginathis.loadPointsData();}/***Atualizarpaginação*@param{number}totalItems-Totaldeitens*/updatePagination(totalItems){consttotalPages=Math.ceil(totalItems/this.itemsPerPage);//AtualizarinformaçõesconstpaginationInfo=document.getElementById('pagination-info');if(paginationInfo){conststart=(this.currentPage-1)*this.itemsPerPage+1;constend=Math.min(start+this.itemsPerPage-1,totalItems);paginationInfo.textContent=`Mostrando${start}a${end}de${totalItems}pontos`;}//AtualizarcontrolesconstpaginationCurrent=document.getElementById('pagination-current');if(paginationCurrent){paginationCurrent.textContent=`Página${this.currentPage}de${totalPages}`;}//AtualizarbotõesconstbtnPrev=document.querySelector('[data-action="prev-page"]');constbtnNext=document.querySelector('[data-action="next-page"]');if(btnPrev){btnPrev.disabled=this.currentPage===1;}if(btnNext){btnNext.disabled=this.currentPage===totalPages;}}/***Páginaanterior*/previousPage(){if(this.currentPage>1){this.currentPage--;this.loadPointsData();}}/***Próximapágina*/nextPage(){this.currentPage++;this.loadPointsData();}/***Visualizarponto*@param{number}id-IDdoponto*/viewPoint(id){constponto=databaseManager.obterPorId(id);if(!ponto)return;constconteudo=`<divclass="point-details"><h4>${ponto.nome}</h4><p><strong>Categoria:</strong>${ponto.categoria}</p><p><strong>Endereço:</strong>${ponto.endereco}</p><p><strong>Descrição:</strong>${ponto.descricao||'Semdescrição'}</p><p><strong>Telefone:</strong>${ponto.telefone||'Nãoinformado'}</p><p><strong>Horário:</strong>${ponto.horario||'Nãoinformado'}</p><p><strong>Coordenadas:</strong>${ponto.latitude},${ponto.longitude}</p><p><strong>DatadeCriação:</strong>${newDate(ponto.dataCriacao||Date.now()).toLocaleDateString()}</p></div>`;constbotoes=[{texto:'Fechar',classe:'btn-secondary',acao:()=>modalManager.fecharModal()}];constmodal=modalManager.criarModal(`Detalhes:${ponto.nome}`,conteudo,botoes);modalManager.mostrarModal(modal);}/***Editarponto*@param{number}id-IDdoponto*/editPoint(id){constponto=databaseManager.obterPorId(id);if(!ponto)return;modalManager.abrirModalEdicaoPonto(ponto);}/***Excluirponto*@param{number}id-IDdoponto*/deletePoint(id){constponto=databaseManager.obterPorId(id);if(!ponto)return;if(confirm(`Temcertezaquedesejaexcluiroponto"${ponto.nome}"?`)){if(databaseManager.removerPonto(id)){this.showNotification('Pontoexcluídocomsucesso!','success');this.loadPointsData();this.loadStatistics();this.loadMapPoints();}else{this.showNotification('Erroaoexcluirponto','error');}}}/***Obterpontosadicionadoshoje*@returns{number}Quantidadedepontos*/getPointsAddedToday(){consthoje=newDate();hoje.setHours(0,0,0,0);constpontos=databaseManager.obterTodos();returnpontos.filter(ponto=>{constdataCriacao=newDate(ponto.dataCriacao||0);returndataCriacao>=hoje;}).length;}/***Popularizarfiltros*/populateFilters(){constselectCategoria=document.getElementById('filter-categoria');if(!selectCategoria)return;constcategorias=databaseManager.getCategorias();selectCategoria.innerHTML='<optionvalue="todos">Todas</option>';categorias.forEach(categoria=>{constoption=document.createElement('option');option.value=categoria.id;option.textContent=categoria.nome;selectCategoria.appendChild(option);});}/***Atualizarinformaçõesdousuário*/updateUserInfo(){constusuario=authManager.getCurrentUser();if(!usuario)return;constuserNameElement=document.querySelector('.user-name');if(userNameElement){userNameElement.textContent=usuario.name;}}/***Ocultarteladeloading*/hideLoadingScreen(){try{constloadingScreen=document.querySelector('.loading-screen');if(loadingScreen){loadingScreen.style.display='none';console.log('Teladeloadingremovida');}else{console.warn('Elemento.loading-screennãoencontrado');}}catch(error){console.error('Erroaoremoverteladeloading:',error);}}/***Configurartooltips*/setupTooltips(){//!TODO:Implementinformativetooltipsinadmininterface}/***Redirecionarparalogin*/redirectToLogin(){window.location.href='index.html';}/***Mostrarnotificação*@param{string}mensagem-Mensagemdanotificação*@param{string}tipo-Tipodanotificação*/showNotification(mensagem,tipo='info'){//Usarosistemadenotificaçõesdoappprincipalif(window.app){window.app.showNotification(mensagem,tipo);}else{console.log(`${tipo.toUpperCase()}:${mensagem}`);}}/***Toggledomenudousuário*/toggleUserMenu(){constuserMenu=document.querySelector('.user-menu');if(userMenu){userMenu.classList.toggle('active');}}/***Mostrarmodaldenovoponto*/mostrarModalNovoPonto(){modalManager.abrirModalAdicaoPonto();}/***Mostrarmodaldenovacategoria*/mostrarModalNovaCategoria(){//!TODO:Implementnewcategorymodalfunctionalitythis.showNotification('Funcionalidadedenovacategoriaemdesenvolvimento','info');}/***Mostrarmodaldenovousuário*/mostrarModalNovoUsuario(){//!TODO:Implementnewusermodalfunctionalitythis.showNotification('Funcionalidadedenovousuárioemdesenvolvimento','info');}/***Exportarrelatório*/exportarRelatorio(){//!TODO:Implementreportexportfunctionalitythis.showNotification('Funcionalidadedeexportaçãoderelatórioemdesenvolvimento','info');}/***Gerarrelatório*/gerarRelatorio(){//!TODO:Implementreportgenerationfunctionalitythis.showNotification('Funcionalidadedegeraçãoderelatórioemdesenvolvimento','info');}/***Mostrarajuda*/mostrarAjuda(){//!TODO:Implementhelpsystemfunctionalitythis.showNotification('Sistemadeajudaemdesenvolvimento','info');}/***Mostrarlogs*/mostrarLogs(){//!TODO:Implementlogsvisualizationfunctionalitythis.showNotification('Visualizaçãodelogsemdesenvolvimento','info');}/***Gerenciarpontospendentes*/mostrarPontosPendentes(){constpontosPendentes=databaseManager.getPontosPendentes();consthtml=`<divclass="admin-section"><divclass="section-header"><h2><iclass="fasfa-clock"></i>PontosPendentesdeAprovação</h2><p>Total:${pontosPendentes.length}pontosaguardandoaprovação</p></div>${pontosPendentes.length===0?`<divclass="empty-state"><iclass="fasfa-check-circle"></i><h3>Nenhumpontopendente</h3><p>Todosospontosforamrevisados!</p></div>`:`<divclass="table-responsive"><tableclass="admin-table"><thead><tr><th>Nome</th><th>Categoria</th><th>Enviadopor</th><th>Data</th><th>Ações</th></tr></thead><tbody>${pontosPendentes.map(ponto=>`<tr><td><strong>${ponto.nome}</strong><br><smallclass="text-muted">${ponto.endereco||'Semendereço'}</small></td><td><spanclass="badgebadge-info">${ponto.categoria}</span></td><td>${ponto.adicionadoPor||'Anônimo'}</td><td>${newDate(ponto.dataAdicao).toLocaleDateString('pt-BR')}</td><td><divclass="btn-group"><buttonclass="btnbtn-successbtn-sm"onclick="adminManager.aprovarPonto(${ponto.id})"><iclass="fasfa-check"></i>Aprovar</button><buttonclass="btnbtn-warningbtn-sm"onclick="adminManager.visualizarPonto(${ponto.id})"><iclass="fasfa-eye"></i>Ver</button><buttonclass="btnbtn-dangerbtn-sm"onclick="adminManager.rejeitarPonto(${ponto.id})"><iclass="fasfa-times"></i>Rejeitar</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;this.renderTabContent(html);}/***Aprovarpontopendente*/aprovarPonto(pontoId){if(confirm('Aprovaresteponto?')){try{databaseManager.aprovarPonto(pontoId,'administrator');this.showNotification('Pontoaprovadocomsucesso!','success');this.mostrarPontosPendentes();//Recarregarlistathis.atualizarContadores();}catch(error){this.showNotification('Erroaoaprovarponto:'+error.message,'error');}}}/***Rejeitarpontopendente*/rejeitarPonto(pontoId){if(confirm('Rejeitaresteponto?Eleserámovidoparapontosocultos.')){try{databaseManager.ocultarPonto(pontoId,'administrator');this.showNotification('Pontorejeitadoeocultado','warning');this.mostrarPontosPendentes();//Recarregarlistathis.atualizarContadores();}catch(error){this.showNotification('Erroaorejeitarponto:'+error.message,'error');}}}/***Mostrarpontosocultos*/mostrarPontosOcultos(){constpontosOcultos=databaseManager.getPontosOcultos();consthtml=`<divclass="admin-section"><divclass="section-header"><h2><iclass="fasfa-eye-slash"></i>PontosOcultos</h2><p>Total:${pontosOcultos.length}pontosocultos</p></div>${pontosOcultos.length===0?`<divclass="empty-state"><iclass="fasfa-eye"></i><h3>Nenhumpontooculto</h3><p>Todosospontosestãovisíveis!</p></div>`:`<divclass="table-responsive"><tableclass="admin-table"><thead><tr><th>Nome</th><th>Categoria</th><th>DataOcultação</th><th>Ações</th></tr></thead><tbody>${pontosOcultos.map(ponto=>`<tr><td><strong>${ponto.nome}</strong><br><smallclass="text-muted">${ponto.endereco||'Semendereço'}</small></td><td><spanclass="badgebadge-secondary">${ponto.categoria}</span></td><td>${ponto.dataOcultacao?newDate(ponto.dataOcultacao).toLocaleDateString('pt-BR'):'N/A'}</td><td><divclass="btn-group"><buttonclass="btnbtn-successbtn-sm"onclick="adminManager.restaurarPonto(${ponto.id})"><iclass="fasfa-undo"></i>Restaurar</button><buttonclass="btnbtn-infobtn-sm"onclick="adminManager.visualizarPonto(${ponto.id})"><iclass="fasfa-eye"></i>Ver</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;this.renderTabContent(html);}/***Restaurarpontooculto*/restaurarPonto(pontoId){if(confirm('Restauraresteponto?Eleficarávisívelnovamente.')){try{databaseManager.restaurarPonto(pontoId,'administrator');this.showNotification('Pontorestauradocomsucesso!','success');this.mostrarPontosOcultos();//Recarregarlistathis.atualizarContadores();}catch(error){this.showNotification('Erroaorestaurarponto:'+error.message,'error');}}}/***Mostrarsugestõespendentes*/mostrarSugestoes(){constsugestoes=databaseManager.getSugestoesPendentes();consthtml=`<divclass="admin-section"><divclass="section-header"><h2><iclass="fasfa-edit"></i>SugestõesdeMudança</h2><p>Total:${sugestoes.length}sugestõespendentes</p></div>${sugestoes.length===0?`<divclass="empty-state"><iclass="fasfa-check-circle"></i><h3>Nenhumasugestãopendente</h3><p>Todasassugestõesforamrevisadas!</p></div>`:`<divclass="suggestions-list">${sugestoes.map(sugestao=>{constponto=databaseManager.getPontoById(sugestao.pontoId);return`<divclass="suggestion-card"><divclass="suggestion-header"><h4>${ponto?ponto.nome:'Pontonãoencontrado'}</h4><spanclass="badgebadge-warning">Pendente</span></div><divclass="suggestion-content"><p><strong>Sugeridopor:</strong>${sugestao.usuarioSugeriu}</p><p><strong>Data:</strong>${newDate(sugestao.dataSugestao).toLocaleDateString('pt-BR')}</p><h5>Mudançaspropostas:</h5><divclass="changes-list">${Object.entries(sugestao.sugestoes).map(([campo,valor])=>`<divclass="change-item"><strong>${campo}:</strong>${valor}</div>`).join('')}</div></div><divclass="suggestion-actions"><buttonclass="btnbtn-successbtn-sm"onclick="adminManager.aprovarSugestao(${sugestao.id})"><iclass="fasfa-check"></i>Aprovar</button><buttonclass="btnbtn-dangerbtn-sm"onclick="adminManager.rejeitarSugestao(${sugestao.id})"><iclass="fasfa-times"></i>Rejeitar</button></div></div>`;}).join('')}</div>`}</div>`;this.renderTabContent(html);}/***Aprovarsugestão*/aprovarSugestao(sugestaoId){if(confirm('Aprovarestasugestão?Asmudançasserãoaplicadasaoponto.')){try{databaseManager.aprovarSugestao(sugestaoId,'administrator');this.showNotification('Sugestãoaprovadacomsucesso!','success');this.mostrarSugestoes();//Recarregarlistathis.atualizarContadores();}catch(error){this.showNotification('Erroaoaprovarsugestão:'+error.message,'error');}}}/***Rejeitarsugestão*/rejeitarSugestao(sugestaoId){if(confirm('Rejeitarestasugestão?')){//!TODO:Implementpointrejectionlogicwithuserfeedbackthis.showNotification('Funcionalidadeemdesenvolvimento','info');}}/***Atualizarcontadoresnasabas*/atualizarContadores(){constpendentesCount=databaseManager.getPontosPendentes().length;constsugestoesCount=databaseManager.getSugestoesPendentes().length;constpendentesBadge=document.getElementById('pendentes-count');constsugestoesBadge=document.getElementById('sugestoes-count');if(pendentesBadge){pendentesBadge.textContent=pendentesCount;pendentesCount>0?pendentesBadge.classList.add('pulse'):pendentesBadge.classList.remove('pulse');}if(sugestoesBadge){sugestoesBadge.textContent=sugestoesCount;sugestoesCount>0?sugestoesBadge.classList.add('pulse'):sugestoesBadge.classList.remove('pulse');}}/***Mostrarnotificação*/showNotification(message,type='info'){//Implementaçãosimplesdenotificaçãoconstcolors={success:'#27ae60',error:'#e74c3c',warning:'#f39c12',info:'#3498db'};constnotification=document.createElement('div');notification.style.cssText=`position:fixed;top:20px;right:20px;background:${colors[type]};color:white;padding:1rem;border-radius:6px;z-index:10001;max-width:300px;box-shadow:04px12pxrgba(0,0,0,0.15);`;notification.textContent=message;document.body.appendChild(notification);setTimeout(()=>{notification.remove();},4000);}}//Disponibilizarglobalmentewindow.AdminManager=AdminManager;
+/**
+ * Gerenciador Administrativo - Pontos de Entretenimento DF
+ * Funcionalidades específicas para o painel administrativo
+ */
+class AdminManager {
+    constructor() {
+        this.currentTab = 'dashboard';
+        this.currentPage = 1;
+        this.itemsPerPage = 10;
+        this.sortBy = 'nome';
+        this.sortOrder = 'asc';
+        this.filters = {
+            categoria: 'todos',
+            search: '',
+            status: 'todos'
+        };
+        this.charts = {};
+        this.init();
+    }
+
+    /**
+     * Inicializar o gerenciador administrativo
+     */
+    async init() {
+        try {
+            console.log('🚀 Inicializando AdminManager...');
+
+            // Verificar permissões
+            if (!window.authManager) {
+                console.error('❌ AuthManager não está disponível');
+                throw new Error('AuthManager não inicializado');
+            }
+
+            const isAuthenticated = window.authManager.isAuthenticated();
+            const currentUser = window.authManager.getCurrentUser();
+            
+            console.log('👤 Usuário autenticado:', isAuthenticated);
+            console.log('📋 Usuário atual:', currentUser);
+
+            // Se não há usuário logado, fazer login automático como admin para desenvolvimento
+            if (!isAuthenticated) {
+                console.log('🔐 Nenhum usuário logado, tentando login automático de admin...');
+                try {
+                    await window.authManager.login('admin', 'admin');
+                    console.log('✅ Login automático de admin realizado');
+                } catch (loginError) {
+                    console.error('❌ Falha no login automático:', loginError);
+                    this.redirectToLogin();
+                    return;
+                }
+            }
+
+            if (!window.authManager.isAdmin()) {
+                console.warn('⚠️ Usuário não é administrador');
+                this.redirectToLogin();
+                return;
+            }
+
+            console.log('✅ Permissões confirmadas - usuário é admin');
+
+            // Configurar interface
+            this.setupInterface();
+            
+            // Carregar dados iniciais
+            await this.loadInitialData();
+            
+            // Configurar event listeners
+            this.setupEventListeners();
+            
+            // Inicializar mapa admin
+            this.initializeAdminMap();
+            
+            // Remover tela de loading
+            this.hideLoadingScreen();
+            
+            console.log('✅ AdminManager inicializado com sucesso');
+        } catch (error) {
+            console.error('💥 Erro crítico durante inicialização do AdminManager:', error);
+            this.showNotification('Erro ao inicializar painel administrativo', 'error');
+            this.hideLoadingScreen();
+        }
+    }
+
+    /**
+     * Configurar interface administrativa
+     */
+    setupInterface() {
+        // Atualizar informações do usuário
+        this.updateUserInfo();
+        
+        // Mostrar tab inicial
+        this.showTab('dashboard');
+        
+        // Configurar tooltips
+        this.setupTooltips();
+    }
+
+    /**
+     * Carregar dados iniciais
+     */
+    async loadInitialData() {
+        try {
+            console.log('📊 Iniciando carregamento de dados...');
+            
+            // Carregar estatísticas
+            await this.loadStatistics();
+            
+            // Carregar dados das tabs
+            await this.loadTabData();
+            
+            // Inicializar gráficos
+            this.initializeCharts();
+            
+            // Atualizar contadores
+            this.atualizarContadores();
+            
+            console.log('✅ Dados iniciais carregados');
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados:', error);
+            this.showNotification('Erro ao carregar dados', 'error');
+            throw error;
+        }
+    }
+
+    /**
+     * Configurar event listeners
+     */
+    setupEventListeners() {
+        // Eventos de navegação
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.nav-tab')) {
+                const tab = e.target.dataset.tab;
+                this.showTab(tab);
+            }
+        });
+
+        // Eventos de filtros
+        document.getElementById('filter-categoria')?.addEventListener('change', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('search-pontos')?.addEventListener('input', (e) => {
+            this.filters.search = e.target.value;
+            this.applyFilters();
+        });
+
+        // Eventos de ordenação
+        document.getElementById('sort-pontos')?.addEventListener('change', (e) => {
+            this.sortBy = e.target.value;
+            this.applyFilters();
+        });
+
+        // Eventos de paginação
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="prev-page"]')) {
+                this.previousPage();
+            } else if (e.target.matches('[data-action="next-page"]')) {
+                this.nextPage();
+            }
+        });
+
+        // Eventos de modal
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.action-btn-edit')) {
+                const id = e.target.dataset.id;
+                this.editItem(id);
+            } else if (e.target.matches('.action-btn-delete')) {
+                const id = e.target.dataset.id;
+                this.deleteItem(id);
+            }
+        });
+    }
+
+    /**
+     * Mostrar tab específica
+     * @param {string} tabName - Nome da tab
+     */
+    showTab(tabName) {
+        // Remover active de todas as tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // Ativar tab atual
+        const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+        const tabContent = document.getElementById(`tab-${tabName}`);
+        
+        if (tabButton) tabButton.classList.add('active');
+        if (tabContent) tabContent.classList.add('active');
+        
+        this.currentTab = tabName;
+
+        // Carregar dados específicos da tab
+        this.loadTabSpecificData(tabName);
+    }
+
+    /**
+     * Carregar dados específicos de uma tab
+     * @param {string} tabName - Nome da tab
+     */
+    loadTabSpecificData(tabName) {
+        switch (tabName) {
+            case 'dashboard':
+                this.loadStatistics();
+                this.initializeCharts();
+                break;
+            case 'pontos':
+                this.mostrarPontosConfirmados();
+                this.populateFilters();
+                break;
+            case 'pendentes':
+                this.mostrarPontosPendentes();
+                break;
+            case 'ocultos':
+                this.mostrarPontosOcultos();
+                break;
+            case 'sugestoes':
+                this.mostrarSugestoes();
+                break;
+            case 'usuarios':
+                this.loadUsersData();
+                break;
+            case 'relatorios':
+                this.loadReportsData();
+                break;
+        }
+
+        // Atualizar contadores sempre que trocar de aba
+        this.atualizarContadores();
+    }
+
+    /**
+     * Mostrar pontos confirmados (principais)
+     */
+    mostrarPontosConfirmados() {
+        const pontosConfirmados = window.databaseManager?.confirmedPoints || [];
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-map-marker-alt"></i> Pontos Confirmados</h2>
+                    <p>Total: ${pontosConfirmados.length} pontos ativos no mapa</p>
+                    <button class="btn btn-primary" onclick="window.addPointModal?.open()">
+                        <i class="fas fa-plus"></i> Adicionar Ponto
+                    </button>
+                </div>
+                
+                ${pontosConfirmados.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>Nenhum ponto confirmado</h3>
+                        <p>Adicione o primeiro ponto ao sistema!</p>
+                        <button class="btn btn-primary" onclick="window.addPointModal?.open()">
+                            <i class="fas fa-plus"></i> Adicionar Primeiro Ponto
+                        </button>
+                    </div>
+                ` : `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Endereço</th>
+                                    <th>Data Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pontosConfirmados.map(ponto => `
+                                    <tr>
+                                        <td>${ponto.id}</td>
+                                        <td>
+                                            <strong>${ponto.nome}</strong>
+                                            ${ponto.descricao ? `<br><small class="text-muted">${ponto.descricao.substring(0, 50)}${ponto.descricao.length > 50 ? '...' : ''}</small>` : ''}
+                                        </td>
+                                        <td><span class="badge badge-primary">${this.getCategoryName(ponto.categoria)}</span></td>
+                                        <td>${ponto.endereco || 'Sem endereço'}</td>
+                                        <td>${new Date(ponto.dataCriacao || ponto.dataAdicao || Date.now()).toLocaleDateString('pt-BR')}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Visualizar">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-warning btn-sm" onclick="adminManager.editarPonto(${ponto.id})" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="adminManager.ocultarPonto(${ponto.id})" title="Ocultar">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPonto(${ponto.id})" title="Deletar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Mostrar pontos pendentes de aprovação
+     */
+    mostrarPontosPendentes() {
+        const pontosPendentes = window.databaseManager?.pendingPoints || [];
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> Pontos Pendentes de Aprovação</h2>
+                    <p>Total: ${pontosPendentes.length} pontos aguardando aprovação</p>
+                </div>
+                
+                ${pontosPendentes.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Nenhum ponto pendente</h3>
+                        <p>Todos os pontos foram revisados!</p>
+                    </div>
+                ` : `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Enviado por</th>
+                                    <th>Data</th>
+                                    <th>Localização</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pontosPendentes.map(ponto => `
+                                    <tr>
+                                        <td>
+                                            <strong>${ponto.nome}</strong>
+                                            ${ponto.descricao ? `<br><small class="text-muted">${ponto.descricao.substring(0, 80)}${ponto.descricao.length > 80 ? '...' : ''}</small>` : ''}
+                                        </td>
+                                        <td><span class="badge badge-info">${this.getCategoryName(ponto.categoria)}</span></td>
+                                        <td>${ponto.adicionadoPor || 'Anônimo'}</td>
+                                        <td>${new Date(ponto.dataAdicao || ponto.dataCriacao || Date.now()).toLocaleDateString('pt-BR')}</td>
+                                        <td>
+                                            ${ponto.endereco || 'Sem endereço'}<br>
+                                            <small class="text-muted">
+                                                ${ponto.coordenadas ? `${ponto.coordenadas[0].toFixed(4)}, ${ponto.coordenadas[1].toFixed(4)}` : 'Sem coordenadas'}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical btn-group-sm">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.aprovarPonto(${ponto.id})" title="Aprovar">
+                                                    <i class="fas fa-check"></i> Aprovar
+                                                </button>
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Visualizar">
+                                                    <i class="fas fa-eye"></i> Ver Detalhes
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.rejeitarPonto(${ponto.id})" title="Rejeitar">
+                                                    <i class="fas fa-times"></i> Rejeitar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Mostrar pontos ocultos
+     */
+    mostrarPontosOcultos() {
+        const pontosOcultos = window.databaseManager?.hiddenPoints || [];
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-eye-slash"></i> Pontos Ocultos</h2>
+                    <p>Total: ${pontosOcultos.length} pontos ocultos</p>
+                </div>
+                
+                ${pontosOcultos.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-eye"></i>
+                        <h3>Nenhum ponto oculto</h3>
+                        <p>Todos os pontos estão visíveis!</p>
+                    </div>
+                ` : `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Data Ocultação</th>
+                                    <th>Motivo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pontosOcultos.map(ponto => `
+                                    <tr>
+                                        <td>
+                                            <strong>${ponto.nome}</strong>
+                                            ${ponto.descricao ? `<br><small class="text-muted">${ponto.descricao.substring(0, 50)}${ponto.descricao.length > 50 ? '...' : ''}</small>` : ''}
+                                        </td>
+                                        <td><span class="badge badge-secondary">${this.getCategoryName(ponto.categoria)}</span></td>
+                                        <td>${ponto.dataOcultacao ? new Date(ponto.dataOcultacao).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                                        <td>${ponto.motivoOcultacao || 'Não informado'}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-success btn-sm" onclick="adminManager.restaurarPonto(${ponto.id})" title="Restaurar">
+                                                    <i class="fas fa-undo"></i> Restaurar
+                                                </button>
+                                                <button class="btn btn-info btn-sm" onclick="adminManager.visualizarPonto(${ponto.id})" title="Ver">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="adminManager.deletarPontoPermanente(${ponto.id})" title="Deletar Permanentemente">
+                                                    <i class="fas fa-trash-alt"></i> Deletar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        this.renderTabContent(html);
+    }
+
+    /**
+     * Aprovar ponto pendente
+     */
+    aprovarPonto(pontoId) {
+        if (confirm('Aprovar este ponto? Ele ficará visível no mapa.')) {
+            try {
+                const resultado = window.databaseManager.aprovarPonto(pontoId, 'administrator');
+                this.showNotification('Ponto aprovado com sucesso!', 'success');
+                this.mostrarPontosPendentes(); // Recarregar lista
+                this.atualizarContadores();
+                
+                console.log('✅ Ponto aprovado:', resultado);
+            } catch (error) {
+                console.error('❌ Erro ao aprovar ponto:', error);
+                this.showNotification('Erro ao aprovar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Rejeitar ponto pendente (mover para ocultos)
+     */
+    rejeitarPonto(pontoId) {
+        const motivo = prompt('Informe o motivo da rejeição (opcional):') || 'Rejeitado pelo administrador';
+        
+        if (confirm('Rejeitar este ponto? Ele será movido para pontos ocultos.')) {
+            try {
+                const resultado = window.databaseManager.ocultarPonto(pontoId, 'administrator');
+                
+                // Adicionar motivo da ocultação
+                if (resultado) {
+                    resultado.motivoOcultacao = motivo;
+                    window.databaseManager.saveAllData();
+                }
+                
+                this.showNotification('Ponto rejeitado e ocultado', 'warning');
+                this.mostrarPontosPendentes(); // Recarregar lista
+                this.atualizarContadores();
+                
+                console.log('⚠️ Ponto rejeitado:', resultado);
+            } catch (error) {
+                console.error('❌ Erro ao rejeitar ponto:', error);
+                this.showNotification('Erro ao rejeitar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Ocultar ponto confirmado
+     */
+    ocultarPonto(pontoId) {
+        const motivo = prompt('Informe o motivo para ocultar este ponto (opcional):') || 'Ocultado pelo administrador';
+        
+        if (confirm('Ocultar este ponto? Ele não ficará mais visível no mapa.')) {
+            try {
+                const resultado = window.databaseManager.ocultarPonto(pontoId, 'administrator');
+                
+                // Adicionar motivo da ocultação
+                if (resultado) {
+                    resultado.motivoOcultacao = motivo;
+                    window.databaseManager.saveAllData();
+                }
+                
+                this.showNotification('Ponto ocultado com sucesso', 'warning');
+                this.mostrarPontosConfirmados(); // Recarregar lista
+                this.atualizarContadores();
+                
+                console.log('👁️‍🗨️ Ponto ocultado:', resultado);
+            } catch (error) {
+                console.error('❌ Erro ao ocultar ponto:', error);
+                this.showNotification('Erro ao ocultar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Restaurar ponto oculto
+     */
+    restaurarPonto(pontoId) {
+        if (confirm('Restaurar este ponto? Ele ficará visível novamente no mapa.')) {
+            try {
+                const resultado = window.databaseManager.restaurarPonto(pontoId, 'administrator');
+                this.showNotification('Ponto restaurado com sucesso!', 'success');
+                this.mostrarPontosOcultos(); // Recarregar lista
+                this.atualizarContadores();
+                
+                console.log('🔄 Ponto restaurado:', resultado);
+            } catch (error) {
+                console.error('❌ Erro ao restaurar ponto:', error);
+                this.showNotification('Erro ao restaurar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Deletar ponto permanentemente
+     */
+    deletarPonto(pontoId) {
+        const ponto = window.databaseManager.getPontoById(pontoId);
+        if (!ponto) return;
+
+        if (confirm(`ATENÇÃO: Deletar permanentemente o ponto "${ponto.nome}"?\n\nEsta ação NÃO pode ser desfeita!`)) {
+            try {
+                const sucesso = window.databaseManager.deletarPonto(pontoId, 'administrator');
+                
+                if (sucesso) {
+                    this.showNotification('Ponto deletado permanentemente!', 'success');
+                    
+                    // Recarregar a lista atual
+                    if (this.currentTab === 'pontos') {
+                        this.mostrarPontosConfirmados();
+                    } else if (this.currentTab === 'pendentes') {
+                        this.mostrarPontosPendentes();
+                    } else if (this.currentTab === 'ocultos') {
+                        this.mostrarPontosOcultos();
+                    }
+                    
+                    this.atualizarContadores();
+                    
+                    console.log('🗑️ Ponto deletado permanentemente:', pontoId);
+                } else {
+                    this.showNotification('Erro ao deletar ponto', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao deletar ponto:', error);
+                this.showNotification('Erro ao deletar ponto: ' + error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * Deletar ponto permanentemente (alias para compatibilidade)
+     */
+    deletarPontoPermanente(pontoId) {
+        this.deletarPonto(pontoId);
+    }
+
+    /**
+     * Visualizar detalhes de um ponto
+     */
+    visualizarPonto(pontoId) {
+        const ponto = window.databaseManager.getPontoById(pontoId);
+        if (!ponto) {
+            this.showNotification('Ponto não encontrado', 'error');
+            return;
+        }
+
+        const statusInfo = this.getStatusInfo(ponto);
+        
+        const conteudo = `
+            <div class="point-details">
+                <div class="point-header">
+                    <h4>${ponto.nome}</h4>
+                    <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
+                </div>
+                
+                <div class="point-info">
+                    <div class="info-group">
+                        <label><i class="fas fa-tag"></i> Categoria:</label>
+                        <span>${this.getCategoryName(ponto.categoria)}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Endereço:</label>
+                        <span>${ponto.endereco || 'Não informado'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-info-circle"></i> Descrição:</label>
+                        <span>${ponto.descricao || 'Sem descrição'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-phone"></i> Telefone:</label>
+                        <span>${ponto.telefone || 'Não informado'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-clock"></i> Horário:</label>
+                        <span>${ponto.horario || 'Não informado'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-dollar-sign"></i> Preço:</label>
+                        <span>${ponto.preco || 'Não informado'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-globe"></i> Coordenadas:</label>
+                        <span>${ponto.coordenadas ? `${ponto.coordenadas[0].toFixed(6)}, ${ponto.coordenadas[1].toFixed(6)}` : 'Não informado'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-user"></i> Adicionado por:</label>
+                        <span>${ponto.adicionadoPor || 'Anônimo'}</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label><i class="fas fa-calendar"></i> Data de Criação:</label>
+                        <span>${new Date(ponto.dataCriacao || ponto.dataAdicao || Date.now()).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    
+                    ${ponto.tags && ponto.tags.length > 0 ? `
+                        <div class="info-group">
+                            <label><i class="fas fa-tags"></i> Tags:</label>
+                            <div class="tags-list">
+                                ${ponto.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${ponto.imagem ? `
+                        <div class="info-group">
+                            <label><i class="fas fa-image"></i> Imagem:</label>
+                            <div class="image-preview">
+                                <img src="${ponto.imagem.url}" alt="${ponto.imagem.description || ponto.nome}" style="max-width: 100%; height: auto; border-radius: 4px;">
+                                <small class="text-muted">${ponto.imagem.description || 'Sem descrição'}</small>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        const acoes = [
+            {
+                texto: 'Fechar',
+                classe: 'btn-secondary',
+                acao: () => this.fecharModal()
+            }
+        ];
+
+        this.mostrarModal(`Detalhes: ${ponto.nome}`, conteudo, acoes);
+    }
+
+    /**
+     * Editar ponto
+     */
+    editarPonto(pontoId) {
+        const ponto = window.databaseManager.getPontoById(pontoId);
+        if (!ponto) {
+            this.showNotification('Ponto não encontrado', 'error');
+            return;
+        }
+
+        // Usar o modal de adicionar ponto em modo edição
+        if (window.addPointModal) {
+            window.addPointModal.open({
+                isEditMode: true,
+                pointData: ponto,
+                onSave: (novosDados) => {
+                    try {
+                        const pontoAtualizado = window.databaseManager.atualizarPonto(pontoId, novosDados);
+                        this.showNotification('Ponto atualizado com sucesso!', 'success');
+                        
+                        // Recarregar a lista atual
+                        this.loadTabSpecificData(this.currentTab);
+                        
+                        console.log('✏️ Ponto editado:', pontoAtualizado);
+                    } catch (error) {
+                        console.error('❌ Erro ao editar ponto:', error);
+                        this.showNotification('Erro ao editar ponto: ' + error.message, 'error');
+                    }
+                }
+            });
+        } else {
+            this.showNotification('Modal de edição não disponível', 'error');
+        }
+    }
+
+    /**
+     * Obter nome da categoria
+     */
+    getCategoryName(categoriaId) {
+        const categoria = window.databaseManager.getCategorias().find(c => c.id === categoriaId);
+        return categoria ? categoria.nome : categoriaId;
+    }
+
+    /**
+     * Obter informações de status do ponto
+     */
+    getStatusInfo(ponto) {
+        if (ponto.status === 'pendente') {
+            return { text: 'Pendente', class: 'badge-warning' };
+        } else if (ponto.status === 'oculto') {
+            return { text: 'Oculto', class: 'badge-secondary' };
+        } else {
+            return { text: 'Ativo', class: 'badge-success' };
+        }
+    }
+
+    /**
+     * Renderizar conteúdo da tab
+     */
+    renderTabContent(html) {
+        const tabContent = document.getElementById(`tab-${this.currentTab}`);
+        if (tabContent) {
+            tabContent.innerHTML = html;
+        }
+    }
+
+    /**
+     * Carregar estatísticas
+     */
+    async loadStatistics() {
+        try {
+            const stats = window.databaseManager?.getEstatisticas?.() || {
+                totalPontos: 0,
+                totalConfirmados: 0,
+                totalPendentes: 0,
+                totalOcultos: 0,
+                pontosPorCategoria: {},
+                pontosRecentes: []
+            };
+
+            // Atualizar cards de estatísticas
+            const statElements = {
+                'stat-total-pontos': stats.totalConfirmados || 0,
+                'stat-categorias': Object.keys(stats.pontosPorCategoria || {}).length,
+                'stat-usuarios': this.getTotalUsers(),
+                'stat-hoje': this.getPointsAddedToday()
+            };
+
+            Object.entries(statElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            });
+
+            console.log('📊 Estatísticas carregadas:', stats);
+        } catch (error) {
+            console.error('❌ Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    /**
+     * Obter total de usuários
+     */
+    getTotalUsers() {
+        try {
+            return Object.keys(window.databaseManager?.usuarios || {}).length;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    /**
+     * Obter pontos adicionados hoje
+     */
+    getPointsAddedToday() {
+        try {
+            const hoje = new Date().toDateString();
+            const todosOsPontos = [
+                ...(window.databaseManager?.confirmedPoints || []),
+                ...(window.databaseManager?.pendingPoints || []),
+                ...(window.databaseManager?.hiddenPoints || [])
+            ];
+            
+            return todosOsPontos.filter(ponto => {
+                const dataAdicao = new Date(ponto.dataAdicao || ponto.dataCriacao || Date.now());
+                return dataAdicao.toDateString() === hoje;
+            }).length;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    /**
+     * Atualizar contadores nas abas
+     */
+    atualizarContadores() {
+        try {
+            const pendentesCount = window.databaseManager?.pendingPoints?.length || 0;
+            const sugestoesCount = window.databaseManager?.getSugestoesPendentes?.()?.length || 0;
+
+            const pendentesBadge = document.getElementById('pendentes-count');
+            const sugestoesBadge = document.getElementById('sugestoes-count');
+
+            if (pendentesBadge) {
+                pendentesBadge.textContent = pendentesCount;
+                pendentesCount > 0 ? pendentesBadge.classList.add('pulse') : pendentesBadge.classList.remove('pulse');
+            }
+
+            if (sugestoesBadge) {
+                sugestoesBadge.textContent = sugestoesCount;
+                sugestoesCount > 0 ? sugestoesBadge.classList.add('pulse') : sugestoesBadge.classList.remove('pulse');
+            }
+
+            console.log('🔢 Contadores atualizados:', { pendentesCount, sugestoesCount });
+        } catch (error) {
+            console.error('❌ Erro ao atualizar contadores:', error);
+        }
+    }
+
+    /**
+     * Mostrar modal personalizado
+     */
+    mostrarModal(titulo, conteudo, acoes = []) {
+        // Criar modal simples se não houver modal manager
+        const modalHtml = `
+            <div class="modal-backdrop" id="admin-modal" style="display: flex;">
+                <div class="modal modal-content">
+                    <div class="modal-header">
+                        <h3>${titulo}</h3>
+                        <button type="button" class="modal-close" onclick="document.getElementById('admin-modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        ${conteudo}
+                    </div>
+                    <div class="modal-footer">
+                        ${acoes.map(acao => `
+                            <button class="btn ${acao.classe}" onclick="${acao.acao ? acao.acao.toString() + '(); document.getElementById(\'admin-modal\').remove();' : 'document.getElementById(\'admin-modal\').remove();'}">
+                                ${acao.texto}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    /**
+     * Fechar modal
+     */
+    fecharModal() {
+        const modal = document.getElementById('admin-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    /**
+     * Mostrar notificação
+     */
+    showNotification(message, type = 'info') {
+        // Implementação simples de notificação
+        const colors = {
+            success: '#27ae60',
+            error: '#e74c3c',
+            warning: '#f39c12',
+            info: '#3498db'
+        };
+
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            z-index: 10001;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : type === 'warning' ? 'exclamation' : 'info'}-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+
+    /**
+     * Inicializar mapa administrativo
+     */
+    initializeAdminMap() {
+        try {
+            const mapElement = document.getElementById('admin-map');
+            if (!mapElement) return;
+
+            // Criar mapa
+            this.adminMap = L.map('admin-map').setView([-15.7975, -47.8919], 11);
+
+            // Adicionar tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.adminMap);
+
+            // Carregar pontos
+            this.loadMapPoints();
+            
+            console.log('🗺️ Mapa administrativo inicializado');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar mapa admin:', error);
+        }
+    }
+
+    /**
+     * Carregar pontos no mapa
+     */
+    loadMapPoints() {
+        if (!this.adminMap) return;
+
+        const pontos = window.databaseManager?.confirmedPoints || [];
+        
+        pontos.forEach(ponto => {
+            if (ponto.coordenadas && ponto.coordenadas.length === 2) {
+                const marker = L.marker(ponto.coordenadas).addTo(this.adminMap)
+                    .bindPopup(`
+                        <div class="popup-admin">
+                            <h4>${ponto.nome}</h4>
+                            <p><strong>Categoria:</strong> ${this.getCategoryName(ponto.categoria)}</p>
+                            <p><strong>Endereço:</strong> ${ponto.endereco || 'N/A'}</p>
+                            <div class="popup-actions">
+                                <button class="btn btn-sm btn-primary" onclick="window.adminManager.visualizarPonto(${ponto.id})">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                                <button class="btn btn-sm btn-warning" onclick="window.adminManager.editarPonto(${ponto.id})">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                        </div>
+                    `);
+            }
+        });
+    }
+
+    /**
+     * Inicializar gráficos
+     */
+    initializeCharts() {
+        // Placeholder para gráficos futuros
+        console.log('📈 Gráficos inicializados');
+    }
+
+    /**
+     * Configurar tooltips
+     */
+    setupTooltips() {
+        // Placeholder para tooltips futuros
+        console.log('💡 Tooltips configurados');
+    }
+
+    /**
+     * Atualizar informações do usuário
+     */
+    updateUserInfo() {
+        const usuario = window.authManager?.getCurrentUser();
+        if (!usuario) return;
+
+        const userNameElement = document.querySelector('.user-name');
+        if (userNameElement) {
+            userNameElement.textContent = usuario.username || usuario.name;
+        }
+    }
+
+    /**
+     * Ocultar tela de loading
+     */
+    hideLoadingScreen() {
+        try {
+            const loadingScreen = document.querySelector('.loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+                console.log('🚀 Tela de loading removida');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao remover tela de loading:', error);
+        }
+    }
+
+    /**
+     * Redirecionar para login
+     */
+    redirectToLogin() {
+        window.location.href = 'index.html';
+    }
+
+    // Métodos placeholder para funcionalidades futuras
+    mostrarSugestoes() { this.showNotification('Funcionalidade de sugestões em desenvolvimento', 'info'); }
+    loadUsersData() { console.log('👥 Carregar dados de usuários - em desenvolvimento'); }
+    loadReportsData() { console.log('📊 Carregar relatórios - em desenvolvimento'); }
+    populateFilters() { console.log('🔍 Popular filtros - em desenvolvimento'); }
+    applyFilters() { console.log('🔍 Aplicar filtros - em desenvolvimento'); }
+    previousPage() { console.log('◀️ Página anterior - em desenvolvimento'); }
+    nextPage() { console.log('▶️ Próxima página - em desenvolvimento'); }
+}
+
+// Disponibilizar globalmente
+window.AdminManager = AdminManager;

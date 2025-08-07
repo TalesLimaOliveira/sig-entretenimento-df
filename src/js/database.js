@@ -391,13 +391,132 @@ class DatabaseManager {
     }
 
     /**
-     * Salva todos os dados
+     * Salva todos os dados no localStorage e tenta salvar nos arquivos JSON
      */
     saveAllData() {
+        // Salvar no localStorage (backup local)
         localStorage.setItem(this.baseStorageKey + '_pontosConfirmados', JSON.stringify(this.confirmedPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosPendentes', JSON.stringify(this.pendingPoints));
         localStorage.setItem(this.baseStorageKey + '_pontosOcultos', JSON.stringify(this.hiddenPoints));
         localStorage.setItem(this.baseStorageKey + '_usuarios', JSON.stringify(this.usuarios));
+        
+        // Tentar salvar nos arquivos JSON (simulação)
+        this.saveToJsonFiles();
+    }
+
+    /**
+     * Salva os dados nos arquivos JSON da pasta database/
+     * Como o navegador não pode escrever arquivos diretamente, 
+     * isso seria implementado com um servidor backend
+     */
+    async saveToJsonFiles() {
+        try {
+            // Em um ambiente real com servidor, isso seria uma requisição POST
+            const dataToSave = {
+                pontos_confirmados: this.confirmedPoints,
+                pontos_pendentes: this.pendingPoints,
+                pontos_ocultos: this.hiddenPoints,
+                usuarios: this.usuarios
+            };
+
+            console.log('💾 Simulando salvamento nos arquivos JSON:');
+            console.log('📁 database/pontos_confirmados.json:', this.confirmedPoints.length, 'pontos');
+            console.log('📁 database/pontos_pendentes.json:', this.pendingPoints.length, 'pontos');
+            console.log('📁 database/pontos_ocultos.json:', this.hiddenPoints.length, 'pontos');
+            console.log('📁 database/usuarios.json:', Object.keys(this.usuarios).length, 'usuários');
+
+            // Criar links de download para facilitar o salvamento manual dos administradores
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                this.createDownloadLinks(dataToSave);
+            }
+
+            // TODO: Em produção, implementar com servidor backend
+            // await fetch('/api/save-database', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(dataToSave)
+            // });
+
+        } catch (error) {
+            console.warn('⚠️ Não foi possível salvar nos arquivos JSON:', error);
+        }
+    }
+
+    /**
+     * Cria links de download dos arquivos JSON para salvamento manual
+     */
+    createDownloadLinks(data) {
+        const user = window.authManager?.getCurrentUser();
+        if (user?.role !== 'administrator') return;
+
+        // Remover links antigos
+        const existingContainer = document.getElementById('download-links-container');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+
+        // Criar container para os links
+        const container = document.createElement('div');
+        container.id = 'download-links-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-size: 12px;
+            max-width: 300px;
+        `;
+
+        container.innerHTML = `
+            <div style="margin-bottom: 8px;">
+                <strong>💾 Arquivos para download (Admin)</strong>
+                <button onclick="this.parentElement.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer;">✕</button>
+            </div>
+        `;
+
+        // Criar links de download para cada arquivo
+        const files = [
+            { name: 'pontos_confirmados.json', data: data.pontos_confirmados },
+            { name: 'pontos_pendentes.json', data: data.pontos_pendentes },
+            { name: 'pontos_ocultos.json', data: data.pontos_ocultos },
+            { name: 'usuarios.json', data: data.usuarios }
+        ];
+
+        files.forEach(file => {
+            const blob = new Blob([JSON.stringify(file.data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            link.textContent = `📁 ${file.name}`;
+            link.style.cssText = `
+                display: block;
+                color: #4CAF50;
+                text-decoration: none;
+                margin: 3px 0;
+                font-size: 11px;
+            `;
+            
+            link.addEventListener('click', () => {
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            });
+            
+            container.appendChild(link);
+        });
+
+        document.body.appendChild(container);
+
+        // Remover automaticamente após 30 segundos
+        setTimeout(() => {
+            if (container.parentNode) {
+                container.remove();
+            }
+        }, 30000);
     }
 
     saveCategories() {

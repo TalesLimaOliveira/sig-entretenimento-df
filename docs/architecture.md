@@ -19,6 +19,7 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
 
 ### 1. Camada de Aplicação (Application Layer)
 - **Arquivo Principal**: `src/js/app.js`
+- **Dashboard Administrativo**: `src/js/admin.js`
 - **Responsabilidade**: Coordenação geral da aplicação, gerenciamento do ciclo de vida
 - **Classe Principal**: `PontosEntretenimentoApp`
   - **Propriedades principais** (nomenclatura em inglês):
@@ -39,6 +40,32 @@ O projeto foi desenvolvido seguindo os princípios de **Clean Architecture**, se
     - `configureTouchBehavior()`: Configuração de comportamento touch
     - `applyResponsiveClasses()`: Aplicação de classes responsivas
     - `adjustLayoutForScreenSize()`: Ajuste de layout por tamanho de tela
+
+- **Classe Administrativa**: `AdminManager`
+  - **Propriedades principais**:
+    - `currentTab`: Aba atualmente ativa no dashboard
+    - `currentPage`: Página atual na paginação
+    - `itemsPerPage`: Número de itens por página
+    - `filters`: Filtros aplicados nas listas
+    - `sortBy`: Campo de ordenação atual
+    - `sortOrder`: Ordem de classificação (asc/desc)
+  - **Métodos principais**:
+    - `init()`: Inicialização do dashboard administrativo
+    - `checkAdminAccess()`: Verificação de permissões de administrador
+    - `showTab()`: Navegação entre abas do dashboard
+    - `loadTabSpecificData()`: Carregamento de dados específicos por aba
+    - `mostrarPontosConfirmados()`: Exibição de pontos confirmados
+    - `mostrarPontosPendentes()`: Exibição de pontos pendentes
+    - `mostrarPontosOcultos()`: Exibição de pontos ocultos
+    - `aprovarPonto()`: Aprovação de pontos pendentes
+    - `rejeitarPonto()`: Rejeição de pontos pendentes
+    - `ocultarPonto()`: Ocultação de pontos confirmados
+    - `restaurarPonto()`: Restauração de pontos ocultos
+    - `deletarPonto()`: Exclusão permanente de pontos
+    - `visualizarPonto()`: Visualização detalhada de pontos
+    - `editarPonto()`: Edição de pontos existentes
+    - `loadStatistics()`: Carregamento de estatísticas do sistema
+    - `atualizarContadores()`: Atualização de contadores em tempo real
 
 ### 2. Camada de Negócio (Domain Layer)
 - **Gerenciador de Dados**: `src/js/database.js` (`DatabaseManager`)
