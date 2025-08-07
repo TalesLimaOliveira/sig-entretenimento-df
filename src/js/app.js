@@ -120,16 +120,16 @@ class PontosEntretenimentoApp {
             this.removeLoadingScreen();
             this._markAsInitialized();
             
-            // Garantir que os botões de categoria estejam visíveis após inicialização
+            // Ensure category buttons are visible after initialization
             setTimeout(() => {
-                console.log('🔄 Verificação final dos botões de categoria...');
+                console.log('Final verification of category buttons...');
                 this.configureCategoryMenu();
                 this.diagnoseCategoryButtons();
                 
-                // Configurar botões de login se ainda não foram configurados
+                // Configure login buttons if not yet configured
                 this.ensureLoginButtonsWork();
                 
-                // Forçar visibilidade do container e botões
+                // Force visibility of container and buttons
                 const container = document.getElementById('nav-buttons-container');
                 if (container) {
                     container.style.display = 'flex !important';
@@ -143,7 +143,7 @@ class PontosEntretenimentoApp {
                         btn.style.opacity = '1 !important';
                     });
                     
-                    console.log(`✅ Container e ${buttons.length} botões forçados como visíveis`);
+                    console.log(`Container and ${buttons.length} buttons forced visible`);
                 }
             }, 200);
             
@@ -347,12 +347,12 @@ class PontosEntretenimentoApp {
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         console.log('Botão de login clicado');
-                        this.mostrarModalLogin();
+                        this.showLoginModal();
                     });
                 }
             });
             
-            console.log('✅ Botões de login restaurados e configurados');
+            console.log('Login buttons restored and configured');
         }, 100);
         
         // Restaurar botão de favoritos também
@@ -360,10 +360,10 @@ class PontosEntretenimentoApp {
     }
 
     /**
-     * Garantir que os botões de login funcionem
+     * Ensure login buttons work
      */
     ensureLoginButtonsWork() {
-        console.log('🔧 Verificando botões de login...');
+        console.log('Checking login buttons...');
         
         const desktopBtn = document.getElementById('desktop-login-btn');
         const mobileBtn = document.getElementById('mobile-login-btn');
@@ -371,23 +371,23 @@ class PontosEntretenimentoApp {
         [desktopBtn, mobileBtn].forEach((btn, index) => {
             if (btn) {
                 const btnType = index === 0 ? 'desktop' : 'mobile';
-                console.log(`✅ Botão ${btnType} encontrado:`, btn);
+                console.log(`Button ${btnType} found:`, btn);
                 
-                // Remover listeners antigos
+                // Remove old listeners
                 const newBtn = btn.cloneNode(true);
                 btn.parentNode.replaceChild(newBtn, btn);
                 
-                // Adicionar novo listener
+                // Add new listener
                 newBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log(`🔔 Clique detectado no botão ${btnType}`);
-                    this.mostrarModalLogin();
+                    console.log(`Click detected on ${btnType} button`);
+                    this.showLoginModal();
                 });
                 
-                console.log(`✅ Event listener configurado para botão ${btnType}`);
+                console.log(`Event listener configured for button ${btnType}`);
             } else {
-                console.warn(`⚠️ Botão ${index === 0 ? 'desktop' : 'mobile'} não encontrado`);
+                console.warn(`Button ${index === 0 ? 'desktop' : 'mobile'} not found`);
             }
         });
     }
@@ -414,7 +414,7 @@ class PontosEntretenimentoApp {
                         </button>
                     `;
                     todosBtn.insertAdjacentHTML('afterend', favoriteBtn);
-                    console.log('✅ Botão de favoritos restaurado');
+                    console.log('Favorites button restored');
                 }
             }
         }
@@ -658,7 +658,7 @@ class PontosEntretenimentoApp {
         document.addEventListener('authStateChanged', (e) => {
             try {
                 const { type, user } = e.detail;
-                console.log(`🔔 Evento de autenticação recebido: ${type}`);
+                console.log(`Authentication event received: ${type}`);
                 
                 if (type === 'login') {
                     this.configureLoggedUser(user);
@@ -678,9 +678,9 @@ class PontosEntretenimentoApp {
             }
         });
 
-        // Event listener para categorias carregadas
+        // Event listener for loaded categories
         document.addEventListener('database_categoriasCarregadas', (e) => {
-            console.log('📂 Categorias carregadas, atualizando menu de categorias...');
+            console.log('Categories loaded, updating category menu...');
             this.configureCategoryMenu();
         });
 
@@ -932,112 +932,81 @@ class PontosEntretenimentoApp {
         try {
             console.log('Loading data...');
             
-            // Verificar se os managers estão disponíveis
+            // Check if managers are available
             if (!window.databaseManager) {
                 throw new Error('DatabaseManager not available');
             }
             
             if (!window.mapManager) {
-                console.warn('MapManager nao disponivel, pulando renderizacao de pontos');
+                console.warn('MapManager not available, skipping point rendering');
                 this.updateStatistics();
                 return;
             }
             
-            // Inicializar o mapa se ainda não foi inicializado
+            // Initialize map if not already initialized
             if (!window.mapManager.map) {
-                console.log('Inicializando mapa...');
+                console.log('Initializing map...');
                 window.mapManager.init();
             }
             
-            // Renderizar pontos e atualizar estatísticas
+            // Render points and update statistics
             this.renderPoints();
             this.updateStatistics();
             
-            // Reconfigurar menu de categorias após dados estarem carregados
-            console.log('Segunda chamada: reconfigurando menu de categorias...');
+            // Reconfigure category menu after data is loaded
+            console.log('Second call: reconfiguring category menu...');
             this.configureCategoryMenu();
             
-            // Garantir que os botões são visíveis
-            setTimeout(() => {
-                const container = document.getElementById('nav-buttons-container');
-                const buttons = container ? container.querySelectorAll('.nav-btn') : [];
-                console.log(`Verificação final: container=${!!container}, botões=${buttons.length}`);
-                
-                if (container) {
-                    container.style.display = 'flex';
-                    container.style.visibility = 'visible';
-                    container.style.opacity = '1';
-                    console.log('Forçada visibilidade do container de navegação');
-                }
-                
-                buttons.forEach((btn, index) => {
-                    btn.style.display = 'flex';
-                    btn.style.visibility = 'visible';
-                    btn.style.opacity = '1';
-                    console.log(`Botão ${index + 1} forçado como visível`);
-                });
-            }, 100);
-            
-            console.log('Dados carregados com sucesso');
+            console.log('Data loaded successfully');
         } catch (error) {
-            console.error('Erro ao carregar dados:', error);
+            console.error('Error loading data:', error);
             // Only show error pop-up if not during initialization
             if (this.isInitialized) {
-                this.showError('Erro ao carregar dados do mapa.');
+                this.showError('Error loading map data.');
             }
             throw error;
         }
     }
 
     configureCategoryMenu() {
-        console.log('📂 Iniciando configuração do menu de categorias...');
+        console.log('Starting category menu configuration...');
         
         const container = document.getElementById('nav-buttons-container');
         if (!container) {
-            console.error('❌ Container de navegação não encontrado: nav-buttons-container');
+            console.error('Navigation container not found: nav-buttons-container');
             return;
         }
-        console.log('✅ Container encontrado:', container);
 
-        // Carregar categorias do banco de dados com fallback robusto
-        let categorias = [];
-        
+        // Immediate render with hardcoded categories for faster loading
+        const defaultCategories = [
+            { id: 'geral', nome: 'Geral', icon: 'fas fa-theater-masks', cor: '#6c757d' },
+            { id: 'esportes-lazer', nome: 'Esportes', icon: 'fas fa-running', cor: '#28a745' },
+            { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#dc3545' },
+            { id: 'geek-nerd', nome: 'Geek', icon: 'fas fa-gamepad', cor: '#6f42c1' },
+            { id: 'casas-noturnas', nome: 'Casas Noturnas', icon: 'fas fa-glass-cheers', cor: '#6610f2' }
+        ];
+
+        // Render immediately for fast user experience
+        this.renderCategoryButtons(defaultCategories);
+
+        // Try to get from DatabaseManager in background
         if (window.databaseManager && window.databaseManager.getCategorias) {
-            categorias = window.databaseManager.getCategorias() || [];
-            console.log('✅ DatabaseManager disponível - categorias obtidas:', categorias.length);
-            console.log('📋 Categorias obtidas:', categorias);
+            const categories = window.databaseManager.getCategorias() || [];
+            if (categories.length > 0) {
+                console.log('DatabaseManager categories available, updating:', categories.length);
+                this.renderCategoryButtons(categories);
+            }
         }
-        
-        // Se não conseguiu carregar do DatabaseManager, tentar fallback direto
-        if (categorias.length === 0) {
-            console.warn('⚠️ Tentando fallback - carregando categorias diretamente...');
-            
-            // Categorias hardcoded como fallback imediato
-            const categoriasDefault = [
-                { id: 'geral', nome: 'Geral', icon: 'fas fa-theater-masks', cor: '#6c757d' },
-                { id: 'esportes-lazer', nome: 'Esportes', icon: 'fas fa-running', cor: '#28a745' },
-                { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#dc3545' },
-                { id: 'geek-nerd', nome: 'Geek', icon: 'fas fa-gamepad', cor: '#6f42c1' },
-                { id: 'casas-noturnas', nome: 'Casas Noturnas', icon: 'fas fa-glass-cheers', cor: '#6610f2' }
-            ];
-            
-            console.log('✅ Usando categorias default:', categoriasDefault.length);
-            this.renderCategoryButtons(categoriasDefault);
-            
-            // Tentar carregar do JSON em paralelo
-            this.loadCategoriesDirectly().then(cats => {
-                if (cats && cats.length > 0) {
-                    console.log('✅ Categorias carregadas do JSON, atualizando:', cats.length);
-                    this.renderCategoryButtons(cats);
-                }
-            }).catch(error => {
-                console.error('❌ Erro ao carregar categorias do JSON:', error);
-            });
-            return;
-        }
-        
-        // Se chegou aqui, tem categorias do DatabaseManager
-        this.renderCategoryButtons(categorias);
+
+        // Load from JSON as fallback (async, non-blocking)
+        this.loadCategoriesDirectly().then(cats => {
+            if (cats && cats.length > 0) {
+                console.log('Categories loaded from JSON, final update:', cats.length);
+                this.renderCategoryButtons(cats);
+            }
+        }).catch(error => {
+            console.error('Error loading categories from JSON:', error);
+        });
     }
 
     async loadCategoriesDirectly() {
@@ -1046,82 +1015,48 @@ class PontosEntretenimentoApp {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const categorias = await response.json();
-            console.log('📂 Categorias carregadas diretamente do JSON:', categorias);
-            return categorias;
+            const categories = await response.json();
+            console.log('Categories loaded directly from JSON:', categories);
+            return categories;
         } catch (error) {
-            console.error('Erro ao carregar categorias diretamente:', error);
+            console.error('Error loading categories directly:', error);
             return [];
         }
     }
 
-    renderCategoryButtons(categorias) {
-        console.log('🔧 Renderizando botões de categoria...', categorias.length);
-        
+    renderCategoryButtons(categories) {
         const container = document.getElementById('nav-buttons-container');
         if (!container) {
-            console.error('❌ Container não encontrado durante renderização');
+            console.error('Container not found during rendering');
             return;
         }
 
-        // Criar botão "Todos" primeiro (sempre presente)
+        // Create "All" button first (always present)
         let buttonsHtml = `
-            <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos" 
-                    style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white;">
+            <button class="nav-btn category-btn" data-categoria="todos" title="Todos os pontos">
                 <i class="fas fa-globe"></i>
                 <span class="nav-btn-text">Todos</span>
             </button>
         `;
 
-        // Gerar botões SOMENTE para categorias que existem no banco de dados
-        categorias.forEach(categoria => {
-            console.log(`📍 Processando categoria: ${categoria.id} - ${categoria.nome}`);
-            console.log(`   Cor: ${categoria.cor}, Ícone: ${categoria.icon}`);
-            
-            // Usar o ícone e cor diretamente do banco de dados
-            const iconClass = categoria.icon || 'fas fa-map-marker-alt'; // fallback se não tiver ícone
-            const corCategoria = categoria.cor || '#6c757d'; // fallback se não tiver cor
+        // Generate buttons for categories
+        categories.forEach(categoria => {
+            const iconClass = categoria.icon || 'fas fa-map-marker-alt';
+            const corCategoria = categoria.cor || '#6c757d';
             
             buttonsHtml += `
                 <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
-                        style="background: ${corCategoria}; border-color: ${corCategoria}; color: white; display: flex !important; visibility: visible !important; opacity: 1 !important;"
-                        title="${categoria.nome}">
+                        data-color="${corCategoria}" title="${categoria.nome}">
                     <i class="${iconClass}"></i>
                     <span class="nav-btn-text">${categoria.nome}</span>
                 </button>
             `;
         });
-
-        console.log('🔧 Inserindo HTML dos botões carregados do banco...');
-        console.log('📝 HTML que será inserido:', buttonsHtml);
         
-        // LIMPAR e inserir HTML no container
-        container.innerHTML = '';
+        // Insert HTML into container
         container.innerHTML = buttonsHtml;
         
-        // FORÇAR visibilidade do container
-        container.style.display = 'flex';
-        container.style.visibility = 'visible';
-        container.style.opacity = '1';
-        container.style.position = 'relative';
-        container.style.zIndex = '1000';
-        
-        console.log('✅ HTML dos botões inserido no container');
-
-        // Verificar se os botões foram realmente criados
-        const buttonsCreated = container.querySelectorAll('.nav-btn');
-        console.log(`${buttonsCreated.length} botões criados no DOM (1 Todos + ${categorias.length} categorias do banco)`);
-        buttonsCreated.forEach((btn, index) => {
-            console.log(`Botão ${index + 1}: ${btn.textContent.trim()} (categoria: ${btn.dataset.categoria})`);
-            // FORÇAR estilos inline para cada botão
-            btn.style.display = 'flex';
-            btn.style.visibility = 'visible';
-            btn.style.opacity = '1';
-            btn.style.position = 'relative';
-            btn.style.zIndex = '1001';
-        });
-
-        // Configurar event listeners (apenas uma vez)
+        // Configure event listeners (only once)
         if (!container.hasAttribute('data-listeners-configured')) {
             container.addEventListener('click', (e) => {
                 const button = e.target.closest('[data-categoria]');
@@ -1129,47 +1064,36 @@ class PontosEntretenimentoApp {
                     e.preventDefault();
                     e.stopPropagation();
                     const categoria = button.dataset.categoria;
-                    console.log(`Clique na categoria: ${categoria}`);
                     this.filterByCategory(categoria);
                 }
             });
             container.setAttribute('data-listeners-configured', 'true');
         }
-
-        console.log(`✅ Menu de navegação configurado com ${categorias.length + 1} botões (1 "Todos" + ${categorias.length} do banco de dados)`);
         
-        // Verificação final
-        setTimeout(() => {
-            console.log('🔄 Verificação final após delay...');
-            const finalCheck = document.getElementById('nav-buttons-container');
-            if (finalCheck) {
-                const finalButtons = finalCheck.querySelectorAll('.nav-btn');
-                console.log('📊 Botões finais visíveis:', finalButtons.length);
-                console.log('📋 Categorias finais carregadas:', Array.from(finalButtons).map(btn => btn.dataset.categoria));
-            }
-        }, 100);
+        // Set initial active state
+        this.updateCategoryButtons(this.activeCategory);
     }
 
     /**
      * Diagnose category buttons visibility
      */
     diagnoseCategoryButtons() {
-        console.log('🔍 Diagnóstico dos botões de categoria:');
+        console.log('Category buttons diagnostic:');
         
         const container = document.getElementById('nav-buttons-container');
         if (!container) {
-            console.error('❌ Container nav-buttons-container não encontrado');
+            console.error('Container nav-buttons-container not found');
             return;
         }
         
-        console.log('📦 Container encontrado:');
+        console.log('Container found:');
         console.log('  - display:', window.getComputedStyle(container).display);
         console.log('  - visibility:', window.getComputedStyle(container).visibility);
         console.log('  - opacity:', window.getComputedStyle(container).opacity);
         console.log('  - innerHTML length:', container.innerHTML.length);
         
         const buttons = container.querySelectorAll('.nav-btn');
-        console.log(`🔘 ${buttons.length} botões encontrados:`);
+        console.log(`${buttons.length} buttons found:`);
         
         buttons.forEach((btn, index) => {
             const computedStyle = window.getComputedStyle(btn);
@@ -1192,8 +1116,8 @@ class PontosEntretenimentoApp {
             return categoria.icon;
         }
         
-        // Fallback apenas se não houver ícone no banco (não deveria acontecer)
-        console.warn(`⚠️ Categoria ${categoria.id} sem ícone no banco, usando fallback`);
+        // Fallback only if there's no icon in database (shouldn't happen)
+        console.warn(`Category ${categoria.id} without icon in database, using fallback`);
         return 'fas fa-map-marker-alt';
     }
 
@@ -1202,15 +1126,13 @@ class PontosEntretenimentoApp {
             console.log(`Filtering by category: ${categoria}`);
             this.activeCategory = categoria;
             
-            // Atualizar botões de navegação com debounce para evitar múltiplos cliques
+            // Update navigation buttons immediately
             this.updateCategoryButtons(categoria);
-            console.log(`Botões atualizados para categoria: ${categoria}`);
 
-            // Verificar se é filtro de favoritos e usuário está logado
+            // Check if it's favorites filter and user is logged in
             if (categoria === 'favoritos') {
                 if (!window.authManager || !window.authManager.isAuthenticated()) {
                     console.log('User not logged in, opening login modal');
-                    // Usuário não logado tentando ver favoritos - abrir modal de login
                     window.loginModal.open({
                         pendingAction: () => this.filterByCategory('favoritos')
                     });
@@ -1218,7 +1140,7 @@ class PontosEntretenimentoApp {
                 }
             }
 
-            // Verificar se MapManager está disponível
+            // Check if MapManager is available
             if (!window.mapManager) {
                 console.error('MapManager not available');
                 return;
@@ -1229,14 +1151,11 @@ class PontosEntretenimentoApp {
                 return;
             }
 
-            // Filtrar marcadores
+            // Filter markers
             console.log(`Calling MapManager.filterByCategory with: ${categoria}`);
             const user = window.authManager && window.authManager.getCurrentUser ? 
                 window.authManager.getCurrentUser() : null;
-            console.log(`User context:`, user ? user.username : 'anonymous');
             window.mapManager.filterByCategory(categoria, user ? user.username : null);
-            
-            console.log(`Filter applied successfully: ${categoria}`);
             
         } catch (error) {
             console.error('Error filtering by category:', error);
@@ -1247,12 +1166,30 @@ class PontosEntretenimentoApp {
      * Atualizar estado visual dos botões de categoria
      */
     updateCategoryButtons(categoriaAtiva) {
-        const botoes = document.querySelectorAll('.nav-btn[data-categoria]');
-        botoes.forEach(btn => {
+        const buttons = document.querySelectorAll('.nav-btn[data-categoria]');
+        buttons.forEach(btn => {
             const isActive = btn.dataset.categoria === categoriaAtiva;
-            btn.classList.toggle('active', isActive);
             
-            // Adicionar atributo para acessibilidade
+            if (isActive) {
+                // Active button styling
+                btn.classList.add('active');
+                btn.style.background = '#3b82f6'; // Primary blue for active
+                btn.style.borderColor = '#3b82f6';
+                btn.style.color = 'white';
+                btn.style.transform = 'scale(1.05)';
+                btn.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.4)';
+            } else {
+                // Inactive button styling
+                btn.classList.remove('active');
+                const originalColor = btn.dataset.color || '#6c757d';
+                btn.style.background = originalColor;
+                btn.style.borderColor = originalColor;
+                btn.style.color = 'white';
+                btn.style.transform = 'scale(1)';
+                btn.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+            }
+            
+            // Set accessibility attribute
             btn.setAttribute('aria-pressed', isActive);
         });
     }
@@ -1340,26 +1277,26 @@ class PontosEntretenimentoApp {
         }
     }
 
-    mostrarModalLogin() {
+    showLoginModal() {
         try {
-            console.log('🔔 mostrarModalLogin chamado');
+            console.log('showLoginModal called');
             
-            // Verificar se o LoginModal está disponível diretamente
+            // Check if LoginModal is available directly
             if (window.loginModal && typeof window.loginModal.open === 'function') {
-                console.log('✅ Usando window.loginModal.open()');
+                console.log('Using window.loginModal.open()');
                 window.loginModal.open();
                 return;
             }
             
-            // Fallback para modalManager
+            // Fallback to modalManager
             if (window.modalManager && typeof window.modalManager.mostrar === 'function') {
-                console.log('✅ Usando window.modalManager.mostrar()');
+                console.log('Using window.modalManager.mostrar()');
                 window.modalManager.mostrar('login');
                 return;
             }
             
-            // Fallback para sistema alternativo
-            console.warn('⚠️ ModalManager e LoginModal não disponíveis, usando fallback');
+            // Fallback to alternative system
+            console.warn('ModalManager and LoginModal not available, using fallback');
             
             // Criar modal simples como fallback
             const modalHtml = `
@@ -1393,7 +1330,7 @@ class PontosEntretenimentoApp {
                 const password = document.getElementById('temp-password').value;
                 
                 if (username === 'admin' && password === 'admin') {
-                    console.log('✅ Login admin bem-sucedido');
+                    console.log('Admin login successful');
                     if (window.authManager) {
                         window.authManager.login({ 
                             id: 'admin', 
@@ -1404,7 +1341,7 @@ class PontosEntretenimentoApp {
                     }
                     document.getElementById('temp-login-modal').remove();
                 } else if (username === 'user' && password === 'user') {
-                    console.log('✅ Login usuário bem-sucedido');
+                    console.log('User login successful');
                     if (window.authManager) {
                         window.authManager.login({ 
                             id: 'user', 
@@ -1420,7 +1357,7 @@ class PontosEntretenimentoApp {
             });
             
         } catch (error) {
-            console.error('❌ Erro ao mostrar modal de login:', error);
+            console.error('Error showing login modal:', error);
             alert('Erro no sistema de login: ' + error.message);
         }
     }

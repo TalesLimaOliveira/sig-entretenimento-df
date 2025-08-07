@@ -31,10 +31,38 @@ class InfoPanelManager {
      * Inicializa o gerenciador do painel
      */
     init() {
-        console.log('Inicializando InfoPanelManager...');
+        console.log('🚀 Inicializando InfoPanelManager...');
+        console.log('🔍 Window status:', {
+            location: window.location.href,
+            protocol: window.location.protocol
+        });
+        
         this.setupElements();
         this.setupEventListeners();
-        console.log('InfoPanelManager inicializado');
+        
+        // Adicionar debug global
+        window.infoPanelDebug = {
+            manager: this,
+            isVisible: () => this.isVisible,
+            currentPoint: () => this.currentPoint,
+            testShow: (testPoint) => {
+                console.log('🧪 Test show called with:', testPoint);
+                this.show(testPoint || {
+                    id: 999,
+                    nome: 'Teste',
+                    endereco: 'Endereço de teste',
+                    descricao: 'Descrição de teste'
+                });
+            }
+        };
+        
+        console.log('✅ InfoPanelManager inicializado');
+        console.log('🔍 Elements found:', {
+            panel: !!this.panel,
+            panelBody: !!this.panelBody,
+            panelTitle: !!this.panelTitle,
+            closeButton: !!this.closeButton
+        });
     }
 
     /**
@@ -806,5 +834,149 @@ class InfoPanelManager {
     }
 }
 
-// Instanciar globalmente
-window.infoPanelManager = new InfoPanelManager();
+// Sistema de inicialização robusta do InfoPanelManager
+class InfoPanelInitializer {
+    constructor() {
+        this.maxAttempts = 10;
+        this.attemptDelay = 100;
+        this.initialized = false;
+    }
+
+    async init() {
+        console.log('Starting InfoPanelManager initialization...');
+        
+        // Aguardar DOM estar pronto
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => {
+                document.addEventListener('DOMContentLoaded', resolve);
+            });
+        }
+
+        // Aguardar elementos necessários
+        await this.waitForElements();
+        
+        // Criar instância
+        this.createInstance();
+        
+        // Verificar se funcionou
+        await this.validateInstance();
+        
+        this.initialized = true;
+        console.log('InfoPanelManager initialized successfully');
+    }
+
+    async waitForElements() {
+        const requiredElements = ['info-panel', 'info-panel-title', 'info-panel-body'];
+        
+        for (const elementId of requiredElements) {
+            let attempts = 0;
+            while (!document.getElementById(elementId) && attempts < this.maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, this.attemptDelay));
+                attempts++;
+            }
+            
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.warn(`Element ${elementId} not found after ${this.maxAttempts} attempts`);
+            } else {
+                console.log(`Element ${elementId} found successfully`);
+            }
+        }
+    }
+
+    createInstance() {
+        try {
+            // Clear any existing instance first
+            if (window.infoPanelManager) {
+                console.log('Clearing existing InfoPanelManager instance...');
+                window.infoPanelManager = null;
+            }
+            
+            console.log('Creating fresh InfoPanelManager instance...');
+            window.infoPanelManager = new InfoPanelManager();
+            console.log('InfoPanelManager instance created successfully');
+            
+            // Verify the instance has the required methods
+            if (typeof window.infoPanelManager.show !== 'function') {
+                throw new Error('InfoPanelManager instance missing show method');
+            }
+            
+        } catch (error) {
+            console.error('Error creating InfoPanelManager:', error);
+            throw error;
+        }
+    }
+
+    async validateInstance() {
+        let attempts = 0;
+        while ((!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') && attempts < this.maxAttempts) {
+            console.log(`Validation attempt ${attempts + 1}/${this.maxAttempts}`);
+            await new Promise(resolve => setTimeout(resolve, this.attemptDelay));
+            
+            if (!window.infoPanelManager) {
+                this.createInstance();
+            }
+            
+            attempts++;
+        }
+
+        if (!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') {
+            throw new Error('Failed to create valid InfoPanelManager instance');
+        }
+    }
+
+    // Método para forçar reinicialização
+    static forceReinit() {
+        console.log('Forcing InfoPanelManager reinitialization...');
+        try {
+            // Clear existing instance
+            if (window.infoPanelManager) {
+                window.infoPanelManager = null;
+            }
+            
+            // Verify required elements exist
+            const requiredElements = ['info-panel', 'info-panel-title', 'info-panel-body'];
+            for (const elementId of requiredElements) {
+                if (!document.getElementById(elementId)) {
+                    console.error(`Required element ${elementId} not found for reinit`);
+                    return false;
+                }
+            }
+            
+            // Create new instance
+            window.infoPanelManager = new InfoPanelManager();
+            
+            // Verify it worked
+            if (window.infoPanelManager && typeof window.infoPanelManager.show === 'function') {
+                console.log('Force reinit successful');
+                return true;
+            } else {
+                console.error('Force reinit failed - instance invalid');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('Force reinit failed with error:', error);
+            return false;
+        }
+    }
+}
+
+// Inicializar automaticamente
+const infoPanelInitializer = new InfoPanelInitializer();
+
+// Inicialização imediata
+infoPanelInitializer.init().catch(error => {
+    console.error('InfoPanelManager initialization failed:', error);
+    
+    // Tentar novamente após 1 segundo
+    setTimeout(() => {
+        console.log('Retrying InfoPanelManager initialization...');
+        infoPanelInitializer.init().catch(retryError => {
+            console.error('Retry failed:', retryError);
+        });
+    }, 1000);
+});
+
+// Expor reinicializador globalmente
+window.InfoPanelInitializer = InfoPanelInitializer;

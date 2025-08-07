@@ -975,31 +975,247 @@ class MapManager {
     }
 
     /**
+     * Ensure InfoPanelManager is available and working
+     */
+    async ensureInfoPanel(ponto) {
+        console.log('Ensuring InfoPanelManager is available for:', ponto.nome);
+        
+        // First, try direct usage if available
+        if (window.infoPanelManager && typeof window.infoPanelManager.show === 'function') {
+            console.log('InfoPanelManager available, using it directly...');
+            try {
+                window.infoPanelManager.show(ponto);
+                console.log('Panel shown successfully via existing InfoPanelManager');
+                return;
+            } catch (showError) {
+                console.error('Error with existing InfoPanelManager:', showError);
+                // Continue to reinitialization
+            }
+        }
+
+        // Force reinitialization - this is the key for localhost compatibility
+        console.log('Forcing InfoPanelManager reinitialization for localhost compatibility...');
+        
+        // Ensure DOM elements exist first
+        const requiredElements = ['info-panel', 'info-panel-title', 'info-panel-body'];
+        let allElementsExist = true;
+        
+        for (const elementId of requiredElements) {
+            if (!document.getElementById(elementId)) {
+                console.error(`Required element ${elementId} not found`);
+                allElementsExist = false;
+            }
+        }
+        
+        if (!allElementsExist) {
+            console.error('Required DOM elements missing - cannot initialize InfoPanelManager');
+            return;
+        }
+
+        // Force recreate InfoPanelManager
+        try {
+            console.log('Creating new InfoPanelManager instance...');
+            
+            // Clear any existing instance
+            window.infoPanelManager = null;
+            
+            // Create fresh instance
+            if (typeof InfoPanelManager !== 'undefined') {
+                window.infoPanelManager = new InfoPanelManager();
+                console.log('New InfoPanelManager created successfully');
+                
+                // Give it a moment to initialize, then show the panel
+                setTimeout(() => {
+                    if (window.infoPanelManager && typeof window.infoPanelManager.show === 'function') {
+                        console.log('Showing panel with newly created InfoPanelManager...');
+                        window.infoPanelManager.show(ponto);
+                        console.log('Panel shown successfully');
+                    } else {
+                        console.error('New InfoPanelManager creation failed');
+                        this.forceShowRealPanel(ponto);
+                    }
+                }, 100);
+                
+            } else {
+                console.error('InfoPanelManager class not available');
+                this.forceShowRealPanel(ponto);
+            }
+            
+        } catch (error) {
+            console.error('Error creating InfoPanelManager:', error);
+            this.forceShowRealPanel(ponto);
+        }
+    }
+
+    /**
+     * Force show real info panel by directly manipulating DOM
+     */
+    forceShowRealPanel(ponto) {
+        console.log('Using direct DOM manipulation to show real info panel...');
+        
+        try {
+            // Get the real info panel elements
+            const panel = document.getElementById('info-panel');
+            const title = document.getElementById('info-panel-title');
+            const body = document.getElementById('info-panel-body');
+            const image = document.getElementById('info-panel-image');
+            const placeholder = document.querySelector('.info-panel-image-placeholder');
+            
+            if (!panel || !title || !body) {
+                console.error('Info panel DOM elements not found');
+                return;
+            }
+            
+            // Set content directly
+            title.textContent = ponto.nome || 'Local';
+            
+            // Build content HTML
+            let contentHtml = `
+                <div class="info-panel-section">
+                    <div class="info-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="info-detail-content">
+                            <h4>Endereço</h4>
+                            <p>${ponto.endereco || 'Endereço não informado'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (ponto.categoria) {
+                contentHtml += `
+                    <div class="info-panel-section">
+                        <div class="info-detail">
+                            <i class="fas fa-tag"></i>
+                            <div class="info-detail-content">
+                                <h4>Categoria</h4>
+                                <p>${ponto.categoria}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (ponto.descricao) {
+                contentHtml += `
+                    <div class="info-panel-section">
+                        <div class="info-detail">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="info-detail-content">
+                                <h4>Descrição</h4>
+                                <p>${ponto.descricao}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (ponto.contato) {
+                contentHtml += `
+                    <div class="info-panel-section">
+                        <div class="info-detail">
+                            <i class="fas fa-phone"></i>
+                            <div class="info-detail-content">
+                                <h4>Contato</h4>
+                                <p>${ponto.contato}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add action buttons
+            contentHtml += `
+                <div class="info-panel-actions">
+                    <button class="info-action-btn secondary" id="btn-rotas">
+                        <i class="fas fa-route"></i>
+                        <span>Como Chegar</span>
+                    </button>
+                    <button class="info-action-btn primary" id="btn-favorito" data-ponto-id="${ponto.id}">
+                        <i class="fas fa-heart"></i>
+                        <span>Favoritar</span>
+                    </button>
+                </div>
+            `;
+            
+            body.innerHTML = contentHtml;
+            
+            // Handle image
+            if (ponto.imagem && image && placeholder) {
+                image.src = ponto.imagem;
+                image.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                image.onerror = function() {
+                    image.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                };
+            } else if (placeholder) {
+                if (image) image.style.display = 'none';
+                placeholder.style.display = 'flex';
+            }
+            
+            // Show the panel with the same logic as InfoPanelManager
+            document.body.classList.add('body-with-info-panel');
+            panel.classList.remove('hidden');
+            
+            requestAnimationFrame(() => {
+                panel.classList.add('visible');
+            });
+            
+            // Set up close button if not already done
+            const closeBtn = document.getElementById('info-panel-close');
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    panel.classList.remove('visible');
+                    setTimeout(() => {
+                        panel.classList.add('hidden');
+                        document.body.classList.remove('body-with-info-panel');
+                    }, 300);
+                };
+            }
+            
+            // Set up action buttons
+            const routeBtn = document.getElementById('btn-rotas');
+            if (routeBtn) {
+                routeBtn.onclick = () => {
+                    console.log('Route functionality - under development');
+                };
+            }
+            
+            const favoriteBtn = document.getElementById('btn-favorito');
+            if (favoriteBtn) {
+                favoriteBtn.onclick = () => {
+                    console.log('Favorite functionality - under development');
+                };
+            }
+            
+            console.log('Real info panel shown successfully via DOM manipulation');
+            
+        } catch (error) {
+            console.error('Error in forceShowRealPanel:', error);
+        }
+    }
+
+    /**
      * Selecionar ponto e exibir no painel lateral
      * @param {Object} ponto - Dados do ponto
      */
     selecionarPonto(ponto) {
         try {
-            console.log('📍 Ponto selecionado:', ponto.nome);
+            console.log('Point selected:', ponto.nome);
             
-            // Incrementar visualizações
+            // Increment views
             this.incrementarViews(ponto.id);
             
-            // Destacar marcador selecionado primeiro
+            // Highlight selected marker first
             this.destacarMarcadorSelecionado(ponto.id);
             
-            // Exibir no painel lateral com delay para evitar conflitos
-            if (window.infoPanelManager) {
-                // Usar requestAnimationFrame para garantir que o evento seja processado
-                requestAnimationFrame(() => {
-                    window.infoPanelManager.show(ponto);
-                });
-            } else {
-                console.warn('⚠️ InfoPanelManager não disponível');
-            }
+            // Use robust InfoPanel initialization
+            this.ensureInfoPanel(ponto);
             
         } catch (error) {
-            console.error('❌ Erro ao selecionar ponto:', error);
+            console.error('Error selecting point:', error);
         }
     }
 

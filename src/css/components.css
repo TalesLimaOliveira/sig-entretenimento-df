@@ -19,7 +19,7 @@
     display: flex !important;
     align-items: center;
     gap: 0.5rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-weight: 500;
     backdrop-filter: blur(10px);
     white-space: nowrap;
@@ -36,16 +36,17 @@
 .nav-btn.category-btn:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.02);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .nav-btn.active,
 .nav-btn.category-btn.active {
-    background: var(--theme-gradient-button);
-    border-color: var(--theme-primary);
-    color: var(--white);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
 .nav-btn i,

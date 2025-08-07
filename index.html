@@ -344,6 +344,66 @@
                 // CRÍTICO: Chamar o método init() da aplicação
                 await window.app.init();
                 
+                // Verificar se InfoPanelManager está funcionando após inicialização
+                console.log('Verifying InfoPanelManager after initialization...');
+                
+                // Force a complete reinitialization for localhost compatibility
+                if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                    console.log('Running on HTTP server - forcing InfoPanelManager reinitialization...');
+                    
+                    // Clear any existing instance
+                    window.infoPanelManager = null;
+                    
+                    // Wait for elements and recreate
+                    setTimeout(() => {
+                        try {
+                            if (typeof InfoPanelManager !== 'undefined') {
+                                window.infoPanelManager = new InfoPanelManager();
+                                console.log('InfoPanelManager reinitialized for HTTP server');
+                                
+                                // Double-check it worked
+                                setTimeout(() => {
+                                    if (!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') {
+                                        console.error('InfoPanelManager reinitialization failed, trying again...');
+                                        if (window.InfoPanelInitializer) {
+                                            window.InfoPanelInitializer.forceReinit();
+                                        }
+                                    } else {
+                                        console.log('InfoPanelManager working correctly on HTTP server');
+                                    }
+                                }, 200);
+                            }
+                        } catch (error) {
+                            console.error('Error reinitializing InfoPanelManager for HTTP:', error);
+                        }
+                    }, 300);
+                }
+                
+                // Original verification logic
+                if (!window.infoPanelManager || typeof window.infoPanelManager.show !== 'function') {
+                    console.log('InfoPanelManager needs reinitialization...');
+                    
+                    if (typeof InfoPanelManager !== 'undefined') {
+                        try {
+                            window.infoPanelManager = new InfoPanelManager();
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                            console.log('InfoPanelManager reinitialized successfully');
+                        } catch (error) {
+                            console.error('Error reinitializing InfoPanelManager:', error);
+                        }
+                    } else {
+                        console.error('InfoPanelManager class not available');
+                    }
+                }
+                
+                // Debug final do status
+                console.log('📊 Status final dos componentes:', {
+                    infoPanelManager: !!window.infoPanelManager,
+                    hasShow: !!(window.infoPanelManager && window.infoPanelManager.show),
+                    mapManager: !!window.mapManager,
+                    databaseManager: !!window.databaseManager
+                });
+                
                 console.log('Aplicação inicializada e pronta');
             }
             
