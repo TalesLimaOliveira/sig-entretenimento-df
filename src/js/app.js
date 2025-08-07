@@ -263,6 +263,26 @@ class PontosEntretenimentoApp {
             console.error('🔐 Erro ao verificar autenticação:', error);
             this.configureVisitorUser();
         }
+        
+        // Forçar uma segunda verificação após 500ms para garantir
+        setTimeout(() => {
+            console.log('🔐 Segunda verificação de autenticação...');
+            try {
+                if (window.authManager && window.authManager.isAuthenticated()) {
+                    const user = window.authManager.getCurrentUser();
+                    console.log('🔐 Segunda verificação - usuário autenticado:', user.nome);
+                    // Só atualizar se os botões ainda estão como "ENTRAR"
+                    const desktopBtn = document.getElementById('desktop-login-btn');
+                    const mobileBtn = document.getElementById('mobile-login-btn');
+                    if (desktopBtn || mobileBtn) {
+                        console.log('🔐 Botões ainda não foram atualizados, forçando atualização...');
+                        this.configureLoggedUser(user);
+                    }
+                }
+            } catch (error) {
+                console.error('🔐 Erro na segunda verificação:', error);
+            }
+        }, 500);
     }
 
     /**
@@ -270,6 +290,14 @@ class PontosEntretenimentoApp {
      */
     configureLoggedUser(user) {
         console.log(`🔐 Configurando usuário logado: ${user.nome} (${user.role})`);
+        
+        // Verificar se os containers existem
+        const desktopContainer = document.querySelector('.desktop-actions');
+        const mobileContainer = document.querySelector('.mobile-actions');
+        console.log('🔐 Containers encontrados:', {
+            desktop: !!desktopContainer,
+            mobile: !!mobileContainer
+        });
         
         console.log('🔐 Chamando updateLoginButton...');
         this.updateLoginButton(user);
@@ -285,7 +313,17 @@ class PontosEntretenimentoApp {
         }
         
         console.log('🔐 Atualizando visibilidade de favoritos');
-        this.updateFavoritesVisibility(user.role);
+        // this.updateFavoritesVisibility(user.role); // Comentado - não implementado ainda
+        
+        // Verificar se os botões foram criados corretamente
+        setTimeout(() => {
+            const desktopBtn = document.getElementById('desktop-user-info-btn');
+            const mobileBtn = document.getElementById('mobile-user-info-btn');
+            console.log('🔐 Verificação pós-criação dos botões:', {
+                desktop: !!desktopBtn,
+                mobile: !!mobileBtn
+            });
+        }, 100);
     }
 
     /**
@@ -295,7 +333,7 @@ class PontosEntretenimentoApp {
         console.log('Configurando interface para visitante...');
         this.isAdmin = false;
         this.configureLoginButton();
-        this.updateFavoritesVisibility('visitor');
+        // this.updateFavoritesVisibility('visitor'); // Comentado - não implementado ainda
     }
 
     /**
@@ -304,67 +342,89 @@ class PontosEntretenimentoApp {
     configureLoginButton() {
         console.log('Configurando botão de login para visitantes...');
         
-        // Verificar se existem containers de usuário para substituir
-        const desktopUserContainer = document.getElementById('desktop-user-info-btn-container');
-        const mobileUserContainer = document.getElementById('mobile-user-info-btn-container');
+        // Garantir que botões de login existam no DOM
+        this.ensureLoginButtonsExist();
         
-        // Verificar botões individuais também
-        const desktopUserBtn = document.getElementById('desktop-user-info-btn');
-        const mobileUserBtn = document.getElementById('mobile-user-info-btn');
-        
-        // Substituir containers ou botões por botões de login
-        if (desktopUserContainer) {
-            desktopUserContainer.outerHTML = `
-                <button class="header-login-btn desktop" id="desktop-login-btn">
-                    <i class="fas fa-user"></i>
-                    <span class="login-btn-text">ENTRAR</span>
-                </button>
-            `;
-        } else if (desktopUserBtn) {
-            desktopUserBtn.outerHTML = `
-                <button class="header-login-btn desktop" id="desktop-login-btn">
-                    <i class="fas fa-user"></i>
-                    <span class="login-btn-text">ENTRAR</span>
-                </button>
-            `;
-        }
-        
-        if (mobileUserContainer) {
-            mobileUserContainer.outerHTML = `
-                <button class="header-login-btn mobile" id="mobile-login-btn">
-                    <i class="fas fa-user"></i>
-                    <span class="login-btn-text">ENTRAR</span>
-                </button>
-            `;
-        } else if (mobileUserBtn) {
-            mobileUserBtn.outerHTML = `
-                <button class="header-login-btn mobile" id="mobile-login-btn">
-                    <i class="fas fa-user"></i>
-                    <span class="login-btn-text">ENTRAR</span>
-                </button>
-            `;
-        }
-        
-        // Reconfigurar eventos de clique para os novos botões de login
-        setTimeout(() => {
-            const newDesktopBtn = document.getElementById('desktop-login-btn');
-            const newMobileBtn = document.getElementById('mobile-login-btn');
-            
-            [newDesktopBtn, newMobileBtn].forEach(btn => {
-                if (btn) {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        console.log('Botão de login clicado');
-                        this.showLoginModal();
-                    });
-                }
-            });
-            
-            console.log('Login buttons restored and configured');
-        }, 100);
+        // Configurar eventos de clique para os botões de login
+        this.setupLoginButtonEvents();
         
         // Restaurar botão de favoritos também
         this.restoreFavoriteButton();
+    }
+
+    /**
+     * Garantir que botões de login existam no DOM
+     */
+    ensureLoginButtonsExist() {
+        const desktopButton = document.getElementById('desktop-login-btn');
+        const mobileButton = document.getElementById('mobile-login-btn');
+        
+        // Se não existirem, procurar por containers de usuário para substituir
+        if (!desktopButton) {
+            const desktopContainer = document.querySelector('.desktop-actions');
+            if (desktopContainer) {
+                // Remover qualquer conteúdo existente relacionado ao usuário
+                const existingUserElements = desktopContainer.querySelectorAll('.user-dropdown, .user-info, [id*="user-info"]');
+                existingUserElements.forEach(el => el.remove());
+                
+                // Criar novo botão de login
+                const loginBtn = document.createElement('button');
+                loginBtn.className = 'header-login-btn desktop';
+                loginBtn.id = 'desktop-login-btn';
+                loginBtn.innerHTML = `
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                `;
+                desktopContainer.appendChild(loginBtn);
+            }
+        }
+        
+        if (!mobileButton) {
+            const mobileContainer = document.querySelector('.mobile-actions');
+            if (mobileContainer) {
+                // Remover qualquer conteúdo existente relacionado ao usuário
+                const existingUserElements = mobileContainer.querySelectorAll('.user-dropdown, .user-info, [id*="user-info"]');
+                existingUserElements.forEach(el => el.remove());
+                
+                // Criar novo botão de login
+                const loginBtn = document.createElement('button');
+                loginBtn.className = 'header-login-btn mobile';
+                loginBtn.id = 'mobile-login-btn';
+                loginBtn.innerHTML = `
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                `;
+                mobileContainer.appendChild(loginBtn);
+            }
+        }
+    }
+
+    /**
+     * Configurar eventos dos botões de login
+     */
+    setupLoginButtonEvents() {
+        setTimeout(() => {
+            const desktopBtn = document.getElementById('desktop-login-btn');
+            const mobileBtn = document.getElementById('mobile-login-btn');
+            
+            [desktopBtn, mobileBtn].forEach((btn, index) => {
+                if (btn) {
+                    // Remover listeners antigos clonando o elemento
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    
+                    // Adicionar novo listener
+                    newBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`Login button clicked: ${index === 0 ? 'desktop' : 'mobile'}`);
+                        this.showLoginModal();
+                    });
+                    
+                    console.log(`Login button configured: ${index === 0 ? 'desktop' : 'mobile'}`);
+                }
+            });
+        }, 100);
     }
 
     /**
@@ -434,36 +494,42 @@ class PontosEntretenimentoApp {
     updateLoginButton(user) {
         console.log('🔄 Atualizando botão de login para usuário:', user.nome, 'Role:', user.role);
         
-        // Atualizar ambos os botões (desktop e mobile)
-        const desktopLoginBtn = document.getElementById('desktop-login-btn');
-        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        // Encontrar containers onde estão os botões
+        const desktopContainer = document.querySelector('.desktop-actions');
+        const mobileContainer = document.querySelector('.mobile-actions');
         
-        console.log('🔍 Botões encontrados:', {
-            desktop: !!desktopLoginBtn,
-            mobile: !!mobileLoginBtn
+        console.log('🔍 Containers encontrados:', {
+            desktop: !!desktopContainer,
+            mobile: !!mobileContainer
         });
         
-        [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
-            if (loginBtn) {
-                console.log('🔧 Processando botão:', loginBtn.id);
+        // Configurações do usuário
+        const isAdmin = user.role === 'administrator';
+        const userName = user.nome || user.username || 'Usuário';
+        
+        console.log('� Dados do usuário:', { userName, isAdmin });
+        
+        // Substituir botões em ambos os containers
+        [desktopContainer, mobileContainer].forEach((container, index) => {
+            if (container) {
+                const containerType = index === 0 ? 'desktop' : 'mobile';
+                console.log(`🔧 Processando container ${containerType}:`, container);
                 
-                const isAdmin = user.role === 'administrator';
-                const newId = loginBtn.id.replace('login-btn', 'user-info-btn');
-                const userName = user.nome || user.username || 'Usuário';
+                // Remover elementos existentes relacionados ao login/usuário
+                const existingElements = container.querySelectorAll('.header-login-btn, .user-dropdown, .user-info, [id*="login-btn"], [id*="user-info"]');
+                existingElements.forEach(el => el.remove());
                 
-                console.log('📝 Dados do usuário:', { userName, isAdmin, newId });
-                
-                // Criar menu suspenso do usuário melhorado
-                const newHTML = `
-                    <div class="user-dropdown" id="${newId}-container">
-                        <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${newId}">
+                // Criar novo elemento de menu de usuário
+                const userMenuHTML = `
+                    <div class="user-dropdown" id="${containerType}-user-dropdown">
+                        <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${containerType}-user-info-btn">
                             <div class="user-avatar">
                                 <i class="fas fa-user user-icon"></i>
                             </div>
                             <span class="user-name">${userName}</span>
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
                         </button>
-                        <div class="user-dropdown-menu" id="${newId}-menu" style="display: none;">
+                        <div class="user-dropdown-menu" id="${containerType}-user-info-btn-menu" style="display: none;">
                             ${isAdmin ? `
                                 <a href="admin.html" class="dropdown-item admin-item">
                                     <i class="fas fa-cogs"></i>
@@ -478,14 +544,13 @@ class PontosEntretenimentoApp {
                     </div>
                 `;
                 
-                console.log('🔄 Substituindo HTML do botão...');
-                loginBtn.outerHTML = newHTML;
-                console.log('✅ Botão substituído com sucesso');
+                container.insertAdjacentHTML('beforeend', userMenuHTML);
+                console.log(`✅ Menu de usuário criado para ${containerType}`);
             }
         });
         
         // Configurar o menu após substituição
-        console.log('🔧 Configurando menu do usuário...');
+        console.log('🔧 Configurando interações do menu do usuário...');
         this.configureUserMenu();
         
         // Remover botão de favoritos apenas se for administrador
@@ -559,7 +624,7 @@ class PontosEntretenimentoApp {
     configureUserMenu() {
         console.log('Configurando menu suspenso do usuário...');
         
-        // Configurar ambos os botões (desktop e mobile)
+        // Configurar ambos os menus (desktop e mobile)
         const desktopUserBtn = document.getElementById('desktop-user-info-btn');
         const mobileUserBtn = document.getElementById('mobile-user-info-btn');
         
@@ -568,14 +633,20 @@ class PontosEntretenimentoApp {
                 console.log('Configurando menu suspenso para botão:', userInfoBtn.id);
                 
                 // Usar o componente UserMenu se disponível
-                if (window.userMenu) {
-                    userInfoBtn.addEventListener('click', (e) => {
+                if (window.userMenu && typeof window.userMenu.toggle === 'function') {
+                    // Remover listeners antigos
+                    const newBtn = userInfoBtn.cloneNode(true);
+                    userInfoBtn.parentNode.replaceChild(newBtn, userInfoBtn);
+                    
+                    newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        window.userMenu.toggle(userInfoBtn);
+                        console.log('Menu toggle via UserMenu component');
+                        window.userMenu.toggle(newBtn);
                     });
                 } else {
                     // Fallback para método antigo
+                    console.log('UserMenu component not available, using fallback');
                     this.setupFallbackUserMenu(userInfoBtn);
                 }
             }
@@ -713,29 +784,40 @@ class PontosEntretenimentoApp {
         
         // Event listener para mudanças de autenticação
         document.addEventListener('authStateChanged', (e) => {
-            console.log('Event authStateChanged disparado!', e);
+            console.log('🎯 Event authStateChanged disparado!', e);
+            console.log('🎯 Event detail:', e.detail);
             
             try {
                 const { type, user } = e.detail;
-                console.log(`Processando evento de autenticação: ${type}`, user);
+                console.log(`🎯 Processando evento de autenticação: ${type}`, user);
                 
                 if (type === 'login') {
-                    console.log('Processando login...');
+                    console.log('🎯 Processando login...');
                     this.configureLoggedUser(user);
                     this.reloadData();
                 } else if (type === 'logout') {
-                    console.log('Processando logout...');
+                    console.log('🎯 Processando logout...');
                     this.configureVisitorUser();
                     this.reloadData();
                 }
             } catch (error) {
-                console.error('Erro ao processar evento de autenticação:', error);
+                console.error('🎯 Erro ao processar evento de autenticação:', error);
                 // Try to reconfigure as visitor in case of error
                 try {
                     this.configureVisitorUser();
                 } catch (fallbackError) {
-                    console.error('Erro no fallback de configuração:', fallbackError);
+                    console.error('🎯 Erro no fallback de configuração:', fallbackError);
                 }
+            }
+        });
+        
+        // NOVA FUNCIONALIDADE: Listener adicional para userLoggedIn
+        document.addEventListener('userLoggedIn', (e) => {
+            console.log('🎯 Event userLoggedIn recebido:', e.detail);
+            try {
+                this.configureLoggedUser(e.detail);
+            } catch (error) {
+                console.error('🎯 Erro ao processar userLoggedIn:', error);
             }
         });
         
@@ -1628,6 +1710,78 @@ class PontosEntretenimentoApp {
         this.updateStatistics();
         return true;
     }
+    
+    // FUNÇÕES DE TESTE/DEBUG
+    testLogin(username, password) {
+        console.log('🧪 TESTE: Iniciando login para:', username);
+        if (window.authManager && window.authManager.login) {
+            window.authManager.login(username, password).then(result => {
+                console.log('🧪 TESTE: Resultado do login:', result);
+                if (result.success) {
+                    console.log('🧪 TESTE: Forçando atualização da interface...');
+                    this.configureLoggedUser(result.user);
+                }
+            });
+        }
+    }
+    
+    testLogout() {
+        console.log('🧪 TESTE: Fazendo logout...');
+        if (window.authManager && window.authManager.logout) {
+            window.authManager.logout();
+        }
+    }
+    
+    checkAuthStatus() {
+        const isAuth = window.authManager ? window.authManager.isAuthenticated() : false;
+        const user = isAuth ? window.authManager.getCurrentUser() : null;
+        console.log('🧪 TESTE: Status de autenticação:', {
+            authenticated: isAuth,
+            user: user ? `${user.nome} (${user.role})` : null
+        });
+        return { authenticated: isAuth, user };
+    }
 }
 
 // Não instanciar aqui - será feito no HTML
+
+// Função global para testes
+window.testLogin = function(username = 'admin', password = 'admin') {
+    console.log('🧪 Função global testLogin chamada');
+    if (window.app && window.app.testLogin) {
+        window.app.testLogin(username, password);
+    } else if (window.authManager) {
+        window.authManager.login(username, password).then(result => {
+            console.log('🧪 Login direto resultado:', result);
+            if (result.success && window.app) {
+                window.app.configureLoggedUser(result.user);
+            }
+        });
+    } else {
+        console.error('🧪 AuthManager não disponível');
+    }
+};
+
+window.testLogout = function() {
+    console.log('🧪 Função global testLogout chamada');
+    if (window.app && window.app.testLogout) {
+        window.app.testLogout();
+    } else if (window.authManager) {
+        window.authManager.logout();
+        setTimeout(() => window.location.reload(), 500);
+    } else {
+        console.error('🧪 AuthManager não disponível');
+    }
+};
+
+window.checkAuthStatus = function() {
+    console.log('🧪 Função global checkAuthStatus chamada');
+    if (window.app && window.app.checkAuthStatus) {
+        return window.app.checkAuthStatus();
+    } else {
+        const isAuth = window.authManager ? window.authManager.isAuthenticated() : false;
+        const user = isAuth ? window.authManager.getCurrentUser() : null;
+        console.log('🧪 Status direto:', { authenticated: isAuth, user });
+        return { authenticated: isAuth, user };
+    }
+};

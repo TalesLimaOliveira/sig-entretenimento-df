@@ -290,9 +290,21 @@ class LoginModal {
             );
 
             if (result && result.success) {
+                console.log('🎯 Login bem-sucedido no modal:', result.user);
+                
                 // Login bem-sucedido
                 this.close();
                 this.handleLoginSuccess(result.user);
+                
+                // FORÇAR atualização da interface imediatamente
+                if (window.app && typeof window.app.configureLoggedUser === 'function') {
+                    console.log('🎯 Forçando atualização via app.configureLoggedUser...');
+                    window.app.configureLoggedUser(result.user);
+                } else {
+                    console.warn('🎯 App não disponível, tentando método alternativo...');
+                    // Método alternativo direto
+                    this.forceButtonUpdate(result.user);
+                }
             } else {
                 // Login falhou
                 this.showError(result ? (result.message || 'Credenciais inválidas') : 'Erro desconhecido no login');
@@ -309,6 +321,8 @@ class LoginModal {
     }
 
     handleLoginSuccess(user) {
+        console.log('🎯 LoginModal: handleLoginSuccess chamado para:', user.nome);
+        
         // Mostrar notificação
         this.showNotification(`Bem-vindo, ${user.nome || user.name}!`, 'success');
 
@@ -325,30 +339,126 @@ class LoginModal {
             }, 500);
         }
 
-        // Atualizar interface
-        this.updateUIAfterLogin(user);
+        // O AuthManager já disparou o evento 'authStateChanged'
+        // O app.js vai gerenciar a atualização da interface
+        console.log('🎯 LoginModal: Interface será atualizada via evento authStateChanged');
 
         // Admin permanece na página principal - acesso ao painel pelo menu
         if (user.role === 'administrator') {
-            console.log('Administrator logged in - admin panel available via menu');
+            console.log('🎯 Administrator logged in - admin panel available via menu');
         }
+        
+        // Forçar uma verificação adicional se o app não respondeu
+        setTimeout(() => {
+            if (window.app && typeof window.app.configureLoggedUser === 'function') {
+                console.log('🎯 LoginModal: Forçando atualização de interface via app...');
+                window.app.configureLoggedUser(user);
+            }
+        }, 1000);
     }
 
+    // updateUIAfterLogin - DESABILITADA para evitar conflitos com app.js
+    // O app.js gerencia toda a interface via evento authStateChanged
     updateUIAfterLogin(user) {
-        // Atualizar botão de login no header
-        const loginBtn = document.querySelector('.admin-login');
-        if (loginBtn) {
-            loginBtn.innerHTML = `<i class="fas fa-user"></i> ${user.nome || user.name}`;
-            loginBtn.onclick = () => this.showUserMenu(user);
-        }
-
-        // Adicionar categoria de favoritos se for usuário comum
-        if (user.role === 'user') {
-            this.addFavoritesCategory();
-        }
-
-        // Disparar evento customizado
+        console.log('🎯 LoginModal: updateUIAfterLogin chamado mas desabilitado');
+        // Esta função foi desabilitada para evitar conflitos
+        // A interface é gerenciada pelo app.js via evento authStateChanged
+        
+        // Apenas disparar evento customizado adicional se necessário
         document.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
+    }
+
+    /**
+     * Método de fallback para forçar atualização dos botões
+     */
+    forceButtonUpdate(user) {
+        console.log('🎯 LoginModal: Executando forceButtonUpdate para:', user.nome);
+        
+        const isAdmin = user.role === 'administrator';
+        const userName = user.nome || user.username || 'Usuário';
+        
+        // Encontrar containers
+        const desktopContainer = document.querySelector('.desktop-actions');
+        const mobileContainer = document.querySelector('.mobile-actions');
+        
+        [desktopContainer, mobileContainer].forEach((container, index) => {
+            if (container) {
+                const containerType = index === 0 ? 'desktop' : 'mobile';
+                
+                // Remover botões de login existentes
+                const existingButtons = container.querySelectorAll('.header-login-btn, .user-dropdown, .user-info, [id*="login-btn"], [id*="user-info"]');
+                existingButtons.forEach(btn => btn.remove());
+                
+                // Criar novo menu de usuário
+                const userMenuHTML = `
+                    <div class="user-dropdown" id="${containerType}-user-dropdown">
+                        <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${containerType}-user-info-btn">
+                            <div class="user-avatar">
+                                <i class="fas fa-user user-icon"></i>
+                            </div>
+                            <span class="user-name">${userName}</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </button>
+                        <div class="user-dropdown-menu" id="${containerType}-user-info-btn-menu" style="display: none;">
+                            ${isAdmin ? `
+                                <a href="admin.html" class="dropdown-item admin-item">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>Gerenciar Pontos</span>
+                                </a>
+                            ` : ''}
+                            <button class="dropdown-item logout-btn" data-action="logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', userMenuHTML);
+                console.log(`🎯 Menu de usuário criado via fallback para ${containerType}`);
+                
+                // Configurar eventos do menu
+                const userBtn = document.getElementById(`${containerType}-user-info-btn`);
+                const menu = document.getElementById(`${containerType}-user-info-btn-menu`);
+                
+                if (userBtn && menu) {
+                    userBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const isVisible = menu.style.display !== 'none';
+                        
+                        // Fechar todos os outros menus
+                        document.querySelectorAll('.user-dropdown-menu').forEach(m => {
+                            if (m !== menu) m.style.display = 'none';
+                        });
+                        
+                        // Toggle do menu atual
+                        menu.style.display = isVisible ? 'none' : 'block';
+                        console.log(`🎯 Menu ${containerType} toggled:`, !isVisible);
+                    });
+                    
+                    // Configurar logout
+                    const logoutBtn = menu.querySelector('.logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', () => {
+                            if (window.authManager) {
+                                window.authManager.logout();
+                            }
+                        });
+                    }
+                }
+            }
+        });
+        
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-dropdown')) {
+                document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
     }
 
     addFavoritesCategory() {

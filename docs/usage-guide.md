@@ -36,6 +36,50 @@ Simplesmente abra o arquivo `index.html` diretamente no navegador.
 - Detecta automaticamente o protocolo `file://`
 - Fornece experiência equivalente ao servidor HTTP
 
+## Sistema de Autenticação
+
+### Como fazer login
+
+1. **Clique no botão "ENTRAR"** no canto superior direito
+2. **Digite as credenciais**:
+   - **Administrador**: usuário `admin` / senha `admin`
+   - **Usuário comum**: usuário `user` / senha `user`
+
+### Comportamento após login
+
+**Para usuários comuns:**
+- O botão "ENTRAR" se transforma em um **menu suspenso** com o nome do usuário
+- **Opções disponíveis**:
+  - Nome do usuário (não clicável)
+  - "Gerenciar conta" (em desenvolvimento)
+  - "Sair" (logout)
+
+**Para administradores:**
+- O botão "ENTRAR" se transforma em um **menu suspenso dourado** com o nome do administrador
+- **Opções disponíveis**:
+  - Nome do administrador (não clicável)
+  - "Painel Administrativo" (link para `admin.html`)
+  - "Gerenciar conta" (em desenvolvimento)
+  - "Sair" (logout)
+- O **botão de favoritos é removido** da navegação (administradores não usam favoritos)
+
+### Menu suspenso do usuário
+
+O menu suspenso possui:
+- **Design responsivo** que se adapta ao tamanho da tela
+- **Animações suaves** de entrada e saída
+- **Posicionamento inteligente** que evita sair da tela
+- **Ícones FontAwesome** para cada opção
+- **Cores diferenciadas** para administradores (dourado) e usuários comuns
+- **Suporte a tema escuro/claro**
+
+### Sistema de logout
+
+- Ao clicar em "Sair", o usuário é deslogado imediatamente
+- A página é recarregada automaticamente
+- O menu suspenso volta a ser o botão "ENTRAR"
+- Dados da sessão são limpos do navegador
+
 ## Diferenças Técnicas Resolvidas
 
 ### ✅ Problema 1: Carregamento de Dados
@@ -48,7 +92,12 @@ Simplesmente abra o arquivo `index.html` diretamente no navegador.
 - **Depois:** Unificado para usar `icon` com classes FontAwesome
 - **Resultado:** Ícones idênticos em ambos os protocolos
 
-### ✅ Problema 3: Inicialização
+### ✅ Problema 3: Sistema de Login/Usuário
+- **Antes:** Botão "ENTRAR" não funcionava corretamente após login
+- **Depois:** Transformação automática em menu suspenso funcional
+- **Resultado:** Interface de usuário profissional e responsiva
+
+### ✅ Problema 4: Inicialização
 - **Sistema:** Inicializador robusto que verifica dependências
 - **Fallback:** Se carregamento JSON falha em file://, usa dados padrão
 - **Garantia:** Aplicação funciona em ambos os cenários

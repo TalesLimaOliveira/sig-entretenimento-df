@@ -464,13 +464,18 @@ class AuthManager {
      */
     dispatchAuthEvent(type, user) {
         try {
+            console.log(`🎯 AuthManager: Disparando evento authStateChanged - ${type}`, user);
             const event = new CustomEvent('authStateChanged', {
                 detail: { type, user }
             });
             document.dispatchEvent(event);
-            console.log(`Evento de autenticação disparado: ${type}`);
+            console.log(`🎯 AuthManager: Evento de autenticação disparado com sucesso: ${type}`);
+            
+            // Verificar se há listeners
+            const listeners = document._listeners?.authStateChanged?.length || 0;
+            console.log(`🎯 AuthManager: ${listeners} listeners registrados para authStateChanged`);
         } catch (error) {
-            console.error('Erro ao disparar evento de autenticação:', error);
+            console.error('🎯 AuthManager: Erro ao disparar evento de autenticação:', error);
             // Continuar mesmo com erro no evento
         }
     }

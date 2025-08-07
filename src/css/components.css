@@ -1991,3 +1991,272 @@
         font-size: 0.9rem;
     }
 }
+
+/* ===== SISTEMA DE BOTÃO DE USUÁRIO E DROPDOWN MELHORADO ===== */
+
+/* Botões de login/usuário responsivos */
+.header-login-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+}
+
+.header-login-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.header-login-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.header-login-btn i {
+    font-size: 1rem;
+}
+
+.login-btn-text {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Estados do botão de usuário */
+.user-btn, .admin-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+}
+
+.admin-btn {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-color: #fbbf24;
+}
+
+.user-btn:hover, .admin-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.admin-btn:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #f59e0b;
+}
+
+.user-name {
+    font-weight: 600;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-menu-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+    margin-left: 0.25rem;
+}
+
+/* Menu dropdown melhorado */
+.user-dropdown-menu {
+    position: fixed;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    min-width: 220px;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+    display: none;
+}
+
+.user-dropdown-menu.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.user-dropdown-content {
+    padding: 0.5rem;
+}
+
+.user-menu-item {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+    margin-bottom: 0.25rem;
+    text-decoration: none;
+}
+
+.user-menu-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    transform: translateX(2px);
+}
+
+.user-menu-item i {
+    width: 16px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.user-menu-item.admin-item {
+    color: var(--color-warning, #fbbf24);
+}
+
+.user-menu-item.admin-item:hover {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--color-warning, #fbbf24);
+}
+
+.user-menu-item.account-item {
+    color: var(--color-info, #3b82f6);
+}
+
+.user-menu-item.account-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-info, #3b82f6);
+}
+
+.user-menu-item.logout-item {
+    color: var(--color-error, #ef4444);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-menu-item.logout-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error, #ef4444);
+}
+
+/* Suporte para tema escuro */
+.theme-dark .user-dropdown-menu {
+    background: rgba(17, 24, 39, 0.95);
+    border-color: rgba(75, 85, 99, 0.5);
+    color: var(--gray-100);
+}
+
+.theme-dark .user-menu-item {
+    color: var(--gray-200);
+}
+
+.theme-dark .user-menu-item:hover {
+    background: rgba(75, 85, 99, 0.3);
+    color: var(--gray-100);
+}
+
+.theme-dark .user-menu-item.logout-item {
+    border-top-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Responsividade móvel */
+@media (max-width: 768px) {
+    .header-login-btn, .user-btn, .admin-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .user-name {
+        max-width: 100px;
+    }
+    
+    .user-dropdown-menu {
+        min-width: 200px;
+        max-width: calc(100vw - 16px);
+    }
+    
+    .user-menu-item {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+    
+    .login-btn-text {
+        display: none;
+    }
+    
+    .header-login-btn i {
+        margin: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-name {
+        display: none;
+    }
+    
+    .user-menu-arrow {
+        margin-left: 0;
+    }
+}
+
+/* Animações */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+.user-dropdown-menu.show {
+    animation: slideDown 0.2s ease;
+}
+
+.user-dropdown-menu:not(.show) {
+    animation: slideUp 0.2s ease;
+}
