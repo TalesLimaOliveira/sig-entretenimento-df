@@ -1671,3 +1671,119 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
 }
+
+/* Estilos para Menu Suspenso do Usuário */
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.user-info:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.user-info.is-admin {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.user-info .user-icon {
+    font-size: 1rem;
+}
+
+.user-info .user-name {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.user-info .dropdown-arrow {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-primary, #1a1a1a);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-width: 180px;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+    margin-top: 0.5rem;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: white;
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.dropdown-item span {
+    font-weight: 400;
+}
+
+/* Responsividade para menu do usuário */
+@media (max-width: 768px) {
+    .user-info .user-name {
+        display: none;
+    }
+    
+    .user-info {
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        justify-content: center;
+    }
+    
+    .user-dropdown-menu {
+        right: -20px;
+        min-width: 160px;
+    }
+}

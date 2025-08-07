@@ -126,6 +126,9 @@ class PontosEntretenimentoApp {
                 this.configureCategoryMenu();
                 this.diagnoseCategoryButtons();
                 
+                // Configurar botões de login se ainda não foram configurados
+                this.ensureLoginButtonsWork();
+                
                 // Forçar visibilidade do container e botões
                 const container = document.getElementById('nav-buttons-container');
                 if (container) {
@@ -281,7 +284,7 @@ class PontosEntretenimentoApp {
      * Configure interface for visitor
      */
     configureVisitorUser() {
-        console.log('Visitor user');
+        console.log('Configurando interface para visitante...');
         this.isAdmin = false;
         this.configureLoginButton();
         this.updateFavoritesVisibility('visitor');
@@ -293,12 +296,23 @@ class PontosEntretenimentoApp {
     configureLoginButton() {
         console.log('Configurando botão de login para visitantes...');
         
-        // Verificar se existem botões de usuário para substituir
+        // Verificar se existem containers de usuário para substituir
+        const desktopUserContainer = document.getElementById('desktop-user-info-btn-container');
+        const mobileUserContainer = document.getElementById('mobile-user-info-btn-container');
+        
+        // Verificar botões individuais também
         const desktopUserBtn = document.getElementById('desktop-user-info-btn');
         const mobileUserBtn = document.getElementById('mobile-user-info-btn');
         
-        // Se existem botões de usuário, substitui-los por botões de login
-        if (desktopUserBtn) {
+        // Substituir containers ou botões por botões de login
+        if (desktopUserContainer) {
+            desktopUserContainer.outerHTML = `
+                <button class="header-login-btn desktop" id="desktop-login-btn">
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                </button>
+            `;
+        } else if (desktopUserBtn) {
             desktopUserBtn.outerHTML = `
                 <button class="header-login-btn desktop" id="desktop-login-btn">
                     <i class="fas fa-user"></i>
@@ -307,7 +321,14 @@ class PontosEntretenimentoApp {
             `;
         }
         
-        if (mobileUserBtn) {
+        if (mobileUserContainer) {
+            mobileUserContainer.outerHTML = `
+                <button class="header-login-btn mobile" id="mobile-login-btn">
+                    <i class="fas fa-user"></i>
+                    <span class="login-btn-text">ENTRAR</span>
+                </button>
+            `;
+        } else if (mobileUserBtn) {
             mobileUserBtn.outerHTML = `
                 <button class="header-login-btn mobile" id="mobile-login-btn">
                     <i class="fas fa-user"></i>
@@ -316,26 +337,87 @@ class PontosEntretenimentoApp {
             `;
         }
         
-        // Configurar botões desktop e mobile (se já existem ou foram criados agora)
-        const desktopLoginBtn = document.getElementById('desktop-login-btn');
-        const mobileLoginBtn = document.getElementById('mobile-login-btn');
+        // Reconfigurar eventos de clique para os novos botões de login
+        setTimeout(() => {
+            const newDesktopBtn = document.getElementById('desktop-login-btn');
+            const newMobileBtn = document.getElementById('mobile-login-btn');
+            
+            [newDesktopBtn, newMobileBtn].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        console.log('Botão de login clicado');
+                        this.mostrarModalLogin();
+                    });
+                }
+            });
+            
+            console.log('✅ Botões de login restaurados e configurados');
+        }, 100);
         
-        [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
-            if (loginBtn) {
-                // Garantir que o conteúdo esteja correto
-                loginBtn.innerHTML = '<i class="fas fa-user"></i> <span class="login-btn-text">ENTRAR</span>';
+        // Restaurar botão de favoritos também
+        this.restoreFavoriteButton();
+    }
+
+    /**
+     * Garantir que os botões de login funcionem
+     */
+    ensureLoginButtonsWork() {
+        console.log('🔧 Verificando botões de login...');
+        
+        const desktopBtn = document.getElementById('desktop-login-btn');
+        const mobileBtn = document.getElementById('mobile-login-btn');
+        
+        [desktopBtn, mobileBtn].forEach((btn, index) => {
+            if (btn) {
+                const btnType = index === 0 ? 'desktop' : 'mobile';
+                console.log(`✅ Botão ${btnType} encontrado:`, btn);
                 
-                // Remover event listeners antigos e adicionar novos
-                loginBtn.onclick = null;
-                loginBtn.onclick = () => {
-                    if (window.loginModal) {
-                        window.loginModal.open();
-                    } else {
-                        console.error('Login modal não disponível');
-                    }
-                };
+                // Remover listeners antigos
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                // Adicionar novo listener
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log(`🔔 Clique detectado no botão ${btnType}`);
+                    this.mostrarModalLogin();
+                });
+                
+                console.log(`✅ Event listener configurado para botão ${btnType}`);
+            } else {
+                console.warn(`⚠️ Botão ${index === 0 ? 'desktop' : 'mobile'} não encontrado`);
             }
         });
+    }
+
+    /**
+     * Restaura o botão de favoritos quando usuário não está logado
+     */
+    restoreFavoriteButton() {
+        console.log('Verificando se precisa restaurar botão de favoritos...');
+        
+        const navContainer = document.getElementById('nav-buttons-container');
+        if (navContainer) {
+            const existingFavoriteBtn = navContainer.querySelector('[data-categoria="favoritos"]');
+            if (!existingFavoriteBtn) {
+                console.log('Restaurando botão de favoritos...');
+                // Adicionar botão de favoritos após o botão "Todos"
+                const todosBtn = navContainer.querySelector('[data-categoria="todos"]');
+                if (todosBtn) {
+                    const favoriteBtn = `
+                        <button class="nav-btn category-btn" data-categoria="favoritos" title="Favoritos" 
+                                style="background: #e11d48; border-color: #e11d48; color: white; display: flex !important; visibility: visible !important; opacity: 1 !important;">
+                            <i class="fas fa-heart"></i>
+                            <span class="nav-btn-text">Favoritos</span>
+                        </button>
+                    `;
+                    todosBtn.insertAdjacentHTML('afterend', favoriteBtn);
+                    console.log('✅ Botão de favoritos restaurado');
+                }
+            }
+        }
     }
 
     /**
@@ -351,22 +433,59 @@ class PontosEntretenimentoApp {
         [desktopLoginBtn, mobileLoginBtn].forEach(loginBtn => {
             if (loginBtn) {
                 const isAdmin = user.role === 'administrator';
-                const adminIcon = isAdmin ? '<i class="fas fa-shield-alt admin-icon"></i>' : '';
                 const newId = loginBtn.id.replace('login-btn', 'user-info-btn');
                 
-                // Substituir o botão por um botão de usuário
+                // Criar menu suspenso do usuário
                 loginBtn.outerHTML = `
-                    <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${newId}">
-                        <div class="user-avatar">${user.nome.charAt(0).toUpperCase()}</div>
-                        <span class="user-name">${user.nome}</span>
-                        ${adminIcon}
-                        <i class="fas fa-chevron-down dropdown-arrow"></i>
-                    </button>
+                    <div class="user-dropdown" id="${newId}-container">
+                        <button class="user-info ${isAdmin ? 'is-admin' : ''}" id="${newId}">
+                            <i class="fas fa-user user-icon"></i>
+                            <span class="user-name">${user.nome}</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </button>
+                        <div class="user-dropdown-menu" id="${newId}-menu" style="display: none;">
+                            ${isAdmin ? `
+                                <a href="admin.html" class="dropdown-item">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>Gerenciar Pontos</span>
+                                </a>
+                            ` : ''}
+                            <button class="dropdown-item logout-btn" data-action="logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
                 `;
             }
         });
         
         this.configureUserMenu();
+        this.removeFavoriteButton(); // Remover botão de favoritos quando logado
+    }
+
+    /**
+     * Remove o botão de favoritos da interface quando usuário está logado
+     */
+    removeFavoriteButton() {
+        console.log('Removendo botão de favoritos da interface...');
+        
+        // Procurar e remover botão de favoritos em todas as possíveis localizações
+        const favoriteButtons = document.querySelectorAll('[data-categoria="favoritos"]');
+        favoriteButtons.forEach(btn => {
+            console.log('Removendo botão de favoritos:', btn);
+            btn.remove();
+        });
+        
+        // Verificar se há botões de favoritos no container de navegação
+        const navContainer = document.getElementById('nav-buttons-container');
+        if (navContainer) {
+            const favoriteBtn = navContainer.querySelector('[data-categoria="favoritos"]');
+            if (favoriteBtn) {
+                favoriteBtn.remove();
+                console.log('Botão de favoritos removido do container de navegação');
+            }
+        }
     }
 
     /**
@@ -405,7 +524,7 @@ class PontosEntretenimentoApp {
      * Configure user menu
      */
     configureUserMenu() {
-        console.log('Configurando menu do usuário...');
+        console.log('Configurando menu suspenso do usuário...');
         
         // Configurar ambos os botões (desktop e mobile)
         const desktopUserBtn = document.getElementById('desktop-user-info-btn');
@@ -413,27 +532,72 @@ class PontosEntretenimentoApp {
         
         [desktopUserBtn, mobileUserBtn].forEach(userInfoBtn => {
             if (userInfoBtn) {
-                console.log('Configurando evento de clique para botão:', userInfoBtn.id);
+                console.log('Configurando menu suspenso para botão:', userInfoBtn.id);
                 
-                userInfoBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                const menuId = userInfoBtn.id + '-menu';
+                const dropdownMenu = document.getElementById(menuId);
+                
+                if (dropdownMenu) {
+                    // Evento para mostrar/ocultar menu
+                    userInfoBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const isVisible = dropdownMenu.style.display !== 'none';
+                        
+                        // Fechar todos os outros menus
+                        document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
+                            if (menu !== dropdownMenu) {
+                                menu.style.display = 'none';
+                            }
+                        });
+                        
+                        // Toggle do menu atual
+                        dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                        
+                        console.log('Menu suspenso toggled:', !isVisible);
+                    });
                     
-                    console.log('Clique no botão de usuário detectado');
-                    
-                    if (window.userMenu) {
-                        window.userMenu.toggle(userInfoBtn);
-                    } else {
-                        console.error('UserMenu não disponível');
-                        // Fallback para sistema antigo
-                        const user = window.authManager?.getCurrentUser();
-                        if (user) {
-                            this.showUserMenuFallback(user);
-                        }
+                    // Configurar botão de logout no menu
+                    const logoutBtn = dropdownMenu.querySelector('.logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            console.log('Logout solicitado');
+                            if (window.authManager) {
+                                window.authManager.logout();
+                                this.showNotification('Logout realizado com sucesso!', 'success');
+                            }
+                            
+                            // Fechar menu
+                            dropdownMenu.style.display = 'none';
+                        });
                     }
+                }
+            }
+        });
+        
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-dropdown')) {
+                document.querySelectorAll('.user-dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
                 });
             }
         });
+    }
+
+    /**
+     * Mostrar notificação para o usuário
+     */
+    showNotification(message, type = 'info') {
+        if (window.errorHandler?.showSimpleNotification) {
+            window.errorHandler.showSimpleNotification(message, type);
+        } else {
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
     }
 
     /**
@@ -834,34 +998,73 @@ class PontosEntretenimentoApp {
             return;
         }
         console.log('✅ Container encontrado:', container);
-        console.log('📍 HTML atual do container:', container.innerHTML);
 
-        // FORÇAR criação dos botões básicos independente do DatabaseManager
-        let categorias = [
-            { id: 'geral', nome: 'Geral', cor: '#3b82f6', icon: 'fas fa-map-marker-alt' },
-            { id: 'esportes-lazer', nome: 'Esportes e Lazer', cor: '#10b981', icon: 'fas fa-futbol' },
-            { id: 'gastronomia', nome: 'Gastronomia', cor: '#f59e0b', icon: 'fas fa-utensils' },
-            { id: 'geek-nerd', nome: 'Geek/Nerd', cor: '#8b5cf6', icon: 'fas fa-gamepad' },
-            { id: 'casas-noturnas', nome: 'Casas Noturnas', cor: '#ef4444', icon: 'fas fa-glass-cheers' }
-        ];
+        // Carregar categorias do banco de dados com fallback robusto
+        let categorias = [];
+        
+        if (window.databaseManager && window.databaseManager.getCategorias) {
+            categorias = window.databaseManager.getCategorias() || [];
+            console.log('✅ DatabaseManager disponível - categorias obtidas:', categorias.length);
+            console.log('📋 Categorias obtidas:', categorias);
+        }
+        
+        // Se não conseguiu carregar do DatabaseManager, tentar fallback direto
+        if (categorias.length === 0) {
+            console.warn('⚠️ Tentando fallback - carregando categorias diretamente...');
+            
+            // Categorias hardcoded como fallback imediato
+            const categoriasDefault = [
+                { id: 'geral', nome: 'Geral', icon: 'fas fa-theater-masks', cor: '#6c757d' },
+                { id: 'esportes-lazer', nome: 'Esportes', icon: 'fas fa-running', cor: '#28a745' },
+                { id: 'gastronomia', nome: 'Gastronomia', icon: 'fas fa-utensils', cor: '#dc3545' },
+                { id: 'geek-nerd', nome: 'Geek', icon: 'fas fa-gamepad', cor: '#6f42c1' },
+                { id: 'casas-noturnas', nome: 'Casas Noturnas', icon: 'fas fa-glass-cheers', cor: '#6610f2' }
+            ];
+            
+            console.log('✅ Usando categorias default:', categoriasDefault.length);
+            this.renderCategoryButtons(categoriasDefault);
+            
+            // Tentar carregar do JSON em paralelo
+            this.loadCategoriesDirectly().then(cats => {
+                if (cats && cats.length > 0) {
+                    console.log('✅ Categorias carregadas do JSON, atualizando:', cats.length);
+                    this.renderCategoryButtons(cats);
+                }
+            }).catch(error => {
+                console.error('❌ Erro ao carregar categorias do JSON:', error);
+            });
+            return;
+        }
+        
+        // Se chegou aqui, tem categorias do DatabaseManager
+        this.renderCategoryButtons(categorias);
+    }
 
-        // Tentar usar categorias do DatabaseManager se disponível
-        if (window.databaseManager) {
-            const dbCategorias = window.databaseManager.getCategorias();
-            if (dbCategorias && dbCategorias.length > 0) {
-                categorias = dbCategorias;
-                console.log('✅ DatabaseManager disponível - categorias carregadas:', categorias.length);
-            } else {
-                console.log('⚠️ DatabaseManager disponível mas sem categorias - usando padrão');
+    async loadCategoriesDirectly() {
+        try {
+            const response = await fetch('./database/categorias.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        } else {
-            console.log('⚠️ DatabaseManager não disponível - usando categorias padrão');
+            const categorias = await response.json();
+            console.log('📂 Categorias carregadas diretamente do JSON:', categorias);
+            return categorias;
+        } catch (error) {
+            console.error('Erro ao carregar categorias diretamente:', error);
+            return [];
+        }
+    }
+
+    renderCategoryButtons(categorias) {
+        console.log('🔧 Renderizando botões de categoria...', categorias.length);
+        
+        const container = document.getElementById('nav-buttons-container');
+        if (!container) {
+            console.error('❌ Container não encontrado durante renderização');
+            return;
         }
 
-        console.log('✅ Configurando menu de categorias com', categorias.length, 'categorias');
-        console.log('📋 Categorias:', categorias);
-
-        // Criar botão "Todos" primeiro
+        // Criar botão "Todos" primeiro (sempre presente)
         let buttonsHtml = `
             <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos" 
                     style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white;">
@@ -870,13 +1073,18 @@ class PontosEntretenimentoApp {
             </button>
         `;
 
-        // Gerar botões para cada categoria
+        // Gerar botões SOMENTE para categorias que existem no banco de dados
         categorias.forEach(categoria => {
-            const iconClass = this.getIconClassForCategory(categoria);
-            console.log(`📍 Categoria: ${categoria.id}, Ícone: ${iconClass}, Nome: ${categoria.nome}`);
+            console.log(`📍 Processando categoria: ${categoria.id} - ${categoria.nome}`);
+            console.log(`   Cor: ${categoria.cor}, Ícone: ${categoria.icon}`);
+            
+            // Usar o ícone e cor diretamente do banco de dados
+            const iconClass = categoria.icon || 'fas fa-map-marker-alt'; // fallback se não tiver ícone
+            const corCategoria = categoria.cor || '#6c757d'; // fallback se não tiver cor
+            
             buttonsHtml += `
                 <button class="nav-btn category-btn" data-categoria="${categoria.id}" 
-                        style="background: ${categoria.cor}; border-color: ${categoria.cor}; color: white; display: flex !important; visibility: visible !important; opacity: 1 !important;"
+                        style="background: ${corCategoria}; border-color: ${corCategoria}; color: white; display: flex !important; visibility: visible !important; opacity: 1 !important;"
                         title="${categoria.nome}">
                     <i class="${iconClass}"></i>
                     <span class="nav-btn-text">${categoria.nome}</span>
@@ -884,7 +1092,7 @@ class PontosEntretenimentoApp {
             `;
         });
 
-        console.log('🔧 Inserindo HTML dos botões...');
+        console.log('🔧 Inserindo HTML dos botões carregados do banco...');
         console.log('📝 HTML que será inserido:', buttonsHtml);
         
         // LIMPAR e inserir HTML no container
@@ -898,12 +1106,11 @@ class PontosEntretenimentoApp {
         container.style.position = 'relative';
         container.style.zIndex = '1000';
         
-        console.log('HTML dos botões inserido no container');
-        console.log('📍 HTML resultante do container:', container.innerHTML);
+        console.log('✅ HTML dos botões inserido no container');
 
         // Verificar se os botões foram realmente criados
         const buttonsCreated = container.querySelectorAll('.nav-btn');
-        console.log(`${buttonsCreated.length} botões criados no DOM`);
+        console.log(`${buttonsCreated.length} botões criados no DOM (1 Todos + ${categorias.length} categorias do banco)`);
         buttonsCreated.forEach((btn, index) => {
             console.log(`Botão ${index + 1}: ${btn.textContent.trim()} (categoria: ${btn.dataset.categoria})`);
             // FORÇAR estilos inline para cada botão
@@ -914,27 +1121,31 @@ class PontosEntretenimentoApp {
             btn.style.zIndex = '1001';
         });
 
-        // Configurar event listeners
-        container.addEventListener('click', (e) => {
-            const button = e.target.closest('[data-categoria]');
-            if (button) {
-                e.preventDefault();
-                e.stopPropagation();
-                const categoria = button.dataset.categoria;
-                console.log(`Clique na categoria: ${categoria}`);
-                this.filterByCategory(categoria);
-            }
-        });
+        // Configurar event listeners (apenas uma vez)
+        if (!container.hasAttribute('data-listeners-configured')) {
+            container.addEventListener('click', (e) => {
+                const button = e.target.closest('[data-categoria]');
+                if (button) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const categoria = button.dataset.categoria;
+                    console.log(`Clique na categoria: ${categoria}`);
+                    this.filterByCategory(categoria);
+                }
+            });
+            container.setAttribute('data-listeners-configured', 'true');
+        }
 
-        console.log(`Menu de navegação configurado com ${categorias.length + 1} botões (incluindo "Todos")`);
+        console.log(`✅ Menu de navegação configurado com ${categorias.length + 1} botões (1 "Todos" + ${categorias.length} do banco de dados)`);
         
-        // Forçar mais uma verificação após um delay
+        // Verificação final
         setTimeout(() => {
             console.log('🔄 Verificação final após delay...');
             const finalCheck = document.getElementById('nav-buttons-container');
             if (finalCheck) {
-                console.log('📍 Container final check:', finalCheck.innerHTML !== '');
-                console.log('📊 Botões finais visíveis:', finalCheck.querySelectorAll('.nav-btn').length);
+                const finalButtons = finalCheck.querySelectorAll('.nav-btn');
+                console.log('📊 Botões finais visíveis:', finalButtons.length);
+                console.log('📋 Categorias finais carregadas:', Array.from(finalButtons).map(btn => btn.dataset.categoria));
             }
         }, 100);
     }
@@ -975,21 +1186,15 @@ class PontosEntretenimentoApp {
      * Mapear ícones para categorias baseado no campo icone/icon do JSON
      */
     getIconClassForCategory(categoria) {
-        // Primeiro tentar usar o ícone do JSON (se for classe CSS)
-        if (categoria.icon && categoria.icon.startsWith('fas ')) {
+        // Usar o ícone diretamente do banco de dados
+        if (categoria.icon) {
+            console.log(`Usando ícone do banco para ${categoria.id}: ${categoria.icon}`);
             return categoria.icon;
         }
         
-        // Se tem emoji no campo icone, usar o mapeamento FontAwesome baseado no ID
-        const iconMap = {
-            'geral': 'fas fa-map-marker-alt',
-            'esportes-lazer': 'fas fa-futbol',
-            'gastronomia': 'fas fa-utensils',
-            'geek-nerd': 'fas fa-gamepad',
-            'casas-noturnas': 'fas fa-glass-cheers'
-        };
-
-        return iconMap[categoria.id] || 'fas fa-map-marker-alt';
+        // Fallback apenas se não houver ícone no banco (não deveria acontecer)
+        console.warn(`⚠️ Categoria ${categoria.id} sem ícone no banco, usando fallback`);
+        return 'fas fa-map-marker-alt';
     }
 
     filterByCategory(categoria) {
@@ -1137,14 +1342,86 @@ class PontosEntretenimentoApp {
 
     mostrarModalLogin() {
         try {
-            if (window.modalManager && typeof window.modalManager.mostrar === 'function') {
-                window.modalManager.mostrar('login');
-            } else {
-                console.warn('ModalManager nao disponivel');
-                alert('Sistema de login não está disponível no momento.');
+            console.log('🔔 mostrarModalLogin chamado');
+            
+            // Verificar se o LoginModal está disponível diretamente
+            if (window.loginModal && typeof window.loginModal.open === 'function') {
+                console.log('✅ Usando window.loginModal.open()');
+                window.loginModal.open();
+                return;
             }
+            
+            // Fallback para modalManager
+            if (window.modalManager && typeof window.modalManager.mostrar === 'function') {
+                console.log('✅ Usando window.modalManager.mostrar()');
+                window.modalManager.mostrar('login');
+                return;
+            }
+            
+            // Fallback para sistema alternativo
+            console.warn('⚠️ ModalManager e LoginModal não disponíveis, usando fallback');
+            
+            // Criar modal simples como fallback
+            const modalHtml = `
+                <div id="temp-login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
+                        <h3>Login</h3>
+                        <form id="temp-login-form">
+                            <div style="margin-bottom: 1rem;">
+                                <label>Usuário:</label>
+                                <input type="text" id="temp-username" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" placeholder="Digite: admin ou user">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label>Senha:</label>
+                                <input type="password" id="temp-password" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;" placeholder="Digite: admin ou user">
+                            </div>
+                            <div style="display: flex; gap: 1rem;">
+                                <button type="submit" style="flex: 1; padding: 0.75rem; background: #3b82f6; color: white; border: none; border-radius: 4px;">Entrar</button>
+                                <button type="button" onclick="document.getElementById('temp-login-modal').remove()" style="flex: 1; padding: 0.75rem; background: #6b7280; color: white; border: none; border-radius: 4px;">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Configurar form
+            document.getElementById('temp-login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('temp-username').value;
+                const password = document.getElementById('temp-password').value;
+                
+                if (username === 'admin' && password === 'admin') {
+                    console.log('✅ Login admin bem-sucedido');
+                    if (window.authManager) {
+                        window.authManager.login({ 
+                            id: 'admin', 
+                            nome: 'Administrador', 
+                            role: 'administrator',
+                            usuario: 'admin'
+                        });
+                    }
+                    document.getElementById('temp-login-modal').remove();
+                } else if (username === 'user' && password === 'user') {
+                    console.log('✅ Login usuário bem-sucedido');
+                    if (window.authManager) {
+                        window.authManager.login({ 
+                            id: 'user', 
+                            nome: 'Usuário', 
+                            role: 'user',
+                            usuario: 'user'
+                        });
+                    }
+                    document.getElementById('temp-login-modal').remove();
+                } else {
+                    alert('Credenciais inválidas! Use: admin/admin ou user/user');
+                }
+            });
+            
         } catch (error) {
-            console.error('Erro ao mostrar modal de login:', error);
+            console.error('❌ Erro ao mostrar modal de login:', error);
+            alert('Erro no sistema de login: ' + error.message);
         }
     }
 

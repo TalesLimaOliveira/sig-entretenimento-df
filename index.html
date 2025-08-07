@@ -401,56 +401,24 @@
             }
         });
         
-        // FUNÇÃO DE DEBUG: Forçar criação dos botões após 2 segundos
-        setTimeout(() => {
-            console.log('🚨 DEBUG: Forçando criação dos botões de categoria...');
-            const container = document.getElementById('nav-buttons-container');
-            if (container) {
-                console.log('DEBUG: Container encontrado, forçando botões...');
-                container.innerHTML = `
-                    <button class="nav-btn active category-btn" data-categoria="todos" title="Todos os pontos" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-globe"></i>
-                        <span class="nav-btn-text">Todos</span>
-                    </button>
-                    <button class="nav-btn category-btn" data-categoria="geral" title="Geral" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #3b82f6; border-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span class="nav-btn-text">Geral</span>
-                    </button>
-                    <button class="nav-btn category-btn" data-categoria="esportes-lazer" title="Esportes e Lazer" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #10b981; border-color: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-futbol"></i>
-                        <span class="nav-btn-text">Esportes e Lazer</span>
-                    </button>
-                    <button class="nav-btn category-btn" data-categoria="gastronomia" title="Gastronomia" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #f59e0b; border-color: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-utensils"></i>
-                        <span class="nav-btn-text">Gastronomia</span>
-                    </button>
-                    <button class="nav-btn category-btn" data-categoria="geek-nerd" title="Geek/Nerd" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #8b5cf6; border-color: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-gamepad"></i>
-                        <span class="nav-btn-text">Geek/Nerd</span>
-                    </button>
-                    <button class="nav-btn category-btn" data-categoria="casas-noturnas" title="Casas Noturnas" 
-                            style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: #ef4444; border-color: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 20px; margin: 0.2rem;">
-                        <i class="fas fa-glass-cheers"></i>
-                        <span class="nav-btn-text">Casas Noturnas</span>
-                    </button>
-                `;
-                container.style.display = 'flex';
-                container.style.flexWrap = 'wrap';
-                container.style.gap = '0.5rem';
-                container.style.justifyContent = 'center';
-                container.style.visibility = 'visible';
-                container.style.opacity = '1';
-                container.style.zIndex = '1000';
-                console.log('DEBUG: Botões criados com sucesso!');
-            } else {
-                console.error('DEBUG: Container não encontrado!');
+        // DEBUG: Listener global para detectar cliques
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.header-login-btn')) {
+                console.log('🔔 CLICK DEBUG: Botão de login clicado!', e.target);
             }
-        }, 2000);
+            if (e.target.closest('.nav-btn')) {
+                console.log('🔔 CLICK DEBUG: Botão de categoria clicado!', e.target.dataset.categoria);
+            }
+        }, true);
+        
+        // Forçar configuração adicional após 3 segundos
+        setTimeout(() => {
+            console.log('🚨 DEBUG: Configuração forçada após 3 segundos');
+            if (window.app) {
+                window.app.configureCategoryMenu();
+                window.app.ensureLoginButtonsWork();
+            }
+        }, 3000);
     </script>
 </body>
 </html>
